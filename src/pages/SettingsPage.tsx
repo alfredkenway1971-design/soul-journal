@@ -1,0 +1,159 @@
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { 
+  ArrowLeft, 
+  User, 
+  Palette, 
+  Bell, 
+  Lock, 
+  HelpCircle,
+  ChevronRight,
+  Moon,
+  Sun,
+  Type
+} from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import BottomNav from "@/components/BottomNav";
+
+const SettingsPage = () => {
+  const navigate = useNavigate();
+  const [notifications, setNotifications] = useState(true);
+  const [darkMode, setDarkMode] = useState(false);
+
+  const settingsSections = [
+    {
+      title: "Account",
+      items: [
+        { icon: User, label: "Profile", action: "navigate" },
+        { icon: Lock, label: "Security & PIN", action: "navigate" },
+      ],
+    },
+    {
+      title: "Appearance",
+      items: [
+        { 
+          icon: darkMode ? Moon : Sun, 
+          label: "Dark Mode", 
+          action: "toggle",
+          value: darkMode,
+          onChange: setDarkMode
+        },
+        { icon: Palette, label: "Themes & Backgrounds", action: "navigate" },
+        { icon: Type, label: "Fonts", action: "navigate" },
+      ],
+    },
+    {
+      title: "Notifications",
+      items: [
+        { 
+          icon: Bell, 
+          label: "Daily Reminders", 
+          action: "toggle",
+          value: notifications,
+          onChange: setNotifications
+        },
+      ],
+    },
+    {
+      title: "Support",
+      items: [
+        { icon: HelpCircle, label: "Help & FAQ", action: "navigate" },
+      ],
+    },
+  ];
+
+  return (
+    <div className="min-h-screen gradient-warm pb-24">
+      {/* Header */}
+      <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border/50">
+        <div className="max-w-lg mx-auto px-4 py-4">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-full"
+              onClick={() => navigate("/")}
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <div>
+              <h1 className="text-lg font-semibold text-foreground">Settings</h1>
+              <p className="text-sm text-muted-foreground">Customize your journal</p>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Content */}
+      <main className="max-w-lg mx-auto px-4 py-6 space-y-6">
+        {settingsSections.map((section, sectionIndex) => (
+          <motion.div
+            key={section.title}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: sectionIndex * 0.1 }}
+          >
+            <h2 className="text-sm font-medium text-muted-foreground mb-3 px-2">
+              {section.title}
+            </h2>
+            <div className="glass-card rounded-2xl overflow-hidden">
+              {section.items.map((item, index) => {
+                const Icon = item.icon;
+                return (
+                  <motion.button
+                    key={item.label}
+                    className={`w-full flex items-center gap-4 p-4 hover:bg-muted/50 transition-colors ${
+                      index !== section.items.length - 1 ? "border-b border-border" : ""
+                    }`}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => {
+                      if (item.action === "navigate") {
+                        // Navigate to sub-page
+                      }
+                    }}
+                  >
+                    <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                      <Icon className="w-5 h-5 text-muted-foreground" />
+                    </div>
+                    <span className="flex-1 text-left font-medium text-foreground">
+                      {item.label}
+                    </span>
+                    {item.action === "toggle" ? (
+                      <Switch
+                        checked={item.value}
+                        onCheckedChange={item.onChange}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    ) : (
+                      <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                    )}
+                  </motion.button>
+                );
+              })}
+            </div>
+          </motion.div>
+        ))}
+
+        {/* App Info */}
+        <motion.div
+          className="text-center pt-8"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+        >
+          <div className="w-16 h-16 rounded-2xl gradient-amber flex items-center justify-center mx-auto mb-4 shadow-glow">
+            <span className="text-2xl">📔</span>
+          </div>
+          <h3 className="font-semibold text-foreground">Voice Journal</h3>
+          <p className="text-sm text-muted-foreground">Version 1.0.0</p>
+        </motion.div>
+      </main>
+
+      <BottomNav />
+    </div>
+  );
+};
+
+export default SettingsPage;
