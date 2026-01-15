@@ -1,6 +1,6 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
-import { ArrowLeft, Image, Sparkles } from "lucide-react";
+import { useState, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowLeft, Image, Sparkles, X, Play, Volume2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -9,18 +9,31 @@ import MoodSelector, { Mood } from "@/components/MoodSelector";
 import LanguageSelector, { Language } from "@/components/LanguageSelector";
 import BottomNav from "@/components/BottomNav";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { useJournalAPI } from "@/hooks/useJournalAPI";
 
 type RecordingStep = "mood" | "record" | "enhance" | "language" | "complete";
 
 const RecordPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
+  const api = useJournalAPI();
+  
   const [step, setStep] = useState<RecordingStep>("mood");
   const [selectedMood, setSelectedMood] = useState<Mood | null>(null);
   const [selectedLanguage, setSelectedLanguage] = useState<Language>("en");
   const [isProcessing, setIsProcessing] = useState(false);
   const [transcription, setTranscription] = useState("");
   const [enhancedText, setEnhancedText] = useState("");
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const [photos, setPhotos] = useState<File[]>([]);
+  const [photosPreviews, setPhotosPreviews] = useState<string[]>([]);
+  const [generatedAudioUrl, setGeneratedAudioUrl] = useState<string | null>(null);
+  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
 
   const handleMoodSelect = (mood: Mood) => {
     setSelectedMood(mood);
@@ -29,41 +42,182 @@ const RecordPage = () => {
 
   const handleRecordingComplete = async (blob: Blob, duration: number) => {
     setIsProcessing(true);
+    setAudioBlob(blob);
     
-    // Simulate AI transcription
-    setTimeout(() => {
-      setTranscription(
-        "Today was an interesting day. I started my morning with a cup of coffee and some quiet reflection. The weather was perfect, and I took a long walk in the park. I've been thinking a lot about my goals and where I want to be in the next few months..."
-      );
+    try {
+      const text = await api.transcribeAudio(blob);
+      setTranscription(text);
       setStep("enhance");
+    } catch (error) {
+      console.error('Transcription error:', error);
+      toast({
+        title: "Transcription Failed",
+        description: error instanceof Error ? error.message : "Failed to transcribe audio",
+        variant: "destructive",
+      });
+    } finally {
       setIsProcessing(false);
-    }, 2000);
+    }
   };
 
   const handleEnhance = async () => {
     setIsProcessing(true);
     
-    // Simulate AI enhancement
-    setTimeout(() => {
-      setEnhancedText(
-        "The morning greeted me with the warm embrace of my favorite coffee, its aroma filling the room as I sat in contemplative silence. The day unfolded beautifully—the weather couldn't have been more perfect, prompting me to venture into the park for a leisurely walk. As my feet traced familiar paths, my mind wandered through the landscape of my aspirations. I found myself deeply reflecting on the journey ahead, mapping out the milestones I hope to reach in the coming months. There's something profoundly clarifying about movement; each step seemed to bring greater clarity to my vision of the future."
-      );
+    try {
+      const enhanced = await api.enhanceText(transcription);
+      setEnhancedText(enhanced);
       setStep("language");
+    } catch (error) {
+      console.error('Enhancement error:', error);
+      toast({
+        title: "Enhancement Failed",
+        description: error instanceof Error ? error.message : "Failed to enhance text",
+        variant: "destructive",
+      });
+    } finally {
       setIsProcessing(false);
-    }, 2500);
+    }
   };
 
-  const handleSave = () => {
-    setStep("complete");
-    toast({
-      title: "Entry Saved! ✨",
-      description: "Your journal entry has been saved with voice cloning.",
-    });
-    setTimeout(() => navigate("/"), 2000);
+  const handleAddPhotos = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handlePhotosSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length > 0) {
+      setPhotos((prev) => [...prev, ...files]);
+      
+      // Create previews
+      files.forEach((file) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setPhotosPreviews((prev) => [...prev, reader.result as string]);
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+  };
+
+  const removePhoto = (index: number) => {
+    setPhotos((prev) => prev.filter((_, i) => i !== index));
+    setPhotosPreviews((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleGenerateVoice = async () => {
+    if (!enhancedText) return;
+    
+    setIsProcessing(true);
+    
+    try {
+      // Translate if not English
+      let textForVoice = enhancedText;
+      if (selectedLanguage !== 'en') {
+        textForVoice = await api.translateText(enhancedText, selectedLanguage);
+      }
+      
+      const audioUrl = await api.generateVoice(textForVoice);
+      setGeneratedAudioUrl(audioUrl);
+      
+      toast({
+        title: "Voice Generated! 🎙️",
+        description: "Your entry is ready to play.",
+      });
+    } catch (error) {
+      console.error('Voice generation error:', error);
+      toast({
+        title: "Voice Generation Failed",
+        description: error instanceof Error ? error.message : "Failed to generate voice",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handlePlayAudio = () => {
+    if (audioRef.current && generatedAudioUrl) {
+      if (isPlayingAudio) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play();
+      }
+      setIsPlayingAudio(!isPlayingAudio);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!user || !selectedMood) return;
+    
+    setIsProcessing(true);
+    
+    try {
+      // Upload audio if available
+      let audioPath: string | undefined;
+      if (audioBlob) {
+        audioPath = await api.uploadAudio(audioBlob, user.id);
+      }
+      
+      // Save entry
+      const entry = await api.saveEntry({
+        userId: user.id,
+        originalTranscription: transcription,
+        enhancedText: enhancedText,
+        mood: selectedMood,
+        playbackLanguage: selectedLanguage,
+        audioUrl: audioPath,
+      });
+      
+      // Upload photos and save media entries
+      for (const photo of photos) {
+        const photoPath = await api.uploadPhoto(photo, user.id);
+        await api.saveEntryMedia(entry.id, 'photo', photoPath);
+      }
+      
+      // Save audio as media if uploaded
+      if (audioPath) {
+        await api.saveEntryMedia(entry.id, 'audio', audioPath);
+      }
+      
+      setStep("complete");
+      toast({
+        title: "Entry Saved! ✨",
+        description: "Your journal entry has been saved with voice cloning.",
+      });
+      setTimeout(() => navigate("/"), 2000);
+    } catch (error) {
+      console.error('Save error:', error);
+      toast({
+        title: "Save Failed",
+        description: error instanceof Error ? error.message : "Failed to save entry",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   return (
     <div className="min-h-screen gradient-warm pb-24">
+      {/* Hidden file input for photos */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handlePhotosSelected}
+        accept="image/*"
+        multiple
+        className="hidden"
+      />
+      
+      {/* Hidden audio element */}
+      {generatedAudioUrl && (
+        <audio
+          ref={audioRef}
+          src={generatedAudioUrl}
+          onEnded={() => setIsPlayingAudio(false)}
+        />
+      )}
+
       {/* Header */}
       <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border/50">
         <div className="max-w-lg mx-auto px-4 py-4">
@@ -135,6 +289,31 @@ const RecordPage = () => {
               isProcessing={isProcessing}
             />
 
+            {/* Photo Previews */}
+            {photosPreviews.length > 0 && (
+              <motion.div
+                className="mt-6 flex flex-wrap gap-2"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+              >
+                {photosPreviews.map((preview, index) => (
+                  <div key={index} className="relative">
+                    <img
+                      src={preview}
+                      alt={`Photo ${index + 1}`}
+                      className="w-20 h-20 object-cover rounded-xl"
+                    />
+                    <button
+                      onClick={() => removePhoto(index)}
+                      className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </motion.div>
+            )}
+
             {/* Add Photo Option */}
             <motion.div
               className="mt-8 pt-6 border-t border-border"
@@ -142,7 +321,11 @@ const RecordPage = () => {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.3 }}
             >
-              <Button variant="outline" className="w-full gap-2">
+              <Button 
+                variant="outline" 
+                className="w-full gap-2"
+                onClick={handleAddPhotos}
+              >
                 <Image className="w-4 h-4" />
                 Add Photos
               </Button>
@@ -243,11 +426,75 @@ const RecordPage = () => {
               onSelect={setSelectedLanguage}
             />
 
+            {/* Generate Voice Preview */}
+            {!generatedAudioUrl && (
+              <Button
+                variant="outline"
+                className="w-full gap-2 h-12 rounded-xl"
+                onClick={handleGenerateVoice}
+                disabled={isProcessing}
+              >
+                {isProcessing ? (
+                  <>
+                    <motion.div
+                      className="w-5 h-5 border-2 border-foreground border-t-transparent rounded-full"
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    />
+                    Generating Voice...
+                  </>
+                ) : (
+                  <>
+                    <Volume2 className="w-5 h-5" />
+                    Preview Voice
+                  </>
+                )}
+              </Button>
+            )}
+
+            {/* Audio Player */}
+            <AnimatePresence>
+              {generatedAudioUrl && (
+                <motion.div
+                  className="glass-card rounded-2xl p-4 flex items-center gap-4"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                >
+                  <Button
+                    size="icon"
+                    className="w-12 h-12 rounded-full gradient-amber"
+                    onClick={handlePlayAudio}
+                  >
+                    <Play className={`w-5 h-5 ${isPlayingAudio ? 'animate-pulse' : ''}`} />
+                  </Button>
+                  <div className="flex-1">
+                    <p className="font-medium text-sm">Voice Preview</p>
+                    <p className="text-muted-foreground text-xs">
+                      {isPlayingAudio ? 'Playing...' : 'Tap to play'}
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             <Button
               className="w-full gap-2 h-14 rounded-2xl gradient-amber shadow-glow"
               onClick={handleSave}
+              disabled={isProcessing}
             >
-              Save Entry
+              {isProcessing ? (
+                <>
+                  <motion.div
+                    className="w-5 h-5 border-2 border-primary-foreground border-t-transparent rounded-full"
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                  />
+                  Saving...
+                </>
+              ) : (
+                "Save Entry"
+              )}
             </Button>
           </motion.div>
         )}

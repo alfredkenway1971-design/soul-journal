@@ -1,11 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Plus, Search, Bell } from "lucide-react";
+import { Search, Bell, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import JournalEntry from "@/components/JournalEntry";
 import BottomNav from "@/components/BottomNav";
+import { useAuth } from "@/contexts/AuthContext";
+import { useJournalAPI } from "@/hooks/useJournalAPI";
 import type { Mood } from "@/components/MoodSelector";
 
 interface Entry {
@@ -19,49 +21,28 @@ interface Entry {
   imageUrl?: string;
 }
 
-// Sample entries for demo
-const sampleEntries: Entry[] = [
-  {
-    id: "1",
-    date: new Date(),
-    title: "A Productive Morning",
-    preview: "Started the day with meditation and journaling. The sunrise was absolutely beautiful today, casting golden light through my window...",
-    mood: "happy",
-    hasAudio: true,
-    hasImage: true,
-    imageUrl: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=200&h=200&fit=crop",
-  },
-  {
-    id: "2",
-    date: new Date(Date.now() - 86400000),
-    title: "Reflections on the Week",
-    preview: "It's been quite a journey this week. I've learned so much about myself and my goals. The challenges made me stronger...",
-    mood: "good",
-    hasAudio: true,
-  },
-  {
-    id: "3",
-    date: new Date(Date.now() - 172800000),
-    title: "Finding Balance",
-    preview: "Today was about finding equilibrium between work and rest. Sometimes the middle path is the wisest choice...",
-    mood: "fine",
-    hasAudio: true,
-  },
-  {
-    id: "4",
-    date: new Date(Date.now() - 259200000),
-    title: "Rainy Day Thoughts",
-    preview: "The rain outside mirrors my contemplative mood. There's something peaceful about listening to raindrops...",
-    mood: "sad",
-    hasAudio: true,
-    hasImage: true,
-    imageUrl: "https://images.unsplash.com/photo-1515694346937-94d85e41e6f0?w=200&h=200&fit=crop",
-  },
-];
+const moodEmojis: Record<Mood, string> = {
+  happy: "😊",
+  good: "🙂",
+  fine: "😐",
+  sad: "😔",
+  unhappy: "😢",
+};
 
 const HomePage = () => {
   const navigate = useNavigate();
+  const { user, signOut } = useAuth();
+  const api = useJournalAPI();
+  
   const [searchQuery, setSearchQuery] = useState("");
+  const [entries, setEntries] = useState<Entry[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [stats, setStats] = useState({
+    thisWeek: 0,
+    streak: 0,
+    topMood: "happy" as Mood,
+  });
+  
   const currentHour = new Date().getHours();
   
   const getGreeting = () => {
@@ -70,11 +51,83 @@ const HomePage = () => {
     return "Good Evening";
   };
 
-  const filteredEntries = sampleEntries.filter(
+  useEffect(() => {
+    const fetchEntries = async () => {
+      if (!user) return;
+      
+      try {
+        const data = await api.getEntries(user.id);
+        
+        const formattedEntries: Entry[] = data.map((entry) => ({
+          id: entry.id,
+          date: new Date(entry.created_at),
+          title: entry.title || "Untitled Entry",
+          preview: entry.enhanced_text || entry.original_transcription || "",
+          mood: (entry.mood as Mood) || "fine",
+          hasAudio: !!entry.audio_url,
+        }));
+        
+        setEntries(formattedEntries);
+        
+        // Calculate stats
+        const now = new Date();
+        const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        const thisWeekEntries = formattedEntries.filter((e) => e.date >= weekAgo);
+        
+        // Calculate streak
+        let streak = 0;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        for (let i = 0; i < 365; i++) {
+          const checkDate = new Date(today);
+          checkDate.setDate(checkDate.getDate() - i);
+          const hasEntry = formattedEntries.some((e) => {
+            const entryDate = new Date(e.date);
+            entryDate.setHours(0, 0, 0, 0);
+            return entryDate.getTime() === checkDate.getTime();
+          });
+          
+          if (hasEntry) {
+            streak++;
+          } else if (i > 0) {
+            break;
+          }
+        }
+        
+        // Calculate top mood
+        const moodCounts: Record<string, number> = {};
+        formattedEntries.forEach((e) => {
+          moodCounts[e.mood] = (moodCounts[e.mood] || 0) + 1;
+        });
+        
+        const topMood = Object.entries(moodCounts).sort((a, b) => b[1] - a[1])[0]?.[0] as Mood || "happy";
+        
+        setStats({
+          thisWeek: thisWeekEntries.length,
+          streak,
+          topMood,
+        });
+      } catch (error) {
+        console.error("Error fetching entries:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchEntries();
+  }, [user]);
+
+  const filteredEntries = entries.filter(
     (entry) =>
       entry.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       entry.preview.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/auth");
+  };
 
   return (
     <div className="min-h-screen gradient-warm pb-24">
@@ -96,6 +149,14 @@ const HomePage = () => {
             >
               <Button variant="ghost" size="icon" className="rounded-full">
                 <Bell className="w-5 h-5" />
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="rounded-full"
+                onClick={handleSignOut}
+              >
+                <LogOut className="w-5 h-5" />
               </Button>
             </motion.div>
           </div>
@@ -128,15 +189,15 @@ const HomePage = () => {
           transition={{ delay: 0.2 }}
         >
           <div className="glass-card rounded-2xl p-4 text-center">
-            <p className="text-2xl font-semibold text-foreground">12</p>
+            <p className="text-2xl font-semibold text-foreground">{stats.thisWeek}</p>
             <p className="text-xs text-muted-foreground">This Week</p>
           </div>
           <div className="glass-card rounded-2xl p-4 text-center">
-            <p className="text-2xl font-semibold text-foreground">5</p>
+            <p className="text-2xl font-semibold text-foreground">{stats.streak}</p>
             <p className="text-xs text-muted-foreground">Day Streak</p>
           </div>
           <div className="glass-card rounded-2xl p-4 text-center">
-            <p className="text-2xl font-semibold text-foreground">😊</p>
+            <p className="text-2xl font-semibold text-foreground">{moodEmojis[stats.topMood]}</p>
             <p className="text-xs text-muted-foreground">Top Mood</p>
           </div>
         </motion.div>
@@ -149,29 +210,42 @@ const HomePage = () => {
           </Button>
         </div>
 
-        <div className="space-y-4">
-          {filteredEntries.map((entry, index) => (
-            <motion.div
-              key={entry.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 + index * 0.1 }}
-            >
-              <JournalEntry
-                {...entry}
-                onClick={() => navigate(`/entry/${entry.id}`)}
-              />
-            </motion.div>
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="flex justify-center py-12">
+            <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {filteredEntries.map((entry, index) => (
+              <motion.div
+                key={entry.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 + index * 0.1 }}
+              >
+                <JournalEntry
+                  {...entry}
+                  onClick={() => navigate(`/entry/${entry.id}`)}
+                />
+              </motion.div>
+            ))}
+          </div>
+        )}
 
-        {filteredEntries.length === 0 && (
+        {!isLoading && filteredEntries.length === 0 && (
           <motion.div
             className="text-center py-12"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
           >
-            <p className="text-muted-foreground">No entries found</p>
+            <span className="text-4xl mb-4 block">📝</span>
+            <p className="text-muted-foreground mb-4">No entries yet</p>
+            <Button 
+              className="gradient-amber"
+              onClick={() => navigate("/record")}
+            >
+              Create Your First Entry
+            </Button>
           </motion.div>
         )}
       </main>

@@ -1,0 +1,165 @@
+import { supabase } from "@/integrations/supabase/client";
+
+export const useJournalAPI = () => {
+  const transcribeAudio = async (audioBlob: Blob): Promise<string> => {
+    // Convert blob to base64
+    const reader = new FileReader();
+    const base64Promise = new Promise<string>((resolve, reject) => {
+      reader.onloadend = () => {
+        const base64 = (reader.result as string).split(',')[1];
+        resolve(base64);
+      };
+      reader.onerror = reject;
+    });
+    reader.readAsDataURL(audioBlob);
+    const base64Audio = await base64Promise;
+
+    const { data, error } = await supabase.functions.invoke('transcribe-audio', {
+      body: { audio: base64Audio },
+    });
+
+    if (error) throw new Error(error.message);
+    if (data.error) throw new Error(data.error);
+    
+    return data.text;
+  };
+
+  const enhanceText = async (text: string, tone: string = 'natural'): Promise<string> => {
+    const { data, error } = await supabase.functions.invoke('enhance-text', {
+      body: { text, tone },
+    });
+
+    if (error) throw new Error(error.message);
+    if (data.error) throw new Error(data.error);
+    
+    return data.enhancedText;
+  };
+
+  const translateText = async (text: string, targetLanguage: string): Promise<string> => {
+    const { data, error } = await supabase.functions.invoke('translate-text', {
+      body: { text, targetLanguage },
+    });
+
+    if (error) throw new Error(error.message);
+    if (data.error) throw new Error(data.error);
+    
+    return data.translatedText;
+  };
+
+  const generateVoice = async (text: string, voiceId?: string): Promise<string> => {
+    const { data, error } = await supabase.functions.invoke('generate-voice', {
+      body: { text, voiceId },
+    });
+
+    if (error) throw new Error(error.message);
+    if (data.error) throw new Error(data.error);
+    
+    // Return audio URL from base64
+    return `data:audio/mpeg;base64,${data.audioContent}`;
+  };
+
+  const uploadAudio = async (audioBlob: Blob, userId: string): Promise<string> => {
+    const fileName = `${userId}/${Date.now()}.webm`;
+    
+    const { data, error } = await supabase.storage
+      .from('journal-audio')
+      .upload(fileName, audioBlob, {
+        contentType: 'audio/webm',
+      });
+
+    if (error) throw new Error(error.message);
+    
+    return data.path;
+  };
+
+  const uploadPhoto = async (file: File, userId: string): Promise<string> => {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${userId}/${Date.now()}.${fileExt}`;
+    
+    const { data, error } = await supabase.storage
+      .from('journal-photos')
+      .upload(fileName, file, {
+        contentType: file.type,
+      });
+
+    if (error) throw new Error(error.message);
+    
+    return data.path;
+  };
+
+  const saveEntry = async (entry: {
+    userId: string;
+    title?: string;
+    originalTranscription: string;
+    enhancedText: string;
+    mood: string;
+    playbackLanguage: string;
+    audioUrl?: string;
+  }) => {
+    const { data, error } = await supabase
+      .from('journal_entries')
+      .insert({
+        user_id: entry.userId,
+        title: entry.title,
+        original_transcription: entry.originalTranscription,
+        enhanced_text: entry.enhancedText,
+        mood: entry.mood,
+        playback_language: entry.playbackLanguage,
+        audio_url: entry.audioUrl,
+      })
+      .select()
+      .single();
+
+    if (error) throw new Error(error.message);
+    
+    return data;
+  };
+
+  const saveEntryMedia = async (entryId: string, mediaType: 'audio' | 'photo', storagePath: string) => {
+    const { error } = await supabase
+      .from('entry_media')
+      .insert({
+        entry_id: entryId,
+        media_type: mediaType,
+        storage_path: storagePath,
+      });
+
+    if (error) throw new Error(error.message);
+  };
+
+  const getEntries = async (userId: string) => {
+    const { data, error } = await supabase
+      .from('journal_entries')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (error) throw new Error(error.message);
+    
+    return data;
+  };
+
+  const getEntryMedia = async (entryId: string) => {
+    const { data, error } = await supabase
+      .from('entry_media')
+      .select('*')
+      .eq('entry_id', entryId);
+
+    if (error) throw new Error(error.message);
+    
+    return data;
+  };
+
+  return {
+    transcribeAudio,
+    enhanceText,
+    translateText,
+    generateVoice,
+    uploadAudio,
+    uploadPhoto,
+    saveEntry,
+    saveEntryMedia,
+    getEntries,
+    getEntryMedia,
+  };
+};
