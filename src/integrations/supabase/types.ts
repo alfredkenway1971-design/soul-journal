@@ -14,7 +14,112 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      entry_media: {
+        Row: {
+          created_at: string
+          entry_id: string
+          id: string
+          media_type: string
+          storage_path: string
+        }
+        Insert: {
+          created_at?: string
+          entry_id: string
+          id?: string
+          media_type: string
+          storage_path: string
+        }
+        Update: {
+          created_at?: string
+          entry_id?: string
+          id?: string
+          media_type?: string
+          storage_path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entry_media_entry_id_fkey"
+            columns: ["entry_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      journal_entries: {
+        Row: {
+          audio_url: string | null
+          created_at: string
+          enhanced_text: string | null
+          id: string
+          mood: string | null
+          original_transcription: string | null
+          playback_language: string | null
+          title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          audio_url?: string | null
+          created_at?: string
+          enhanced_text?: string | null
+          id?: string
+          mood?: string | null
+          original_transcription?: string | null
+          playback_language?: string | null
+          title?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          audio_url?: string | null
+          created_at?: string
+          enhanced_text?: string | null
+          id?: string
+          mood?: string | null
+          original_transcription?: string | null
+          playback_language?: string | null
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "journal_entries_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          id: string
+          pin_hash: string | null
+          updated_at: string
+          voice_clone_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          id: string
+          pin_hash?: string | null
+          updated_at?: string
+          voice_clone_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          pin_hash?: string | null
+          updated_at?: string
+          voice_clone_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
