@@ -10,6 +10,10 @@ import RecordPage from "@/pages/RecordPage";
 import InsightsPage from "@/pages/InsightsPage";
 import SettingsPage from "@/pages/SettingsPage";
 import CalendarPage from "@/pages/CalendarPage";
+import EntryDetailPage from "@/pages/EntryDetailPage";
+import SecuritySettingsPage from "@/pages/SecuritySettingsPage";
+import ProfileSettingsPage from "@/pages/ProfileSettingsPage";
+import VoiceSettingsPage from "@/pages/VoiceSettingsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -94,10 +98,42 @@ const AppRoutes = () => {
         }
       />
       <Route
+        path="/settings/security"
+        element={
+          <ProtectedRoute>
+            <SecuritySettingsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/settings/profile"
+        element={
+          <ProtectedRoute>
+            <ProfileSettingsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/settings/voice"
+        element={
+          <ProtectedRoute>
+            <VoiceSettingsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/calendar"
         element={
           <ProtectedRoute>
             <CalendarPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/entry/:id"
+        element={
+          <ProtectedRoute>
+            <EntryDetailPage />
           </ProtectedRoute>
         }
       />

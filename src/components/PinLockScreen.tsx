@@ -1,7 +1,9 @@
-import { useState, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useCallback, useEffect } from "react";
+import { motion } from "framer-motion";
 import { Fingerprint, Lock, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 interface PinLockScreenProps {
   onUnlock: () => void;
@@ -10,16 +12,59 @@ interface PinLockScreenProps {
 const PinLockScreen = ({ onUnlock }: PinLockScreenProps) => {
   const [pin, setPin] = useState<string>("");
   const [error, setError] = useState(false);
-  const correctPin = "1234"; // In production, this would be stored securely
+  const [storedPinHash, setStoredPinHash] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
-  const handleNumberPress = useCallback((num: string) => {
+  useEffect(() => {
+    const fetchPinHash = async () => {
+      if (!user) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('pin_hash')
+          .eq('id', user.id)
+          .single();
+        
+        if (error) throw error;
+        setStoredPinHash(data?.pin_hash || null);
+        
+        // If no PIN is set, unlock immediately
+        if (!data?.pin_hash) {
+          onUnlock();
+        }
+      } catch (error) {
+        console.error('Error fetching PIN:', error);
+        // On error, allow access
+        onUnlock();
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchPinHash();
+  }, [user, onUnlock]);
+
+  const hashPin = async (inputPin: string): Promise<string> => {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(inputPin + user?.id);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  };
+
+  const handleNumberPress = useCallback(async (num: string) => {
     if (pin.length < 4) {
       const newPin = pin + num;
       setPin(newPin);
       setError(false);
       
       if (newPin.length === 4) {
-        if (newPin === correctPin) {
+        // Verify PIN
+        const inputHash = await hashPin(newPin);
+        
+        if (inputHash === storedPinHash) {
           setTimeout(() => onUnlock(), 300);
         } else {
           setError(true);
@@ -30,7 +75,7 @@ const PinLockScreen = ({ onUnlock }: PinLockScreenProps) => {
         }
       }
     }
-  }, [pin, onUnlock]);
+  }, [pin, storedPinHash, onUnlock, user]);
 
   const handleDelete = useCallback(() => {
     setPin(prev => prev.slice(0, -1));
@@ -43,6 +88,14 @@ const PinLockScreen = ({ onUnlock }: PinLockScreenProps) => {
   }, [onUnlock]);
 
   const numbers = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "", "0", "delete"];
+
+  if (loading) {
+    return (
+      <div className="min-h-screen gradient-warm flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen gradient-warm flex flex-col items-center justify-center p-6">
@@ -122,11 +175,6 @@ const PinLockScreen = ({ onUnlock }: PinLockScreenProps) => {
         <Fingerprint className="w-6 h-6" />
         <span className="text-sm font-medium">Use Fingerprint or Face ID</span>
       </motion.button>
-
-      {/* Hint */}
-      <p className="text-xs text-muted-foreground/60 mt-8">
-        Demo PIN: 1234
-      </p>
     </div>
   );
 };

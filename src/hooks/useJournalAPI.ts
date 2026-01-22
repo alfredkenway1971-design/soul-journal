@@ -150,6 +150,49 @@ export const useJournalAPI = () => {
     return data;
   };
 
+  const getEntryById = async (entryId: string) => {
+    const { data, error } = await supabase
+      .from('journal_entries')
+      .select('*')
+      .eq('id', entryId)
+      .single();
+
+    if (error) throw new Error(error.message);
+    
+    return data;
+  };
+
+  const deleteEntry = async (entryId: string) => {
+    // First delete associated media
+    const { error: mediaError } = await supabase
+      .from('entry_media')
+      .delete()
+      .eq('entry_id', entryId);
+
+    if (mediaError) throw new Error(mediaError.message);
+
+    // Then delete the entry
+    const { error } = await supabase
+      .from('journal_entries')
+      .delete()
+      .eq('id', entryId);
+
+    if (error) throw new Error(error.message);
+  };
+
+  const getSignedUrl = async (bucket: string, path: string): Promise<string | null> => {
+    const { data, error } = await supabase.storage
+      .from(bucket)
+      .createSignedUrl(path, 3600); // 1 hour expiry
+
+    if (error) {
+      console.error('Error getting signed URL:', error);
+      return null;
+    }
+    
+    return data.signedUrl;
+  };
+
   return {
     transcribeAudio,
     enhanceText,
@@ -161,5 +204,8 @@ export const useJournalAPI = () => {
     saveEntryMedia,
     getEntries,
     getEntryMedia,
+    getEntryById,
+    deleteEntry,
+    getSignedUrl,
   };
 };
