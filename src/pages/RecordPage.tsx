@@ -26,6 +26,7 @@ const RecordPage = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [transcription, setTranscription] = useState("");
   const [enhancedText, setEnhancedText] = useState("");
+  const [entryTitle, setEntryTitle] = useState("");
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [photos, setPhotos] = useState<File[]>([]);
   const [photosPreviews, setPhotosPreviews] = useState<string[]>([]);
@@ -161,6 +162,7 @@ const RecordPage = () => {
       // Save entry
       const entry = await api.saveEntry({
         userId: user.id,
+        title: entryTitle || undefined,
         originalTranscription: transcription,
         enhancedText: enhancedText,
         mood: selectedMood,
@@ -388,6 +390,16 @@ const RecordPage = () => {
                     AI Enhanced
                   </h3>
                 </div>
+                
+                {/* Title Input */}
+                <input
+                  type="text"
+                  value={entryTitle}
+                  onChange={(e) => setEntryTitle(e.target.value)}
+                  placeholder="Add a title (optional)"
+                  className="w-full mb-4 px-3 py-2 bg-muted/50 border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+                
                 <Textarea
                   value={enhancedText}
                   onChange={(e) => setEnhancedText(e.target.value)}

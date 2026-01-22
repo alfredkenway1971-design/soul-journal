@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import BottomNav from "@/components/BottomNav";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import type { Mood } from "@/components/MoodSelector";
 
 const moodColors: Record<Mood, string> = {
@@ -14,21 +16,73 @@ const moodColors: Record<Mood, string> = {
   unhappy: "bg-mood-unhappy",
 };
 
-// Sample calendar data
-const calendarData: Record<string, { mood: Mood; hasEntry: boolean }> = {
-  "2024-01-08": { mood: "happy", hasEntry: true },
-  "2024-01-09": { mood: "good", hasEntry: true },
-  "2024-01-10": { mood: "happy", hasEntry: true },
-  "2024-01-11": { mood: "fine", hasEntry: true },
-  "2024-01-12": { mood: "good", hasEntry: true },
-  "2024-01-13": { mood: "happy", hasEntry: true },
-  "2024-01-14": { mood: "sad", hasEntry: true },
-  "2024-01-15": { mood: "good", hasEntry: true },
-};
+interface CalendarEntry {
+  mood: Mood;
+  entryId: string;
+}
 
 const CalendarPage = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [calendarData, setCalendarData] = useState<Record<string, CalendarEntry>>({});
+  const [monthStats, setMonthStats] = useState({ entries: 0, positivePercent: 0 });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchEntriesForMonth = async () => {
+      if (!user) return;
+      
+      setLoading(true);
+      
+      try {
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+        const startOfMonth = new Date(year, month, 1).toISOString();
+        const endOfMonth = new Date(year, month + 1, 0, 23, 59, 59).toISOString();
+        
+        const { data: entries, error } = await supabase
+          .from('journal_entries')
+          .select('id, mood, created_at')
+          .eq('user_id', user.id)
+          .gte('created_at', startOfMonth)
+          .lte('created_at', endOfMonth);
+        
+        if (error) throw error;
+        
+        const dataMap: Record<string, CalendarEntry> = {};
+        entries?.forEach(entry => {
+          const dateKey = new Date(entry.created_at).toISOString().split('T')[0];
+          if (!dataMap[dateKey] && entry.mood) {
+            dataMap[dateKey] = {
+              mood: entry.mood as Mood,
+              entryId: entry.id,
+            };
+          }
+        });
+        
+        setCalendarData(dataMap);
+        
+        // Calculate stats
+        const entryCount = Object.keys(dataMap).length;
+        const positiveCount = Object.values(dataMap).filter(
+          e => e.mood === 'happy' || e.mood === 'good'
+        ).length;
+        
+        setMonthStats({
+          entries: entryCount,
+          positivePercent: entryCount > 0 ? Math.round((positiveCount / entryCount) * 100) : 0,
+        });
+        
+      } catch (error) {
+        console.error('Error fetching calendar entries:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchEntriesForMonth();
+  }, [user, currentDate]);
 
   const getDaysInMonth = (date: Date) => {
     const year = date.getFullYear();
@@ -138,48 +192,54 @@ const CalendarPage = () => {
           </div>
 
           {/* Calendar Grid */}
-          <div className="grid grid-cols-7 gap-1">
-            {days.map((day, index) => {
-              if (day === null) {
-                return <div key={`empty-${index}`} className="aspect-square" />;
-              }
+          {loading ? (
+            <div className="flex items-center justify-center h-64">
+              <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : (
+            <div className="grid grid-cols-7 gap-1">
+              {days.map((day, index) => {
+                if (day === null) {
+                  return <div key={`empty-${index}`} className="aspect-square" />;
+                }
 
-              const dateKey = getDateKey(day);
-              const entry = calendarData[dateKey];
-              const isToday = 
-                day === new Date().getDate() &&
-                currentDate.getMonth() === new Date().getMonth() &&
-                currentDate.getFullYear() === new Date().getFullYear();
+                const dateKey = getDateKey(day);
+                const entry = calendarData[dateKey];
+                const isToday = 
+                  day === new Date().getDate() &&
+                  currentDate.getMonth() === new Date().getMonth() &&
+                  currentDate.getFullYear() === new Date().getFullYear();
 
-              return (
-                <motion.button
-                  key={day}
-                  className={`aspect-square rounded-xl flex flex-col items-center justify-center gap-1 transition-all ${
-                    isToday
-                      ? "ring-2 ring-primary"
-                      : ""
-                  } ${
-                    entry?.hasEntry
-                      ? "glass-card-strong hover:scale-105"
-                      : "hover:bg-muted/50"
-                  }`}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => {
-                    if (entry?.hasEntry) {
-                      // Navigate to entry
-                    }
-                  }}
-                >
-                  <span className={`text-sm ${isToday ? "font-semibold text-primary" : "text-foreground"}`}>
-                    {day}
-                  </span>
-                  {entry?.hasEntry && (
-                    <div className={`w-2 h-2 rounded-full ${moodColors[entry.mood]}`} />
-                  )}
-                </motion.button>
-              );
-            })}
-          </div>
+                return (
+                  <motion.button
+                    key={day}
+                    className={`aspect-square rounded-xl flex flex-col items-center justify-center gap-1 transition-all ${
+                      isToday
+                        ? "ring-2 ring-primary"
+                        : ""
+                    } ${
+                      entry
+                        ? "glass-card-strong hover:scale-105"
+                        : "hover:bg-muted/50"
+                    }`}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => {
+                      if (entry) {
+                        navigate(`/entry/${entry.entryId}`);
+                      }
+                    }}
+                  >
+                    <span className={`text-sm ${isToday ? "font-semibold text-primary" : "text-foreground"}`}>
+                      {day}
+                    </span>
+                    {entry && (
+                      <div className={`w-2 h-2 rounded-full ${moodColors[entry.mood]}`} />
+                    )}
+                  </motion.button>
+                );
+              })}
+            </div>
+          )}
         </motion.div>
 
         {/* Mood Legend */}
@@ -208,11 +268,11 @@ const CalendarPage = () => {
           transition={{ delay: 0.3 }}
         >
           <div className="glass-card rounded-2xl p-4 text-center">
-            <p className="text-2xl font-semibold text-foreground">8</p>
+            <p className="text-2xl font-semibold text-foreground">{monthStats.entries}</p>
             <p className="text-xs text-muted-foreground">Entries this month</p>
           </div>
           <div className="glass-card rounded-2xl p-4 text-center">
-            <p className="text-2xl font-semibold text-foreground">85%</p>
+            <p className="text-2xl font-semibold text-foreground">{monthStats.positivePercent}%</p>
             <p className="text-xs text-muted-foreground">Positive moods</p>
           </div>
         </motion.div>

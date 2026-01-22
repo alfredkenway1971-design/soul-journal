@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { 
   ArrowLeft, 
@@ -10,7 +10,8 @@ import {
   ChevronRight,
   Moon,
   Sun,
-  Type
+  Type,
+  Mic
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -22,12 +23,27 @@ const SettingsPage = () => {
   const [notifications, setNotifications] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
 
+  useEffect(() => {
+    // Load dark mode preference
+    const saved = localStorage.getItem('darkMode');
+    if (saved !== null) {
+      setDarkMode(saved === 'true');
+    }
+  }, []);
+
+  const handleDarkModeToggle = (enabled: boolean) => {
+    setDarkMode(enabled);
+    localStorage.setItem('darkMode', String(enabled));
+    // In a full implementation, this would apply the theme
+  };
+
   const settingsSections = [
     {
       title: "Account",
       items: [
-        { icon: User, label: "Profile", action: "navigate" },
-        { icon: Lock, label: "Security & PIN", action: "navigate" },
+        { icon: User, label: "Profile", action: "navigate", route: "/settings/profile" },
+        { icon: Lock, label: "Security & PIN", action: "navigate", route: "/settings/security" },
+        { icon: Mic, label: "Voice Clone", action: "navigate", route: "/settings/voice" },
       ],
     },
     {
@@ -38,10 +54,10 @@ const SettingsPage = () => {
           label: "Dark Mode", 
           action: "toggle",
           value: darkMode,
-          onChange: setDarkMode
+          onChange: handleDarkModeToggle
         },
-        { icon: Palette, label: "Themes & Backgrounds", action: "navigate" },
-        { icon: Type, label: "Fonts", action: "navigate" },
+        { icon: Palette, label: "Themes & Backgrounds", action: "navigate", route: "" },
+        { icon: Type, label: "Fonts", action: "navigate", route: "" },
       ],
     },
     {
@@ -59,7 +75,7 @@ const SettingsPage = () => {
     {
       title: "Support",
       items: [
-        { icon: HelpCircle, label: "Help & FAQ", action: "navigate" },
+        { icon: HelpCircle, label: "Help & FAQ", action: "navigate", route: "" },
       ],
     },
   ];
@@ -109,8 +125,8 @@ const SettingsPage = () => {
                     }`}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => {
-                      if (item.action === "navigate") {
-                        // Navigate to sub-page
+                      if (item.action === "navigate" && item.route) {
+                        navigate(item.route);
                       }
                     }}
                   >
