@@ -14,6 +14,8 @@ import EntryDetailPage from "@/pages/EntryDetailPage";
 import SecuritySettingsPage from "@/pages/SecuritySettingsPage";
 import ProfileSettingsPage from "@/pages/ProfileSettingsPage";
 import VoiceSettingsPage from "@/pages/VoiceSettingsPage";
+import GoalsSettingsPage from "@/pages/GoalsSettingsPage";
+import CoachingPage from "@/pages/CoachingPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -118,6 +120,22 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <VoiceSettingsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/settings/goals"
+        element={
+          <ProtectedRoute>
+            <GoalsSettingsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/coaching"
+        element={
+          <ProtectedRoute>
+            <CoachingPage />
           </ProtectedRoute>
         }
       />
