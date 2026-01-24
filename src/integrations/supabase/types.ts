@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      coaching_insights: {
+        Row: {
+          content: string
+          created_at: string
+          expires_at: string | null
+          id: string
+          insight_type: string
+          is_completed: boolean
+          is_read: boolean
+          related_goal: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          insight_type: string
+          is_completed?: boolean
+          is_read?: boolean
+          related_goal?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          insight_type?: string
+          is_completed?: boolean
+          is_read?: boolean
+          related_goal?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       entry_media: {
         Row: {
           created_at: string
@@ -97,7 +136,9 @@ export type Database = {
         Row: {
           created_at: string
           display_name: string | null
+          goals: Json | null
           id: string
+          interests: string[] | null
           pin_hash: string | null
           updated_at: string
           voice_clone_id: string | null
@@ -105,7 +146,9 @@ export type Database = {
         Insert: {
           created_at?: string
           display_name?: string | null
+          goals?: Json | null
           id: string
+          interests?: string[] | null
           pin_hash?: string | null
           updated_at?: string
           voice_clone_id?: string | null
@@ -113,7 +156,9 @@ export type Database = {
         Update: {
           created_at?: string
           display_name?: string | null
+          goals?: Json | null
           id?: string
+          interests?: string[] | null
           pin_hash?: string | null
           updated_at?: string
           voice_clone_id?: string | null

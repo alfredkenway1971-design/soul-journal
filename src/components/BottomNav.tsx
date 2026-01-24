@@ -1,12 +1,12 @@
 import { motion } from "framer-motion";
-import { Home, Calendar, Mic, BarChart3, Settings } from "lucide-react";
+import { Home, Calendar, Mic, Brain, Settings } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 const navItems = [
   { icon: Home, label: "Home", path: "/" },
   { icon: Calendar, label: "Calendar", path: "/calendar" },
   { icon: Mic, label: "Record", path: "/record", isCenter: true },
-  { icon: BarChart3, label: "Insights", path: "/insights" },
+  { icon: Brain, label: "Coach", path: "/coaching" },
   { icon: Settings, label: "Settings", path: "/settings" },
 ];
 

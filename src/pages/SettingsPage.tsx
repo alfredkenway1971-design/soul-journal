@@ -11,7 +11,9 @@ import {
   Moon,
   Sun,
   Type,
-  Mic
+  Mic,
+  Target,
+  Brain
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -44,6 +46,13 @@ const SettingsPage = () => {
         { icon: User, label: "Profile", action: "navigate", route: "/settings/profile" },
         { icon: Lock, label: "Security & PIN", action: "navigate", route: "/settings/security" },
         { icon: Mic, label: "Voice Clone", action: "navigate", route: "/settings/voice" },
+        { icon: Target, label: "Goals & Interests", action: "navigate", route: "/settings/goals" },
+      ],
+    },
+    {
+      title: "AI Coach",
+      items: [
+        { icon: Brain, label: "Coaching Dashboard", action: "navigate", route: "/coaching" },
       ],
     },
     {
