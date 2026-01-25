@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Image, Sparkles, X, Play, Volume2 } from "lucide-react";
+import { ArrowLeft, Image, Sparkles, X, Play, Volume2, Wand2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -24,6 +24,7 @@ const RecordPage = () => {
   const [selectedMood, setSelectedMood] = useState<Mood | null>(null);
   const [selectedLanguage, setSelectedLanguage] = useState<Language>("en");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isGeneratingTitle, setIsGeneratingTitle] = useState(false);
   const [transcription, setTranscription] = useState("");
   const [enhancedText, setEnhancedText] = useState("");
   const [entryTitle, setEntryTitle] = useState("");
@@ -391,14 +392,50 @@ const RecordPage = () => {
                   </h3>
                 </div>
                 
-                {/* Title Input */}
-                <input
-                  type="text"
-                  value={entryTitle}
-                  onChange={(e) => setEntryTitle(e.target.value)}
-                  placeholder="Add a title (optional)"
-                  className="w-full mb-4 px-3 py-2 bg-muted/50 border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                />
+                {/* Title Input with AI Generate */}
+                <div className="flex gap-2 mb-4">
+                  <input
+                    type="text"
+                    value={entryTitle}
+                    onChange={(e) => setEntryTitle(e.target.value)}
+                    placeholder="Add a title (optional)"
+                    className="flex-1 px-3 py-2 bg-muted/50 border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="rounded-xl shrink-0"
+                    onClick={async () => {
+                      if (!enhancedText) return;
+                      setIsGeneratingTitle(true);
+                      try {
+                        const title = await api.generateTitle(enhancedText);
+                        setEntryTitle(title);
+                      } catch (error) {
+                        console.error('Error generating title:', error);
+                        toast({
+                          title: "Failed to generate title",
+                          description: "Please try again or enter manually.",
+                          variant: "destructive",
+                        });
+                      } finally {
+                        setIsGeneratingTitle(false);
+                      }
+                    }}
+                    disabled={isGeneratingTitle || !enhancedText}
+                    title="Generate AI title"
+                  >
+                    {isGeneratingTitle ? (
+                      <motion.div
+                        className="w-4 h-4 border-2 border-foreground border-t-transparent rounded-full"
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                      />
+                    ) : (
+                      <Wand2 className="w-4 h-4" />
+                    )}
+                  </Button>
+                </div>
                 
                 <Textarea
                   value={enhancedText}

@@ -36,6 +36,28 @@ const ThemesSettingsPage = () => {
   const handleSave = () => {
     localStorage.setItem("app-theme", selectedTheme);
     localStorage.setItem("app-background", selectedBackground);
+    
+    // Apply theme immediately
+    document.documentElement.setAttribute('data-theme', selectedTheme);
+    
+    // Update CSS variables based on theme
+    const theme = THEME_OPTIONS.find(t => t.id === selectedTheme);
+    if (theme) {
+      const root = document.documentElement;
+      // Apply theme colors to primary CSS variable
+      if (selectedTheme === 'warm') {
+        root.style.setProperty('--primary', '35 90% 55%');
+      } else if (selectedTheme === 'sage') {
+        root.style.setProperty('--primary', '145 30% 60%');
+      } else if (selectedTheme === 'coral') {
+        root.style.setProperty('--primary', '15 85% 65%');
+      } else if (selectedTheme === 'lavender') {
+        root.style.setProperty('--primary', '270 50% 70%');
+      } else if (selectedTheme === 'sky') {
+        root.style.setProperty('--primary', '200 70% 70%');
+      }
+    }
+    
     toast({
       title: "Theme Updated",
       description: "Your theme preferences have been saved.",

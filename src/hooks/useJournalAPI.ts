@@ -35,6 +35,21 @@ export const useJournalAPI = () => {
     return data.enhancedText;
   };
 
+  const generateTitle = async (text: string): Promise<string> => {
+    const { data, error } = await supabase.functions.invoke('enhance-text', {
+      body: { 
+        text, 
+        tone: 'title',
+        customPrompt: 'Generate a short, evocative title (3-6 words max) for this journal entry. Return ONLY the title, nothing else:' 
+      },
+    });
+
+    if (error) throw new Error(error.message);
+    if (data.error) throw new Error(data.error);
+    
+    return data.enhancedText.replace(/["']/g, '').trim();
+  };
+
   const translateText = async (text: string, targetLanguage: string): Promise<string> => {
     const { data, error } = await supabase.functions.invoke('translate-text', {
       body: { text, targetLanguage },
@@ -196,6 +211,7 @@ export const useJournalAPI = () => {
   return {
     transcribeAudio,
     enhanceText,
+    generateTitle,
     translateText,
     generateVoice,
     uploadAudio,
