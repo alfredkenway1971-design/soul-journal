@@ -180,11 +180,46 @@ const AppRoutes = () => {
 };
 
 const App = () => {
-  // Initialize dark mode on app load
+  // Initialize dark mode and theme on app load
   useEffect(() => {
     const savedDarkMode = localStorage.getItem('darkMode');
     if (savedDarkMode === 'true') {
       document.documentElement.classList.add('dark');
+    }
+    
+    // Apply saved theme
+    const savedTheme = localStorage.getItem('app-theme');
+    if (savedTheme) {
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      const root = document.documentElement;
+      // Apply theme colors to primary CSS variable
+      if (savedTheme === 'warm') {
+        root.style.setProperty('--primary', '35 90% 55%');
+      } else if (savedTheme === 'sage') {
+        root.style.setProperty('--primary', '145 30% 60%');
+      } else if (savedTheme === 'coral') {
+        root.style.setProperty('--primary', '15 85% 65%');
+      } else if (savedTheme === 'lavender') {
+        root.style.setProperty('--primary', '270 50% 70%');
+      } else if (savedTheme === 'sky') {
+        root.style.setProperty('--primary', '200 70% 70%');
+      }
+    }
+    
+    // Apply saved font
+    const savedFont = localStorage.getItem('app-font');
+    if (savedFont) {
+      document.documentElement.setAttribute('data-font', savedFont);
+      // Apply font family
+      const fontFamilies: Record<string, string> = {
+        'inter': "'Inter', sans-serif",
+        'crimson': "'Crimson Pro', serif",
+        'georgia': "Georgia, serif",
+        'system': "system-ui, sans-serif",
+      };
+      if (fontFamilies[savedFont]) {
+        document.body.style.fontFamily = fontFamilies[savedFont];
+      }
     }
   }, []);
 

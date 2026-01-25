@@ -30,12 +30,15 @@ const FontsSettingsPage = () => {
     localStorage.setItem("app-font", selectedFont);
     localStorage.setItem("app-font-size", fontSize[0].toString());
     
-    // Apply font settings
+    // Apply font settings immediately
     const font = FONT_OPTIONS.find(f => f.id === selectedFont);
     if (font) {
-      document.documentElement.style.setProperty("--app-font-family", font.family);
+      document.body.style.fontFamily = font.family;
+      document.documentElement.setAttribute('data-font', selectedFont);
     }
-    document.documentElement.style.setProperty("--app-font-size", `${fontSize[0]}px`);
+    
+    // Apply font size to root
+    document.documentElement.style.fontSize = `${fontSize[0]}px`;
     
     toast({
       title: "Font Settings Updated",

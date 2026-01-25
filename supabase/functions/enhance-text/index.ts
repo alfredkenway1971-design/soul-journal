@@ -14,15 +14,23 @@ serve(async (req) => {
   }
 
   try {
-    const { text, tone = 'natural' } = await req.json();
+    const { text, tone = 'natural', customPrompt } = await req.json();
 
     if (!text) {
       throw new Error('No text provided');
     }
 
-    console.log('Enhancing text with tone:', tone);
+    console.log('Enhancing text with tone:', tone, 'custom prompt:', !!customPrompt);
 
-    const systemPrompt = `You are a skilled editor that enhances journal entries. Your task is to:
+    let systemPrompt: string;
+    let userMessage: string;
+
+    if (customPrompt) {
+      // Use custom prompt for title generation or other specialized tasks
+      systemPrompt = 'You are a helpful assistant that follows instructions precisely.';
+      userMessage = `${customPrompt}\n\n${text}`;
+    } else {
+      systemPrompt = `You are a skilled editor that enhances journal entries. Your task is to:
 1. Fix grammar and spelling errors
 2. Improve clarity and flow
 3. Maintain the original meaning and personal voice
@@ -31,6 +39,8 @@ serve(async (req) => {
 6. Keep the entry personal and authentic
 
 Do not add content that wasn't in the original. Just polish and enhance what's there.`;
+      userMessage = `Please enhance this journal entry:\n\n${text}`;
+    }
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -42,10 +52,10 @@ Do not add content that wasn't in the original. Just polish and enhance what's t
         model: 'gpt-4o-mini',
         messages: [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: `Please enhance this journal entry:\n\n${text}` }
+          { role: 'user', content: userMessage }
         ],
-        max_tokens: 2000,
-        temperature: 0.7,
+        max_tokens: customPrompt ? 50 : 2000,
+        temperature: customPrompt ? 0.8 : 0.7,
       }),
     });
 

@@ -131,9 +131,17 @@ const EntryDetailPage = () => {
       setGeneratedAudioUrl(audioUrl);
     } catch (error) {
       console.error('Error generating voice:', error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to generate voice";
+      
+      // Provide more helpful error message for ElevenLabs issues
+      let userMessage = errorMessage;
+      if (errorMessage.includes('unusual_activity') || errorMessage.includes('Free Tier')) {
+        userMessage = "ElevenLabs free tier limit reached. Please upgrade your ElevenLabs API key to a paid plan in Settings → Voice to continue using voice playback.";
+      }
+      
       toast({
         title: "Voice Generation Failed",
-        description: error instanceof Error ? error.message : "Failed to generate voice. Please try again.",
+        description: userMessage,
         variant: "destructive",
       });
     } finally {
