@@ -14,8 +14,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['Inter', 'sans-serif'],
-        journal: ['Crimson Pro', 'serif'],
+        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+        display: ['Playfair Display', 'Crimson Pro', 'Georgia', 'serif'],
+        journal: ['Crimson Pro', 'Georgia', 'serif'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -51,22 +52,14 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        journal: {
-          cream: "hsl(var(--journal-cream))",
-          warm: "hsl(var(--journal-warm))",
-          amber: "hsl(var(--journal-amber))",
-          gold: "hsl(var(--journal-gold))",
-          sage: "hsl(var(--journal-sage))",
-          coral: "hsl(var(--journal-coral))",
-          blush: "hsl(var(--journal-blush))",
-          lavender: "hsl(var(--journal-lavender))",
-          sky: "hsl(var(--journal-sky))",
-        },
+        charcoal: "hsl(var(--slate-charcoal))",
         mood: {
           happy: "hsl(var(--mood-happy))",
           good: "hsl(var(--mood-good))",
           fine: "hsl(var(--mood-fine))",
+          calm: "hsl(var(--mood-calm))",
           sad: "hsl(var(--mood-sad))",
+          anxious: "hsl(var(--mood-anxious))",
           unhappy: "hsl(var(--mood-unhappy))",
         },
         sidebar: {
@@ -82,8 +75,8 @@ export default {
       },
       borderRadius: {
         lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        md: "calc(var(--radius) - 4px)",
+        sm: "calc(var(--radius) - 8px)",
         xl: "calc(var(--radius) + 4px)",
         "2xl": "calc(var(--radius) + 8px)",
         "3xl": "calc(var(--radius) + 16px)",
@@ -92,6 +85,7 @@ export default {
         soft: "var(--shadow-soft)",
         medium: "var(--shadow-medium)",
         glow: "var(--shadow-glow)",
+        card: "var(--shadow-card)",
       },
       keyframes: {
         "accordion-down": {

@@ -1,49 +1,99 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, User, Mail, Calendar, Trash2, Mic } from "lucide-react";
+import { ChevronLeft, Settings, Pencil, Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Textarea } from "@/components/ui/textarea";
+import BottomNav from "@/components/BottomNav";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import type { Mood } from "@/components/MoodSelector";
 
 const ProfileSettingsPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   
-  const [displayName, setDisplayName] = useState("");
+  const [displayName, setDisplayName] = useState("Alex Morgan");
+  const [bio, setBio] = useState("Mindful Explorer · San Francisco");
+  const [manifesto, setManifesto] = useState('"To live with intention, embrace the chaos, and find stillness in the motion."');
+  const [isEditingManifesto, setIsEditingManifesto] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [hasVoiceClone, setHasVoiceClone] = useState(false);
+  const [stats, setStats] = useState({ streak: 0, entries: 0, topMood: "happy" as Mood });
+  const [interests, setInterests] = useState<string[]>(["Mindfulness", "Marathon Prep", "Digital Art"]);
+
+  const interestEmojis: Record<string, string> = {
+    "Mindfulness": "🌿",
+    "Marathon Prep": "🏃",
+    "Digital Art": "🎨",
+    "Reading": "📚",
+    "Meditation": "🧘",
+    "Writing": "✍️",
+  };
 
   useEffect(() => {
     const fetchProfile = async () => {
       if (!user) return;
       
       try {
-        const { data, error } = await supabase
+        const { data: profile } = await supabase
           .from('profiles')
-          .select('display_name, voice_clone_id')
+          .select('display_name, interests')
           .eq('id', user.id)
           .single();
         
-        if (error) throw error;
-        setDisplayName(data?.display_name || "");
-        setHasVoiceClone(!!data?.voice_clone_id);
+        if (profile?.display_name) {
+          setDisplayName(profile.display_name);
+        }
+        if (profile?.interests) {
+          setInterests(profile.interests);
+        }
+
+        // Fetch entries for stats
+        const { data: entries } = await supabase
+          .from('journal_entries')
+          .select('id, mood, created_at')
+          .eq('user_id', user.id);
+
+        if (entries) {
+          // Calculate streak
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          let streak = 0;
+          
+          for (let i = 0; i < 365; i++) {
+            const checkDate = new Date(today);
+            checkDate.setDate(checkDate.getDate() - i);
+            const hasEntry = entries.some((e) => {
+              const entryDate = new Date(e.created_at);
+              entryDate.setHours(0, 0, 0, 0);
+              return entryDate.getTime() === checkDate.getTime();
+            });
+            
+            if (hasEntry) {
+              streak++;
+            } else if (i > 0) {
+              break;
+            }
+          }
+
+          // Calculate top mood
+          const moodCounts: Record<string, number> = {};
+          entries.forEach((e) => {
+            if (e.mood) {
+              moodCounts[e.mood] = (moodCounts[e.mood] || 0) + 1;
+            }
+          });
+          const topMood = Object.entries(moodCounts).sort((a, b) => b[1] - a[1])[0]?.[0] as Mood || "happy";
+
+          setStats({
+            streak,
+            entries: entries.length,
+            topMood,
+          });
+        }
       } catch (error) {
         console.error('Error fetching profile:', error);
       } finally {
@@ -54,53 +104,15 @@ const ProfileSettingsPage = () => {
     fetchProfile();
   }, [user]);
 
-  const handleSave = async () => {
-    if (!user) return;
-    
-    setSaving(true);
-    
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ display_name: displayName })
-        .eq('id', user.id);
-      
-      if (error) throw error;
-      
-      toast({
-        title: "Profile Updated",
-        description: "Your changes have been saved.",
-      });
-    } catch (error) {
-      console.error('Error saving profile:', error);
-      toast({
-        title: "Error",
-        description: "Failed to save changes",
-        variant: "destructive",
-      });
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleDeleteAccount = async () => {
-    // Note: Full account deletion would require an Edge Function with service role
-    await signOut();
-    navigate("/auth");
+  const handleSaveManifesto = async () => {
+    setIsEditingManifesto(false);
     toast({
-      title: "Signed Out",
-      description: "Contact support to fully delete your account.",
+      title: "Manifesto Updated",
+      description: "Your personal manifesto has been saved.",
     });
   };
 
-  const formatDate = (dateStr?: string) => {
-    if (!dateStr) return "Unknown";
-    return new Date(dateStr).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
+  const firstName = displayName.split(' ')[0];
 
   if (loading) {
     return (
@@ -111,165 +123,154 @@ const ProfileSettingsPage = () => {
   }
 
   return (
-    <div className="min-h-screen gradient-warm pb-24">
+    <div className="min-h-screen gradient-warm pb-28">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border/50">
-        <div className="max-w-lg mx-auto px-4 py-4">
-          <div className="flex items-center gap-4">
+      <header className="pt-12 pb-4 px-5">
+        <div className="max-w-lg mx-auto">
+          <div className="flex items-center justify-between">
             <Button
               variant="ghost"
               size="icon"
-              className="rounded-full"
+              className="rounded-full w-10 h-10 bg-white/50 dark:bg-white/10"
+              onClick={() => navigate("/")}
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </Button>
+            <p className="section-label">PROFILE</p>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-full w-10 h-10 bg-white/50 dark:bg-white/10"
               onClick={() => navigate("/settings")}
             >
-              <ArrowLeft className="w-5 h-5" />
+              <Settings className="w-5 h-5" />
             </Button>
-            <div>
-              <h1 className="text-lg font-semibold text-foreground">Profile</h1>
-              <p className="text-sm text-muted-foreground">Manage your account</p>
-            </div>
           </div>
         </div>
       </header>
 
-      {/* Content */}
-      <main className="max-w-lg mx-auto px-4 py-6 space-y-6">
+      <main className="max-w-lg mx-auto px-5 space-y-6">
         {/* Avatar Section */}
         <motion.div
-          className="flex flex-col items-center py-6"
+          className="flex flex-col items-center pt-4"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <div className="w-24 h-24 rounded-full gradient-amber flex items-center justify-center mb-4 shadow-glow">
-            <User className="w-12 h-12 text-primary-foreground" />
+          <div className="relative mb-4">
+            <Avatar className="w-28 h-28 border-4 border-primary/30">
+              <AvatarImage src="" />
+              <AvatarFallback className="bg-gradient-to-br from-primary/40 to-purple-400/40 text-2xl font-display">
+                {firstName.charAt(0)}
+              </AvatarFallback>
+            </Avatar>
+            <button className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-charcoal dark:bg-primary text-white flex items-center justify-center">
+              <Pencil className="w-4 h-4" />
+            </button>
           </div>
-          <h2 className="text-xl font-semibold text-foreground">
-            {displayName || "Voice Journalist"}
-          </h2>
+          <h1 className="text-2xl font-display font-semibold text-foreground">{displayName}</h1>
+          <p className="text-muted-foreground">{bio}</p>
         </motion.div>
 
-        {/* Profile Form */}
+        {/* Stats */}
         <motion.div
-          className="glass-card rounded-2xl p-6 space-y-6"
+          className="grid grid-cols-3 gap-3"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
         >
-          <div className="space-y-2">
-            <Label htmlFor="displayName" className="flex items-center gap-2">
-              <User className="w-4 h-4" />
-              Display Name
-            </Label>
-            <Input
-              id="displayName"
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
-              placeholder="Your name"
-              className="rounded-xl"
-            />
+          <div className="vitality-card p-4 text-center">
+            <p className="text-2xl font-semibold text-foreground">{stats.streak}</p>
+            <p className="text-xs text-muted-foreground uppercase tracking-wider">Streak</p>
           </div>
-
-          <div className="space-y-2">
-            <Label className="flex items-center gap-2">
-              <Mail className="w-4 h-4" />
-              Email
-            </Label>
-            <Input
-              value={user?.email || ""}
-              disabled
-              className="rounded-xl bg-muted"
-            />
+          <div className="vitality-card p-4 text-center">
+            <p className="text-2xl font-semibold text-foreground">{stats.entries}</p>
+            <p className="text-xs text-muted-foreground uppercase tracking-wider">Entries</p>
           </div>
-
-          <div className="space-y-2">
-            <Label className="flex items-center gap-2">
-              <Calendar className="w-4 h-4" />
-              Member Since
-            </Label>
-            <Input
-              value={formatDate(user?.created_at)}
-              disabled
-              className="rounded-xl bg-muted"
-            />
+          <div className="vitality-card p-4 text-center">
+            <p className="text-2xl font-semibold text-foreground capitalize">Top</p>
+            <p className="text-xs text-muted-foreground uppercase tracking-wider">Mood</p>
           </div>
-
-          <Button
-            className="w-full h-12 rounded-xl gradient-amber"
-            onClick={handleSave}
-            disabled={saving}
-          >
-            {saving ? "Saving..." : "Save Changes"}
-          </Button>
         </motion.div>
 
-        {/* Voice Clone Status */}
-        <motion.div
-          className="glass-card rounded-2xl p-6"
+        {/* My Manifesto */}
+        <motion.section
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <div className="flex items-center gap-4">
-            <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-              hasVoiceClone ? "bg-primary/20" : "bg-muted"
-            }`}>
-              <Mic className={`w-6 h-6 ${hasVoiceClone ? "text-primary" : "text-muted-foreground"}`} />
-            </div>
-            <div className="flex-1">
-              <h3 className="font-medium text-foreground">Voice Clone</h3>
-              <p className="text-sm text-muted-foreground">
-                {hasVoiceClone ? "Voice clone is set up" : "Not configured yet"}
-              </p>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate("/settings/voice")}
-            >
-              {hasVoiceClone ? "Manage" : "Setup"}
-            </Button>
+          <p className="section-label mb-3">MY MANIFESTO</p>
+          <div className="glass-premium p-5">
+            <div className="text-4xl text-primary/30 font-display mb-2">"</div>
+            {isEditingManifesto ? (
+              <div className="space-y-4">
+                <Textarea
+                  value={manifesto}
+                  onChange={(e) => setManifesto(e.target.value)}
+                  className="min-h-[100px] font-journal text-lg border-0 bg-transparent resize-none focus-visible:ring-0 -mt-4"
+                />
+                <div className="flex gap-3">
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => setIsEditingManifesto(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    className="flex-1 gradient-primary"
+                    onClick={handleSaveManifesto}
+                  >
+                    Save
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <p className="font-journal text-lg text-foreground leading-relaxed -mt-4">
+                  {manifesto.replace(/"/g, '')}
+                  {" "}
+                  <span className="text-primary">intention</span>
+                  {", embrace the chaos, and find stillness in the motion.\""}
+                </p>
+                <button 
+                  className="mt-4 text-sm font-semibold text-charcoal dark:text-primary uppercase tracking-wider border-b-2 border-dashed border-charcoal/30 dark:border-primary/30 pb-0.5"
+                  onClick={() => setIsEditingManifesto(true)}
+                >
+                  Edit Manifesto
+                </button>
+              </>
+            )}
           </div>
-        </motion.div>
+        </motion.section>
 
-        {/* Danger Zone */}
-        <motion.div
-          className="glass-card rounded-2xl p-6 border border-destructive/20"
+        {/* Current Focus */}
+        <motion.section
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <h3 className="font-medium text-destructive mb-4">Danger Zone</h3>
-          
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button
-                variant="outline"
-                className="w-full gap-2 border-destructive text-destructive hover:bg-destructive/10"
+          <p className="section-label mb-3">CURRENT FOCUS</p>
+          <div className="flex flex-wrap gap-2">
+            {interests.map((interest) => (
+              <span 
+                key={interest}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/60 dark:bg-white/10 border border-border/50 text-sm font-medium"
               >
-                <Trash2 className="w-4 h-4" />
-                Delete Account
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Delete Account?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This will sign you out. To fully delete your account and all data, please contact support.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={handleDeleteAccount}
-                  className="bg-destructive text-destructive-foreground"
-                >
-                  Sign Out
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </motion.div>
+                <span>{interestEmojis[interest] || "✨"}</span>
+                {interest}
+              </span>
+            ))}
+            <button 
+              className="w-10 h-10 rounded-full bg-white/60 dark:bg-white/10 border border-border/50 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+              onClick={() => navigate("/settings/goals")}
+            >
+              <Plus className="w-5 h-5" />
+            </button>
+          </div>
+        </motion.section>
       </main>
+
+      <BottomNav />
     </div>
   );
 };

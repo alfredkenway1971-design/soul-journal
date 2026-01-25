@@ -1,18 +1,21 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Image, Sparkles, X, Play, Volume2, Wand2 } from "lucide-react";
+import { X, Type, Camera, Smile, Sparkles, Wand2, Play, Volume2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import VoiceRecorder from "@/components/VoiceRecorder";
 import MoodSelector, { Mood } from "@/components/MoodSelector";
 import LanguageSelector, { Language } from "@/components/LanguageSelector";
+import CoachReflectionCard from "@/components/premium/CoachReflectionCard";
+import RecentEntryCard from "@/components/premium/RecentEntryCard";
 import BottomNav from "@/components/BottomNav";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useJournalAPI } from "@/hooks/useJournalAPI";
+import { supabase } from "@/integrations/supabase/client";
+import { Mic } from "lucide-react";
 
-type RecordingStep = "mood" | "record" | "enhance" | "language" | "complete";
+type RecordingStep = "main" | "write" | "mood" | "enhance" | "language" | "complete";
 
 const RecordPage = () => {
   const navigate = useNavigate();
@@ -20,51 +23,126 @@ const RecordPage = () => {
   const { user } = useAuth();
   const api = useJournalAPI();
   
-  const [step, setStep] = useState<RecordingStep>("mood");
+  const [step, setStep] = useState<RecordingStep>("main");
   const [selectedMood, setSelectedMood] = useState<Mood | null>(null);
   const [selectedLanguage, setSelectedLanguage] = useState<Language>("en");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
   const [isGeneratingTitle, setIsGeneratingTitle] = useState(false);
   const [transcription, setTranscription] = useState("");
   const [enhancedText, setEnhancedText] = useState("");
   const [entryTitle, setEntryTitle] = useState("");
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
-  const [photos, setPhotos] = useState<File[]>([]);
-  const [photosPreviews, setPhotosPreviews] = useState<string[]>([]);
+  const [displayName, setDisplayName] = useState("Alex");
+  const [recentEntry, setRecentEntry] = useState<{ id: string; title: string; preview: string; date: Date; mood: Mood } | null>(null);
   const [generatedAudioUrl, setGeneratedAudioUrl] = useState<string | null>(null);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  const handleMoodSelect = (mood: Mood) => {
-    setSelectedMood(mood);
-    setTimeout(() => setStep("record"), 500);
-  };
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!user) return;
+      
+      // Fetch profile name
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('display_name')
+        .eq('id', user.id)
+        .single();
+      
+      if (profile?.display_name) {
+        setDisplayName(profile.display_name.split(' ')[0]);
+      }
 
-  const handleRecordingComplete = async (blob: Blob, duration: number) => {
-    setIsProcessing(true);
-    setAudioBlob(blob);
+      // Fetch recent entry
+      const { data: entries } = await supabase
+        .from('journal_entries')
+        .select('id, title, enhanced_text, original_transcription, mood, created_at')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1);
+      
+      if (entries && entries.length > 0) {
+        const entry = entries[0];
+        setRecentEntry({
+          id: entry.id,
+          title: entry.title || "Evening Reflection",
+          preview: entry.enhanced_text || entry.original_transcription || "Feeling calm after the...",
+          date: new Date(entry.created_at),
+          mood: (entry.mood as Mood) || "fine",
+        });
+      }
+    };
     
+    fetchData();
+  }, [user]);
+
+  const startRecording = async () => {
     try {
-      const text = await api.transcribeAudio(blob);
-      setTranscription(text);
-      setStep("enhance");
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (e) => {
+        audioChunksRef.current.push(e.data);
+      };
+
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        setAudioBlob(audioBlob);
+        stream.getTracks().forEach(track => track.stop());
+        
+        // Transcribe
+        setIsProcessing(true);
+        try {
+          const text = await api.transcribeAudio(audioBlob);
+          setTranscription(text);
+          setStep("enhance");
+        } catch (error) {
+          console.error('Transcription error:', error);
+          toast({
+            title: "Transcription Failed",
+            description: error instanceof Error ? error.message : "Failed to transcribe audio",
+            variant: "destructive",
+          });
+        } finally {
+          setIsProcessing(false);
+        }
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
     } catch (error) {
-      console.error('Transcription error:', error);
+      console.error('Error starting recording:', error);
       toast({
-        title: "Transcription Failed",
-        description: error instanceof Error ? error.message : "Failed to transcribe audio",
+        title: "Microphone Access Denied",
+        description: "Please allow microphone access to record.",
         variant: "destructive",
       });
-    } finally {
-      setIsProcessing(false);
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+  };
+
+  const handleRecordClick = () => {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      startRecording();
     }
   };
 
   const handleEnhance = async () => {
     setIsProcessing(true);
-    
     try {
       const enhanced = await api.enhanceText(transcription);
       setEnhancedText(enhanced);
@@ -81,46 +159,16 @@ const RecordPage = () => {
     }
   };
 
-  const handleAddPhotos = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handlePhotosSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    if (files.length > 0) {
-      setPhotos((prev) => [...prev, ...files]);
-      
-      // Create previews
-      files.forEach((file) => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setPhotosPreviews((prev) => [...prev, reader.result as string]);
-        };
-        reader.readAsDataURL(file);
-      });
-    }
-  };
-
-  const removePhoto = (index: number) => {
-    setPhotos((prev) => prev.filter((_, i) => i !== index));
-    setPhotosPreviews((prev) => prev.filter((_, i) => i !== index));
-  };
-
   const handleGenerateVoice = async () => {
     if (!enhancedText) return;
-    
     setIsProcessing(true);
-    
     try {
-      // Translate if not English
       let textForVoice = enhancedText;
       if (selectedLanguage !== 'en') {
         textForVoice = await api.translateText(enhancedText, selectedLanguage);
       }
-      
       const audioUrl = await api.generateVoice(textForVoice);
       setGeneratedAudioUrl(audioUrl);
-      
       toast({
         title: "Voice Generated! 🎙️",
         description: "Your entry is ready to play.",
@@ -137,55 +185,29 @@ const RecordPage = () => {
     }
   };
 
-  const handlePlayAudio = () => {
-    if (audioRef.current && generatedAudioUrl) {
-      if (isPlayingAudio) {
-        audioRef.current.pause();
-      } else {
-        audioRef.current.play();
-      }
-      setIsPlayingAudio(!isPlayingAudio);
-    }
-  };
-
   const handleSave = async () => {
-    if (!user || !selectedMood) return;
-    
+    if (!user) return;
     setIsProcessing(true);
-    
     try {
-      // Upload audio if available
       let audioPath: string | undefined;
       if (audioBlob) {
         audioPath = await api.uploadAudio(audioBlob, user.id);
       }
       
-      // Save entry
-      const entry = await api.saveEntry({
+      await api.saveEntry({
         userId: user.id,
         title: entryTitle || undefined,
         originalTranscription: transcription,
         enhancedText: enhancedText,
-        mood: selectedMood,
+        mood: selectedMood || "fine",
         playbackLanguage: selectedLanguage,
         audioUrl: audioPath,
       });
       
-      // Upload photos and save media entries
-      for (const photo of photos) {
-        const photoPath = await api.uploadPhoto(photo, user.id);
-        await api.saveEntryMedia(entry.id, 'photo', photoPath);
-      }
-      
-      // Save audio as media if uploaded
-      if (audioPath) {
-        await api.saveEntryMedia(entry.id, 'audio', audioPath);
-      }
-      
       setStep("complete");
       toast({
         title: "Entry Saved! ✨",
-        description: "Your journal entry has been saved with voice cloning.",
+        description: "Your journal entry has been saved.",
       });
       setTimeout(() => navigate("/"), 2000);
     } catch (error) {
@@ -201,17 +223,7 @@ const RecordPage = () => {
   };
 
   return (
-    <div className="min-h-screen gradient-warm pb-24">
-      {/* Hidden file input for photos */}
-      <input
-        type="file"
-        ref={fileInputRef}
-        onChange={handlePhotosSelected}
-        accept="image/*"
-        multiple
-        className="hidden"
-      />
-      
+    <div className="min-h-screen gradient-warm pb-28">
       {/* Hidden audio element */}
       {generatedAudioUrl && (
         <audio
@@ -222,129 +234,175 @@ const RecordPage = () => {
       )}
 
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border/50">
-        <div className="max-w-lg mx-auto px-4 py-4">
-          <div className="flex items-center gap-4">
+      <header className="pt-12 pb-4 px-5">
+        <div className="max-w-lg mx-auto">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="section-label mb-1">NEW ENTRY</p>
+              <h1 className="text-2xl text-foreground">
+                <span className="font-normal">How are you, </span>
+                <span className="font-display italic">{displayName}</span>
+                <span className="font-normal">?</span>
+              </h1>
+            </div>
             <Button
               variant="ghost"
               size="icon"
-              className="rounded-full"
-              onClick={() => {
-                if (step === "mood") {
-                  navigate("/");
-                } else if (step === "record") {
-                  setStep("mood");
-                } else if (step === "enhance") {
-                  setStep("record");
-                } else if (step === "language") {
-                  setStep("enhance");
-                }
-              }}
+              className="rounded-full w-10 h-10 bg-white/50 dark:bg-white/10"
+              onClick={() => navigate("/")}
             >
-              <ArrowLeft className="w-5 h-5" />
+              <X className="w-5 h-5" />
             </Button>
-            <div>
-              <h1 className="text-lg font-semibold text-foreground">New Entry</h1>
-              <p className="text-sm text-muted-foreground">
-                {step === "mood" && "How are you feeling?"}
-                {step === "record" && "Record your thoughts"}
-                {step === "enhance" && "Enhance with AI"}
-                {step === "language" && "Choose playback language"}
-                {step === "complete" && "Entry saved!"}
-              </p>
-            </div>
           </div>
         </div>
       </header>
 
-      {/* Content */}
-      <main className="max-w-lg mx-auto px-4 py-8">
-        {/* Step: Mood Selection */}
-        {step === "mood" && (
-          <motion.div
-            className="glass-card rounded-3xl p-8"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <MoodSelector selected={selectedMood} onSelect={handleMoodSelect} />
-          </motion.div>
-        )}
+      <main className="max-w-lg mx-auto px-5 space-y-6">
+        {/* Main Recording View */}
+        {step === "main" && (
+          <AnimatePresence>
+            <motion.div
+              className="space-y-6"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              {/* Voice Record Button */}
+              <div className="flex flex-col items-center py-8">
+                <motion.button
+                  className={`voice-record-btn w-40 h-40 rounded-full flex items-center justify-center ${
+                    isRecording ? "recording" : ""
+                  }`}
+                  onClick={handleRecordClick}
+                  whileTap={{ scale: 0.95 }}
+                  disabled={isProcessing}
+                >
+                  {isProcessing ? (
+                    <div className="w-10 h-10 border-4 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Mic className="w-12 h-12 text-white" />
+                  )}
+                </motion.button>
+                <p className="mt-4 text-muted-foreground">
+                  {isRecording ? "Recording... Tap to stop" : isProcessing ? "Processing..." : "Tap to Record Assessment"}
+                </p>
+              </div>
 
-        {/* Step: Recording */}
-        {step === "record" && (
-          <motion.div
-            className="glass-card rounded-3xl p-8"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <div className="text-center mb-8">
-              <span className="text-4xl mb-4 block">🎙️</span>
-              <h2 className="text-xl font-semibold font-journal mb-2">
-                Share Your Thoughts
-              </h2>
-              <p className="text-muted-foreground text-sm">
-                Speak freely. Your voice will be cloned for playback.
-              </p>
-            </div>
+              {/* Action Buttons */}
+              <div className="flex justify-center gap-3">
+                <Button
+                  variant="outline"
+                  className="rounded-full px-5 gap-2"
+                  onClick={() => setStep("write")}
+                >
+                  <Type className="w-4 h-4" />
+                  Write
+                </Button>
+                <Button
+                  variant="outline"
+                  className="rounded-full px-5 gap-2"
+                >
+                  <Camera className="w-4 h-4" />
+                  Photo
+                </Button>
+                <Button
+                  variant="outline"
+                  className="rounded-full px-5 gap-2"
+                  onClick={() => setStep("mood")}
+                >
+                  <Smile className="w-4 h-4" />
+                  Mood
+                </Button>
+              </div>
 
-            <VoiceRecorder
-              onRecordingComplete={handleRecordingComplete}
-              isProcessing={isProcessing}
-            />
+              {/* AI Coach Reflection */}
+              <section>
+                <p className="section-label mb-3">AI COACH REFLECTION</p>
+                <CoachReflectionCard />
+              </section>
 
-            {/* Photo Previews */}
-            {photosPreviews.length > 0 && (
-              <motion.div
-                className="mt-6 flex flex-wrap gap-2"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-              >
-                {photosPreviews.map((preview, index) => (
-                  <div key={index} className="relative">
-                    <img
-                      src={preview}
-                      alt={`Photo ${index + 1}`}
-                      className="w-20 h-20 object-cover rounded-xl"
-                    />
-                    <button
-                      onClick={() => removePhoto(index)}
-                      className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center"
+              {/* Recent Entries */}
+              {recentEntry && (
+                <section>
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="section-label">RECENT ENTRIES</p>
+                    <button 
+                      className="text-sm font-medium text-foreground"
+                      onClick={() => navigate("/calendar")}
                     >
-                      <X className="w-4 h-4" />
+                      View All
                     </button>
                   </div>
-                ))}
-              </motion.div>
-            )}
-
-            {/* Add Photo Option */}
-            <motion.div
-              className="mt-8 pt-6 border-t border-border"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.3 }}
-            >
-              <Button 
-                variant="outline" 
-                className="w-full gap-2"
-                onClick={handleAddPhotos}
-              >
-                <Image className="w-4 h-4" />
-                Add Photos
-              </Button>
+                  <RecentEntryCard
+                    id={recentEntry.id}
+                    title={recentEntry.title}
+                    preview={recentEntry.preview.substring(0, 40) + "..."}
+                    date={recentEntry.date}
+                    mood={recentEntry.mood}
+                    onClick={() => navigate(`/entry/${recentEntry.id}`)}
+                  />
+                </section>
+              )}
             </motion.div>
+          </AnimatePresence>
+        )}
+
+        {/* Write Mode */}
+        {step === "write" && (
+          <motion.div
+            className="glass-premium p-6 space-y-4"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <Textarea
+              value={transcription}
+              onChange={(e) => setTranscription(e.target.value)}
+              placeholder="What's on your mind today?"
+              className="min-h-[200px] font-journal text-lg border-0 bg-transparent resize-none focus-visible:ring-0"
+            />
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => setStep("main")}
+              >
+                Cancel
+              </Button>
+              <Button
+                className="flex-1 gradient-primary"
+                onClick={() => setStep("enhance")}
+                disabled={!transcription.trim()}
+              >
+                Continue
+              </Button>
+            </div>
           </motion.div>
         )}
 
-        {/* Step: Enhancement */}
+        {/* Mood Selection */}
+        {step === "mood" && (
+          <motion.div
+            className="glass-premium p-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <MoodSelector 
+              selected={selectedMood} 
+              onSelect={(mood) => {
+                setSelectedMood(mood);
+                setTimeout(() => setStep("main"), 500);
+              }} 
+            />
+          </motion.div>
+        )}
+
+        {/* Enhancement Step */}
         {step === "enhance" && (
           <motion.div
             className="space-y-6"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            {/* Original Transcription */}
-            <div className="glass-card rounded-2xl p-6">
+            <div className="glass-premium p-6">
               <h3 className="text-sm font-medium text-muted-foreground mb-3">
                 Original Transcription
               </h3>
@@ -353,20 +411,15 @@ const RecordPage = () => {
               </p>
             </div>
 
-            {/* Enhance Button */}
             {!enhancedText && (
               <Button
-                className="w-full gap-2 h-14 rounded-2xl gradient-amber shadow-glow"
+                className="w-full gap-2 h-14 rounded-2xl gradient-primary"
                 onClick={handleEnhance}
                 disabled={isProcessing}
               >
                 {isProcessing ? (
                   <>
-                    <motion.div
-                      className="w-5 h-5 border-2 border-primary-foreground border-t-transparent rounded-full"
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                    />
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     Enhancing...
                   </>
                 ) : (
@@ -378,21 +431,17 @@ const RecordPage = () => {
               </Button>
             )}
 
-            {/* Enhanced Version */}
             {enhancedText && (
               <motion.div
-                className="glass-card-strong rounded-2xl p-6"
+                className="glass-premium p-6"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
               >
                 <div className="flex items-center gap-2 mb-3">
                   <Sparkles className="w-4 h-4 text-primary" />
-                  <h3 className="text-sm font-medium text-primary">
-                    AI Enhanced
-                  </h3>
+                  <h3 className="text-sm font-medium text-primary">AI Enhanced</h3>
                 </div>
                 
-                {/* Title Input with AI Generate */}
                 <div className="flex gap-2 mb-4">
                   <input
                     type="text"
@@ -413,24 +462,14 @@ const RecordPage = () => {
                         setEntryTitle(title);
                       } catch (error) {
                         console.error('Error generating title:', error);
-                        toast({
-                          title: "Failed to generate title",
-                          description: "Please try again or enter manually.",
-                          variant: "destructive",
-                        });
                       } finally {
                         setIsGeneratingTitle(false);
                       }
                     }}
-                    disabled={isGeneratingTitle || !enhancedText}
-                    title="Generate AI title"
+                    disabled={isGeneratingTitle}
                   >
                     {isGeneratingTitle ? (
-                      <motion.div
-                        className="w-4 h-4 border-2 border-foreground border-t-transparent rounded-full"
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                      />
+                      <div className="w-4 h-4 border-2 border-foreground border-t-transparent rounded-full animate-spin" />
                     ) : (
                       <Wand2 className="w-4 h-4" />
                     )}
@@ -443,7 +482,7 @@ const RecordPage = () => {
                   className="min-h-[200px] font-journal text-lg border-0 bg-transparent resize-none focus-visible:ring-0"
                 />
                 <Button
-                  className="w-full mt-4 gap-2 h-12 rounded-xl gradient-amber"
+                  className="w-full mt-4 gap-2 h-12 rounded-xl gradient-primary"
                   onClick={() => setStep("language")}
                 >
                   Continue
@@ -453,20 +492,20 @@ const RecordPage = () => {
           </motion.div>
         )}
 
-        {/* Step: Language Selection */}
+        {/* Language Selection */}
         {step === "language" && (
           <motion.div
-            className="glass-card rounded-3xl p-6 space-y-6"
+            className="glass-premium p-6 space-y-6"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
             <div className="text-center">
               <span className="text-4xl mb-4 block">🌍</span>
-              <h2 className="text-xl font-semibold font-journal mb-2">
+              <h2 className="text-xl font-semibold font-display mb-2">
                 Voice Playback Language
               </h2>
               <p className="text-muted-foreground text-sm">
-                Choose which language to hear your story in your cloned voice
+                Choose which language to hear your story in
               </p>
             </div>
 
@@ -475,7 +514,6 @@ const RecordPage = () => {
               onSelect={setSelectedLanguage}
             />
 
-            {/* Generate Voice Preview */}
             {!generatedAudioUrl && (
               <Button
                 variant="outline"
@@ -485,89 +523,58 @@ const RecordPage = () => {
               >
                 {isProcessing ? (
                   <>
-                    <motion.div
-                      className="w-5 h-5 border-2 border-foreground border-t-transparent rounded-full"
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                    />
+                    <div className="w-5 h-5 border-2 border-foreground border-t-transparent rounded-full animate-spin" />
                     Generating Voice...
                   </>
                 ) : (
                   <>
                     <Volume2 className="w-5 h-5" />
-                    Preview Voice
+                    Preview Voice (Optional)
                   </>
                 )}
               </Button>
             )}
 
-            {/* Audio Player */}
-            <AnimatePresence>
-              {generatedAudioUrl && (
-                <motion.div
-                  className="glass-card rounded-2xl p-4 flex items-center gap-4"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                >
-                  <Button
-                    size="icon"
-                    className="w-12 h-12 rounded-full gradient-amber"
-                    onClick={handlePlayAudio}
-                  >
-                    <Play className={`w-5 h-5 ${isPlayingAudio ? 'animate-pulse' : ''}`} />
-                  </Button>
-                  <div className="flex-1">
-                    <p className="font-medium text-sm">Voice Preview</p>
-                    <p className="text-muted-foreground text-xs">
-                      {isPlayingAudio ? 'Playing...' : 'Tap to play'}
-                    </p>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            {generatedAudioUrl && (
+              <Button
+                variant="outline"
+                className="w-full gap-2 h-12 rounded-xl"
+                onClick={() => {
+                  if (audioRef.current) {
+                    if (isPlayingAudio) {
+                      audioRef.current.pause();
+                    } else {
+                      audioRef.current.play();
+                    }
+                    setIsPlayingAudio(!isPlayingAudio);
+                  }
+                }}
+              >
+                <Play className="w-5 h-5" />
+                {isPlayingAudio ? "Pause" : "Play Preview"}
+              </Button>
+            )}
 
             <Button
-              className="w-full gap-2 h-14 rounded-2xl gradient-amber shadow-glow"
+              className="w-full gap-2 h-14 rounded-2xl gradient-primary"
               onClick={handleSave}
               disabled={isProcessing}
             >
-              {isProcessing ? (
-                <>
-                  <motion.div
-                    className="w-5 h-5 border-2 border-primary-foreground border-t-transparent rounded-full"
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                  />
-                  Saving...
-                </>
-              ) : (
-                "Save Entry"
-              )}
+              {isProcessing ? "Saving..." : "Save Entry"}
             </Button>
           </motion.div>
         )}
 
-        {/* Step: Complete */}
+        {/* Complete */}
         {step === "complete" && (
           <motion.div
-            className="text-center py-12"
+            className="glass-premium p-8 text-center"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
           >
-            <motion.div
-              className="w-24 h-24 rounded-full gradient-amber flex items-center justify-center mx-auto mb-6 shadow-glow"
-              animate={{ scale: [1, 1.1, 1] }}
-              transition={{ duration: 0.5, repeat: 2 }}
-            >
-              <span className="text-4xl">✨</span>
-            </motion.div>
-            <h2 className="text-2xl font-semibold font-journal mb-2">
-              Entry Saved!
-            </h2>
-            <p className="text-muted-foreground">
-              Your voice-cloned journal entry is ready
-            </p>
+            <span className="text-6xl mb-4 block">✨</span>
+            <h2 className="text-2xl font-display font-semibold mb-2">Entry Saved!</h2>
+            <p className="text-muted-foreground">Your journal entry has been saved.</p>
           </motion.div>
         )}
       </main>
