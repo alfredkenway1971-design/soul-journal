@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -16,6 +17,8 @@ import ProfileSettingsPage from "@/pages/ProfileSettingsPage";
 import VoiceSettingsPage from "@/pages/VoiceSettingsPage";
 import GoalsSettingsPage from "@/pages/GoalsSettingsPage";
 import CoachingPage from "@/pages/CoachingPage";
+import ThemesSettingsPage from "@/pages/ThemesSettingsPage";
+import FontsSettingsPage from "@/pages/FontsSettingsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -140,6 +143,22 @@ const AppRoutes = () => {
         }
       />
       <Route
+        path="/settings/themes"
+        element={
+          <ProtectedRoute>
+            <ThemesSettingsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/settings/fonts"
+        element={
+          <ProtectedRoute>
+            <FontsSettingsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/calendar"
         element={
           <ProtectedRoute>
@@ -161,6 +180,14 @@ const AppRoutes = () => {
 };
 
 const App = () => {
+  // Initialize dark mode on app load
+  useEffect(() => {
+    const savedDarkMode = localStorage.getItem('darkMode');
+    if (savedDarkMode === 'true') {
+      document.documentElement.classList.add('dark');
+    }
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>

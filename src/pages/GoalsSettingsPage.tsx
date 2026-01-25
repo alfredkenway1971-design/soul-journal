@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Target, Plus, X, Sparkles, Heart, Briefcase, Brain, Users, Zap } from "lucide-react";
+import { ArrowLeft, Target, Plus, X, Sparkles, Heart, Briefcase, Brain, Users, Zap, Mic } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import VoiceGoalInput from "@/components/VoiceGoalInput";
 
 interface Goal {
   id: string;
@@ -220,22 +221,29 @@ const GoalsSettingsPage = () => {
           </AnimatePresence>
 
           {/* Add Custom Goal */}
-          <div className="flex gap-2">
-            <Input
-              value={newGoal}
-              onChange={(e) => setNewGoal(e.target.value)}
-              placeholder="Add a custom goal..."
-              className="rounded-xl"
-              onKeyDown={(e) => e.key === "Enter" && addGoal()}
-            />
-            <Button 
-              onClick={() => addGoal()} 
-              size="icon" 
-              className="rounded-xl"
-              disabled={!newGoal.trim()}
-            >
-              <Plus className="w-4 h-4" />
-            </Button>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Mic className="w-4 h-4" />
+              <span>Speak or type your goal</span>
+            </div>
+            <div className="flex gap-2">
+              <Input
+                value={newGoal}
+                onChange={(e) => setNewGoal(e.target.value)}
+                placeholder="Add a custom goal..."
+                className="rounded-xl"
+                onKeyDown={(e) => e.key === "Enter" && addGoal()}
+              />
+              <VoiceGoalInput onGoalTranscribed={(text) => setNewGoal(text)} />
+              <Button 
+                onClick={() => addGoal()} 
+                size="icon" 
+                className="rounded-xl"
+                disabled={!newGoal.trim()}
+              >
+                <Plus className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
 
           {/* Preset Goals */}

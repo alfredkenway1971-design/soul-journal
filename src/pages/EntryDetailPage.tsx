@@ -116,13 +116,14 @@ const EntryDetailPage = () => {
   };
 
   const handleGenerateVoice = async () => {
-    if (!entry) return;
+    if (!entry || !entry.enhanced_text) return;
     
     setIsGeneratingVoice(true);
     
     try {
       let textForVoice = entry.enhanced_text;
-      if (entry.playback_language !== 'en') {
+      // Only translate if a non-English language is explicitly selected
+      if (entry.playback_language && entry.playback_language !== 'en') {
         textForVoice = await api.translateText(entry.enhanced_text, entry.playback_language);
       }
       
@@ -131,8 +132,8 @@ const EntryDetailPage = () => {
     } catch (error) {
       console.error('Error generating voice:', error);
       toast({
-        title: "Error",
-        description: "Failed to generate voice",
+        title: "Voice Generation Failed",
+        description: error instanceof Error ? error.message : "Failed to generate voice. Please try again.",
         variant: "destructive",
       });
     } finally {
