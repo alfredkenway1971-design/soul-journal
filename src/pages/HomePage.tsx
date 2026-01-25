@@ -1,13 +1,17 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Search, Bell, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import JournalEntry from "@/components/JournalEntry";
-import BottomNav from "@/components/BottomNav";
 import { useAuth } from "@/contexts/AuthContext";
 import { useJournalAPI } from "@/hooks/useJournalAPI";
+import { supabase } from "@/integrations/supabase/client";
+import BottomNav from "@/components/BottomNav";
+import AIInsightCard from "@/components/premium/AIInsightCard";
+import VitalityCards from "@/components/premium/VitalityCards";
+import FocusCards from "@/components/premium/FocusCards";
+import QuickCapture from "@/components/premium/QuickCapture";
+import RecentEntryCard from "@/components/premium/RecentEntryCard";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { format } from "date-fns";
 import type { Mood } from "@/components/MoodSelector";
 
 interface Entry {
@@ -17,48 +21,62 @@ interface Entry {
   preview: string;
   mood: Mood;
   hasAudio: boolean;
-  hasImage?: boolean;
-  imageUrl?: string;
 }
-
-const moodEmojis: Record<Mood, string> = {
-  happy: "😊",
-  good: "🙂",
-  fine: "😐",
-  sad: "😔",
-  unhappy: "😢",
-};
 
 const HomePage = () => {
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const api = useJournalAPI();
   
-  const [searchQuery, setSearchQuery] = useState("");
   const [entries, setEntries] = useState<Entry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [stats, setStats] = useState({
-    thisWeek: 0,
-    streak: 0,
-    topMood: "happy" as Mood,
-  });
+  const [displayName, setDisplayName] = useState("");
+  const [latestInsight, setLatestInsight] = useState<string | null>(null);
+  
+  const currentDate = new Date();
+  const dayOfWeek = format(currentDate, "EEEE");
+  const formattedDate = format(currentDate, "MMM d").toUpperCase() + ", " + dayOfWeek.toUpperCase();
   
   const currentHour = new Date().getHours();
-  
   const getGreeting = () => {
-    if (currentHour < 12) return "Good Morning";
-    if (currentHour < 17) return "Good Afternoon";
-    return "Good Evening";
+    if (currentHour < 12) return "Morning";
+    if (currentHour < 17) return "Afternoon";
+    return "Evening";
   };
 
   useEffect(() => {
-    const fetchEntries = async () => {
+    const fetchData = async () => {
       if (!user) return;
       
       try {
+        // Fetch profile
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('display_name')
+          .eq('id', user.id)
+          .single();
+        
+        if (profile?.display_name) {
+          setDisplayName(profile.display_name);
+        }
+
+        // Fetch latest AI insight
+        const { data: insights } = await supabase
+          .from('coaching_insights')
+          .select('content')
+          .eq('user_id', user.id)
+          .eq('is_read', false)
+          .order('created_at', { ascending: false })
+          .limit(1);
+        
+        if (insights && insights.length > 0) {
+          setLatestInsight(insights[0].content);
+        }
+
+        // Fetch entries
         const data = await api.getEntries(user.id);
         
-        const formattedEntries: Entry[] = data.map((entry) => ({
+        const formattedEntries: Entry[] = data.slice(0, 5).map((entry) => ({
           id: entry.id,
           date: new Date(entry.created_at),
           title: entry.title || "Untitled Entry",
@@ -68,186 +86,141 @@ const HomePage = () => {
         }));
         
         setEntries(formattedEntries);
-        
-        // Calculate stats
-        const now = new Date();
-        const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        const thisWeekEntries = formattedEntries.filter((e) => e.date >= weekAgo);
-        
-        // Calculate streak
-        let streak = 0;
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        
-        for (let i = 0; i < 365; i++) {
-          const checkDate = new Date(today);
-          checkDate.setDate(checkDate.getDate() - i);
-          const hasEntry = formattedEntries.some((e) => {
-            const entryDate = new Date(e.date);
-            entryDate.setHours(0, 0, 0, 0);
-            return entryDate.getTime() === checkDate.getTime();
-          });
-          
-          if (hasEntry) {
-            streak++;
-          } else if (i > 0) {
-            break;
-          }
-        }
-        
-        // Calculate top mood
-        const moodCounts: Record<string, number> = {};
-        formattedEntries.forEach((e) => {
-          moodCounts[e.mood] = (moodCounts[e.mood] || 0) + 1;
-        });
-        
-        const topMood = Object.entries(moodCounts).sort((a, b) => b[1] - a[1])[0]?.[0] as Mood || "happy";
-        
-        setStats({
-          thisWeek: thisWeekEntries.length,
-          streak,
-          topMood,
-        });
       } catch (error) {
-        console.error("Error fetching entries:", error);
+        console.error("Error fetching data:", error);
       } finally {
         setIsLoading(false);
       }
     };
     
-    fetchEntries();
+    fetchData();
   }, [user]);
 
-  const filteredEntries = entries.filter(
-    (entry) =>
-      entry.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      entry.preview.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const handleSignOut = async () => {
-    await signOut();
-    navigate("/auth");
-  };
+  const firstName = displayName?.split(' ')[0] || 'Alex';
 
   return (
-    <div className="min-h-screen gradient-warm pb-24">
+    <div className="min-h-screen gradient-warm pb-28">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border/50">
-        <div className="max-w-lg mx-auto px-4 py-4">
+      <header className="pt-12 pb-4 px-5">
+        <div className="max-w-lg mx-auto">
           <div className="flex items-center justify-between">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
             >
-              <p className="text-sm text-muted-foreground">{getGreeting()}</p>
-              <h1 className="text-xl font-semibold text-foreground">Your Journal</h1>
+              <p className="section-label mb-1">{formattedDate}</p>
+              <h1 className="text-2xl text-foreground">
+                <span className="font-normal">{getGreeting()}, </span>
+                <span className="font-display italic">{firstName}</span>
+              </h1>
             </motion.div>
             <motion.div
-              className="flex items-center gap-2"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
+              className="relative"
             >
-              <Button variant="ghost" size="icon" className="rounded-full">
-                <Bell className="w-5 h-5" />
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="rounded-full"
-                onClick={handleSignOut}
+              <Avatar 
+                className="w-12 h-12 border-2 border-primary/30 cursor-pointer"
+                onClick={() => navigate("/settings/profile")}
               >
-                <LogOut className="w-5 h-5" />
-              </Button>
+                <AvatarImage src="" />
+                <AvatarFallback className="bg-primary/20 text-primary font-medium">
+                  {firstName.charAt(0)}
+                </AvatarFallback>
+              </Avatar>
+              <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-400 rounded-full border-2 border-background" />
             </motion.div>
           </div>
-
-          {/* Search */}
-          <motion.div
-            className="mt-4 relative"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-          >
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Search entries..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 rounded-xl bg-muted/50 border-0 focus-visible:ring-2 focus-visible:ring-primary"
-            />
-          </motion.div>
         </div>
       </header>
 
       {/* Content */}
-      <main className="max-w-lg mx-auto px-4 py-6">
-        {/* Quick Stats */}
+      <main className="max-w-lg mx-auto px-5 space-y-6">
+        {/* AI Insight */}
         <motion.div
-          className="grid grid-cols-3 gap-3 mb-6"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
+          transition={{ delay: 0.1 }}
         >
-          <div className="glass-card rounded-2xl p-4 text-center">
-            <p className="text-2xl font-semibold text-foreground">{stats.thisWeek}</p>
-            <p className="text-xs text-muted-foreground">This Week</p>
-          </div>
-          <div className="glass-card rounded-2xl p-4 text-center">
-            <p className="text-2xl font-semibold text-foreground">{stats.streak}</p>
-            <p className="text-xs text-muted-foreground">Day Streak</p>
-          </div>
-          <div className="glass-card rounded-2xl p-4 text-center">
-            <p className="text-2xl font-semibold text-foreground">{moodEmojis[stats.topMood]}</p>
-            <p className="text-xs text-muted-foreground">Top Mood</p>
-          </div>
+          <AIInsightCard insight={latestInsight || undefined} userName={firstName} />
         </motion.div>
 
-        {/* Entries List */}
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-foreground">Recent Entries</h2>
-          <Button variant="ghost" size="sm" className="text-primary">
-            See All
-          </Button>
-        </div>
+        {/* Your Vitality */}
+        <section>
+          <h2 className="font-semibold text-foreground mb-3">Your Vitality</h2>
+          <VitalityCards />
+        </section>
 
-        {isLoading ? (
-          <div className="flex justify-center py-12">
-            <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+        {/* Today's Focus */}
+        <section>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-semibold text-foreground">Today's Focus</h2>
+            <button className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              View All
+            </button>
           </div>
-        ) : (
-          <div className="space-y-4">
-            {filteredEntries.map((entry, index) => (
-              <motion.div
-                key={entry.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 + index * 0.1 }}
-              >
-                <JournalEntry
-                  {...entry}
-                  onClick={() => navigate(`/entry/${entry.id}`)}
-                />
-              </motion.div>
-            ))}
-          </div>
-        )}
+          <FocusCards />
+        </section>
 
-        {!isLoading && filteredEntries.length === 0 && (
-          <motion.div
-            className="text-center py-12"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-          >
-            <span className="text-4xl mb-4 block">📝</span>
-            <p className="text-muted-foreground mb-4">No entries yet</p>
-            <Button 
-              className="gradient-amber"
-              onClick={() => navigate("/record")}
+        {/* Quick Capture */}
+        <section>
+          <h2 className="font-semibold text-foreground mb-3">Quick Capture</h2>
+          <QuickCapture />
+        </section>
+
+        {/* Recent Entries */}
+        <section>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="section-label">Recent Entries</h2>
+            <button 
+              className="text-sm font-medium text-foreground hover:text-primary transition-colors"
+              onClick={() => navigate("/calendar")}
             >
-              Create Your First Entry
-            </Button>
-          </motion.div>
-        )}
+              View All
+            </button>
+          </div>
+
+          {isLoading ? (
+            <div className="flex justify-center py-12">
+              <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : entries.length > 0 ? (
+            <div className="space-y-3">
+              {entries.slice(0, 3).map((entry, index) => (
+                <motion.div
+                  key={entry.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 + index * 0.1 }}
+                >
+                  <RecentEntryCard
+                    id={entry.id}
+                    title={entry.title}
+                    preview={entry.preview.substring(0, 50) + "..."}
+                    date={entry.date}
+                    mood={entry.mood}
+                    onClick={() => navigate(`/entry/${entry.id}`)}
+                  />
+                </motion.div>
+              ))}
+            </div>
+          ) : (
+            <motion.div
+              className="glass-premium p-8 text-center"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+            >
+              <span className="text-4xl mb-4 block">📝</span>
+              <p className="text-muted-foreground mb-4">No entries yet</p>
+              <button 
+                className="gradient-primary text-white px-6 py-2.5 rounded-full font-medium"
+                onClick={() => navigate("/record")}
+              >
+                Create Your First Entry
+              </button>
+            </motion.div>
+          )}
+        </section>
       </main>
 
       <BottomNav />

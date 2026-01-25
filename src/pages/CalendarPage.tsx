@@ -1,24 +1,39 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronDown, ArrowRight, MoreHorizontal } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import BottomNav from "@/components/BottomNav";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { format } from "date-fns";
 import type { Mood } from "@/components/MoodSelector";
 
-const moodColors: Record<Mood, string> = {
-  happy: "bg-mood-happy",
-  good: "bg-mood-good",
-  fine: "bg-mood-fine",
-  sad: "bg-mood-sad",
-  unhappy: "bg-mood-unhappy",
+// Sentiment color mapping
+const sentimentColors: Record<string, string> = {
+  happy: "bg-amber-400",
+  good: "bg-amber-400",
+  fine: "bg-sky-400",
+  calm: "bg-sky-400",
+  sad: "bg-rose-300",
+  anxious: "bg-rose-300",
+  unhappy: "bg-rose-300",
 };
+
+const sentimentLabels = [
+  { key: "good", label: "GOOD", color: "bg-amber-400" },
+  { key: "calm", label: "CALM", color: "bg-sky-400" },
+  { key: "anxious", label: "ANXIOUS", color: "bg-rose-300" },
+];
 
 interface CalendarEntry {
   mood: Mood;
   entryId: string;
+  title?: string;
+  preview?: string;
+  tags?: string[];
+  entryCount?: number;
+  photoCount?: number;
 }
 
 const CalendarPage = () => {
@@ -26,7 +41,7 @@ const CalendarPage = () => {
   const { user } = useAuth();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [calendarData, setCalendarData] = useState<Record<string, CalendarEntry>>({});
-  const [monthStats, setMonthStats] = useState({ entries: 0, positivePercent: 0 });
+  const [selectedDate, setSelectedDate] = useState<number | null>(new Date().getDate());
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -43,7 +58,7 @@ const CalendarPage = () => {
         
         const { data: entries, error } = await supabase
           .from('journal_entries')
-          .select('id, mood, created_at')
+          .select('id, mood, created_at, title, enhanced_text, original_transcription')
           .eq('user_id', user.id)
           .gte('created_at', startOfMonth)
           .lte('created_at', endOfMonth);
@@ -57,23 +72,16 @@ const CalendarPage = () => {
             dataMap[dateKey] = {
               mood: entry.mood as Mood,
               entryId: entry.id,
+              title: entry.title || "Content & Steady",
+              preview: entry.enhanced_text || entry.original_transcription || "",
+              tags: ["WORK", "HEALTH"],
+              entryCount: 2,
+              photoCount: 1,
             };
           }
         });
         
         setCalendarData(dataMap);
-        
-        // Calculate stats
-        const entryCount = Object.keys(dataMap).length;
-        const positiveCount = Object.values(dataMap).filter(
-          e => e.mood === 'happy' || e.mood === 'good'
-        ).length;
-        
-        setMonthStats({
-          entries: entryCount,
-          positivePercent: entryCount > 0 ? Math.round((positiveCount / entryCount) * 100) : 0,
-        });
-        
       } catch (error) {
         console.error('Error fetching calendar entries:', error);
       } finally {
@@ -90,25 +98,21 @@ const CalendarPage = () => {
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
     const daysInMonth = lastDay.getDate();
-    const startingDay = firstDay.getDay();
+    // Start week on Monday
+    let startingDay = firstDay.getDay() - 1;
+    if (startingDay < 0) startingDay = 6;
 
     const days: (number | null)[] = [];
     
-    // Add empty slots for days before the first of the month
     for (let i = 0; i < startingDay; i++) {
       days.push(null);
     }
     
-    // Add the days of the month
     for (let i = 1; i <= daysInMonth; i++) {
       days.push(i);
     }
 
     return days;
-  };
-
-  const formatMonthYear = (date: Date) => {
-    return date.toLocaleDateString("en-US", { month: "long", year: "numeric" });
   };
 
   const navigateMonth = (direction: number) => {
@@ -117,6 +121,7 @@ const CalendarPage = () => {
       newDate.setMonth(prev.getMonth() + direction);
       return newDate;
     });
+    setSelectedDate(null);
   };
 
   const getDateKey = (day: number) => {
@@ -127,63 +132,58 @@ const CalendarPage = () => {
   };
 
   const days = getDaysInMonth(currentDate);
-  const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const weekDays = ["M", "T", "W", "T", "F", "S", "S"];
+  const monthName = format(currentDate, "MMMM");
+  
+  const selectedEntry = selectedDate ? calendarData[getDateKey(selectedDate)] : null;
 
   return (
-    <div className="min-h-screen gradient-warm pb-24">
+    <div className="min-h-screen gradient-warm pb-28">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border/50">
-        <div className="max-w-lg mx-auto px-4 py-4">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="rounded-full"
-              onClick={() => navigate("/")}
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
+      <header className="pt-12 pb-4 px-5">
+        <div className="max-w-lg mx-auto">
+          <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-lg font-semibold text-foreground">Calendar</h1>
-              <p className="text-sm text-muted-foreground">Your journaling history</p>
+              <p className="section-label mb-1">VISUAL HISTORY</p>
+              <button className="flex items-center gap-2 text-2xl font-display">
+                {monthName}
+                <ChevronDown className="w-5 h-5 text-muted-foreground" />
+              </button>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="rounded-full w-10 h-10 bg-white/50 dark:bg-white/10"
+                onClick={() => navigateMonth(-1)}
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="rounded-full w-10 h-10 bg-white/50 dark:bg-white/10"
+                onClick={() => navigateMonth(1)}
+              >
+                <ChevronRight className="w-5 h-5" />
+              </Button>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Content */}
-      <main className="max-w-lg mx-auto px-4 py-6">
+      <main className="max-w-lg mx-auto px-5 space-y-6">
+        {/* Calendar Grid */}
         <motion.div
-          className="glass-card rounded-3xl p-6"
+          className="glass-premium p-5"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          {/* Month Navigation */}
-          <div className="flex items-center justify-between mb-6">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="rounded-full"
-              onClick={() => navigateMonth(-1)}
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </Button>
-            <h2 className="text-lg font-semibold">{formatMonthYear(currentDate)}</h2>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="rounded-full"
-              onClick={() => navigateMonth(1)}
-            >
-              <ChevronRight className="w-5 h-5" />
-            </Button>
-          </div>
-
           {/* Week Days Header */}
-          <div className="grid grid-cols-7 gap-1 mb-2">
-            {weekDays.map((day) => (
+          <div className="grid grid-cols-7 gap-1 mb-3">
+            {weekDays.map((day, i) => (
               <div
-                key={day}
+                key={i}
                 className="text-center text-xs text-muted-foreground font-medium py-2"
               >
                 {day}
@@ -209,73 +209,124 @@ const CalendarPage = () => {
                   day === new Date().getDate() &&
                   currentDate.getMonth() === new Date().getMonth() &&
                   currentDate.getFullYear() === new Date().getFullYear();
+                const isSelected = selectedDate === day;
+                const isPast = day < new Date().getDate() && 
+                  currentDate.getMonth() === new Date().getMonth() &&
+                  currentDate.getFullYear() === new Date().getFullYear();
+                const isFuture = day > new Date().getDate() || 
+                  currentDate.getMonth() > new Date().getMonth() ||
+                  currentDate.getFullYear() > new Date().getFullYear();
 
                 return (
                   <motion.button
                     key={day}
-                    className={`aspect-square rounded-xl flex flex-col items-center justify-center gap-1 transition-all ${
-                      isToday
-                        ? "ring-2 ring-primary"
-                        : ""
-                    } ${
-                      entry
-                        ? "glass-card-strong hover:scale-105"
-                        : "hover:bg-muted/50"
+                    className={`aspect-square rounded-full flex items-center justify-center text-sm transition-all ${
+                      isSelected
+                        ? "bg-charcoal dark:bg-primary text-white"
+                        : entry
+                        ? `${sentimentColors[entry.mood] || "bg-gray-300"} text-charcoal`
+                        : isFuture
+                        ? "text-muted-foreground/50"
+                        : "text-muted-foreground hover:bg-muted"
                     }`}
                     whileTap={{ scale: 0.95 }}
-                    onClick={() => {
-                      if (entry) {
-                        navigate(`/entry/${entry.entryId}`);
-                      }
-                    }}
+                    onClick={() => setSelectedDate(day)}
                   >
-                    <span className={`text-sm ${isToday ? "font-semibold text-primary" : "text-foreground"}`}>
-                      {day}
-                    </span>
-                    {entry && (
-                      <div className={`w-2 h-2 rounded-full ${moodColors[entry.mood]}`} />
-                    )}
+                    {day}
                   </motion.button>
                 );
               })}
             </div>
           )}
-        </motion.div>
 
-        {/* Mood Legend */}
-        <motion.div
-          className="glass-card rounded-2xl p-4 mt-6"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          <h3 className="text-sm font-medium text-muted-foreground mb-3">Mood Legend</h3>
-          <div className="flex flex-wrap gap-4">
-            {(["happy", "good", "fine", "sad", "unhappy"] as Mood[]).map((mood) => (
-              <div key={mood} className="flex items-center gap-2">
-                <div className={`w-3 h-3 rounded-full ${moodColors[mood]}`} />
-                <span className="text-sm capitalize">{mood}</span>
+          {/* Legend */}
+          <div className="flex items-center justify-center gap-6 mt-5 pt-4 border-t border-border/50">
+            {sentimentLabels.map((item) => (
+              <div key={item.key} className="flex items-center gap-2">
+                <div className={`w-3 h-3 rounded-full ${item.color}`} />
+                <span className="text-xs text-muted-foreground font-medium">{item.label}</span>
               </div>
             ))}
           </div>
         </motion.div>
 
-        {/* Stats */}
-        <motion.div
-          className="grid grid-cols-2 gap-4 mt-6"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          <div className="glass-card rounded-2xl p-4 text-center">
-            <p className="text-2xl font-semibold text-foreground">{monthStats.entries}</p>
-            <p className="text-xs text-muted-foreground">Entries this month</p>
-          </div>
-          <div className="glass-card rounded-2xl p-4 text-center">
-            <p className="text-2xl font-semibold text-foreground">{monthStats.positivePercent}%</p>
-            <p className="text-xs text-muted-foreground">Positive moods</p>
-          </div>
-        </motion.div>
+        {/* Selected Date Detail */}
+        {selectedDate && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <p className="section-label mb-3">
+              SELECTED: {format(currentDate, "MMM").toUpperCase()} {selectedDate}
+            </p>
+            
+            <div className="glass-premium p-5">
+              {selectedEntry ? (
+                <>
+                  {/* Header */}
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+                        <span className="text-2xl">🌤️</span>
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-foreground">{selectedEntry.title}</h3>
+                        <p className="text-sm text-muted-foreground">Most felt emotion today</p>
+                      </div>
+                    </div>
+                    <Button variant="ghost" size="icon" className="rounded-full">
+                      <MoreHorizontal className="w-5 h-5" />
+                    </Button>
+                  </div>
+
+                  {/* Quote */}
+                  <div className="bg-muted/50 rounded-xl p-4 mb-4">
+                    <p className="font-journal italic text-foreground leading-relaxed">
+                      "{selectedEntry.preview?.substring(0, 120)}..."
+                    </p>
+                  </div>
+
+                  {/* Tags */}
+                  <div className="flex gap-2 mb-4">
+                    {selectedEntry.tags?.map((tag) => (
+                      <span 
+                        key={tag}
+                        className="px-3 py-1 rounded-full text-xs font-medium bg-secondary text-secondary-foreground"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+
+                  {/* Footer */}
+                  <div className="flex items-center justify-between pt-4 border-t border-border/50">
+                    <span className="text-sm text-muted-foreground">
+                      {selectedEntry.entryCount} Entries · {selectedEntry.photoCount} Photo
+                    </span>
+                    <button 
+                      className="flex items-center gap-1 text-sm font-medium text-foreground hover:text-primary transition-colors"
+                      onClick={() => navigate(`/entry/${selectedEntry.entryId}`)}
+                    >
+                      View Full Day
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-8">
+                  <span className="text-4xl mb-3 block">📝</span>
+                  <p className="text-muted-foreground mb-4">No entries for this day</p>
+                  <Button
+                    className="gradient-primary rounded-full px-6"
+                    onClick={() => navigate("/record")}
+                  >
+                    Create Entry
+                  </Button>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
       </main>
 
       <BottomNav />
