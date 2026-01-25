@@ -26,17 +26,27 @@ const SettingsPage = () => {
   const [darkMode, setDarkMode] = useState(false);
 
   useEffect(() => {
-    // Load dark mode preference
+    // Load dark mode preference and apply it
     const saved = localStorage.getItem('darkMode');
     if (saved !== null) {
-      setDarkMode(saved === 'true');
+      const isDark = saved === 'true';
+      setDarkMode(isDark);
+      if (isDark) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
     }
   }, []);
 
   const handleDarkModeToggle = (enabled: boolean) => {
     setDarkMode(enabled);
     localStorage.setItem('darkMode', String(enabled));
-    // In a full implementation, this would apply the theme
+    if (enabled) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
   };
 
   const settingsSections = [
@@ -65,8 +75,8 @@ const SettingsPage = () => {
           value: darkMode,
           onChange: handleDarkModeToggle
         },
-        { icon: Palette, label: "Themes & Backgrounds", action: "navigate", route: "" },
-        { icon: Type, label: "Fonts", action: "navigate", route: "" },
+        { icon: Palette, label: "Themes & Backgrounds", action: "navigate", route: "/settings/themes" },
+        { icon: Type, label: "Fonts", action: "navigate", route: "/settings/fonts" },
       ],
     },
     {
