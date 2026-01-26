@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ChevronLeft, Settings, Pencil, Plus } from "lucide-react";
+import { ChevronLeft, Settings, Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Textarea } from "@/components/ui/textarea";
+import AvatarUpload from "@/components/premium/AvatarUpload";
 import BottomNav from "@/components/BottomNav";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -17,6 +17,7 @@ const ProfileSettingsPage = () => {
   const { user } = useAuth();
   
   const [displayName, setDisplayName] = useState("Alex Morgan");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [bio, setBio] = useState("Mindful Explorer · San Francisco");
   const [manifesto, setManifesto] = useState('"To live with intention, embrace the chaos, and find stillness in the motion."');
   const [isEditingManifesto, setIsEditingManifesto] = useState(false);
@@ -40,7 +41,7 @@ const ProfileSettingsPage = () => {
       try {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('display_name, interests')
+          .select('display_name, interests, avatar_url')
           .eq('id', user.id)
           .single();
         
@@ -49,6 +50,9 @@ const ProfileSettingsPage = () => {
         }
         if (profile?.interests) {
           setInterests(profile.interests);
+        }
+        if (profile?.avatar_url) {
+          setAvatarUrl(profile.avatar_url);
         }
 
         // Fetch entries for stats
@@ -156,16 +160,15 @@ const ProfileSettingsPage = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <div className="relative mb-4">
-            <Avatar className="w-28 h-28 border-4 border-primary/30">
-              <AvatarImage src="" />
-              <AvatarFallback className="bg-gradient-to-br from-primary/40 to-purple-400/40 text-2xl font-display">
-                {firstName.charAt(0)}
-              </AvatarFallback>
-            </Avatar>
-            <button className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-charcoal dark:bg-primary text-white flex items-center justify-center">
-              <Pencil className="w-4 h-4" />
-            </button>
+          <div className="mb-4">
+            {user && (
+              <AvatarUpload
+                userId={user.id}
+                currentAvatarUrl={avatarUrl}
+                displayName={displayName}
+                onAvatarChange={setAvatarUrl}
+              />
+            )}
           </div>
           <h1 className="text-2xl font-display font-semibold text-foreground">{displayName}</h1>
           <p className="text-muted-foreground">{bio}</p>

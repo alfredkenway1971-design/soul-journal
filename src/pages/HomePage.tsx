@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useJournalAPI } from "@/hooks/useJournalAPI";
+import { useDailyTracking } from "@/hooks/useDailyTracking";
 import { supabase } from "@/integrations/supabase/client";
 import BottomNav from "@/components/BottomNav";
 import AIInsightCard from "@/components/premium/AIInsightCard";
@@ -10,6 +11,7 @@ import VitalityCards from "@/components/premium/VitalityCards";
 import FocusCards from "@/components/premium/FocusCards";
 import QuickCapture from "@/components/premium/QuickCapture";
 import RecentEntryCard from "@/components/premium/RecentEntryCard";
+import { SleepModal, HydrationModal } from "@/components/premium/TrackingModals";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
 import type { Mood } from "@/components/MoodSelector";
@@ -27,11 +29,15 @@ const HomePage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const api = useJournalAPI();
+  const { tracking, updateSleep, updateHydration } = useDailyTracking();
   
   const [entries, setEntries] = useState<Entry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [displayName, setDisplayName] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [latestInsight, setLatestInsight] = useState<string | null>(null);
+  const [showSleepModal, setShowSleepModal] = useState(false);
+  const [showHydrationModal, setShowHydrationModal] = useState(false);
   
   const currentDate = new Date();
   const dayOfWeek = format(currentDate, "EEEE");
@@ -52,12 +58,15 @@ const HomePage = () => {
         // Fetch profile
         const { data: profile } = await supabase
           .from('profiles')
-          .select('display_name')
+          .select('display_name, avatar_url')
           .eq('id', user.id)
           .single();
         
         if (profile?.display_name) {
           setDisplayName(profile.display_name);
+        }
+        if (profile?.avatar_url) {
+          setAvatarUrl(profile.avatar_url);
         }
 
         // Fetch latest AI insight
@@ -123,7 +132,7 @@ const HomePage = () => {
                 className="w-12 h-12 border-2 border-primary/30 cursor-pointer"
                 onClick={() => navigate("/settings/profile")}
               >
-                <AvatarImage src="" />
+                <AvatarImage src={avatarUrl || undefined} />
                 <AvatarFallback className="bg-primary/20 text-primary font-medium">
                   {firstName.charAt(0)}
                 </AvatarFallback>
@@ -148,18 +157,36 @@ const HomePage = () => {
         {/* Your Vitality */}
         <section>
           <h2 className="font-semibold text-foreground mb-3">Your Vitality</h2>
-          <VitalityCards />
+          <VitalityCards 
+            sleepHours={tracking?.sleep_hours || undefined}
+            onSleepClick={() => setShowSleepModal(true)}
+          />
         </section>
 
         {/* Today's Focus */}
         <section>
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-semibold text-foreground">Today's Focus</h2>
-            <button className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-              View All
+            <button 
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              onClick={() => setShowHydrationModal(true)}
+            >
+              Log Water
             </button>
           </div>
-          <FocusCards />
+          <FocusCards 
+            items={[
+              { 
+                id: "1", 
+                icon: "hydration", 
+                value: `${Math.round(((tracking?.hydration_glasses || 0) / (tracking?.hydration_goal || 8)) * 100)}%`, 
+                label: "Hydration", 
+                isDark: true 
+              },
+              { id: "2", icon: "reading", value: "0/15", label: "Reading", progress: 0 },
+              { id: "3", icon: "running", value: "3km", label: "Running", progress: 100 },
+            ]}
+          />
         </section>
 
         {/* Quick Capture */}
@@ -222,6 +249,21 @@ const HomePage = () => {
           )}
         </section>
       </main>
+
+      {/* Tracking Modals */}
+      <SleepModal
+        isOpen={showSleepModal}
+        onClose={() => setShowSleepModal(false)}
+        currentHours={tracking?.sleep_hours || null}
+        onSave={updateSleep}
+      />
+      <HydrationModal
+        isOpen={showHydrationModal}
+        onClose={() => setShowHydrationModal(false)}
+        currentGlasses={tracking?.hydration_glasses || 0}
+        goal={tracking?.hydration_goal || 8}
+        onSave={updateHydration}
+      />
 
       <BottomNav />
     </div>
