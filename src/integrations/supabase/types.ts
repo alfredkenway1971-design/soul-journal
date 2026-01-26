@@ -53,6 +53,47 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_tracking: {
+        Row: {
+          created_at: string
+          date: string
+          hydration_glasses: number | null
+          hydration_goal: number | null
+          id: string
+          sleep_hours: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date?: string
+          hydration_glasses?: number | null
+          hydration_goal?: number | null
+          id?: string
+          sleep_hours?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          hydration_glasses?: number | null
+          hydration_goal?: number | null
+          id?: string
+          sleep_hours?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_tracking_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       entry_media: {
         Row: {
           created_at: string
@@ -134,6 +175,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_url: string | null
           created_at: string
           display_name: string | null
           goals: Json | null
@@ -144,6 +186,7 @@ export type Database = {
           voice_clone_id: string | null
         }
         Insert: {
+          avatar_url?: string | null
           created_at?: string
           display_name?: string | null
           goals?: Json | null
@@ -154,6 +197,7 @@ export type Database = {
           voice_clone_id?: string | null
         }
         Update: {
+          avatar_url?: string | null
           created_at?: string
           display_name?: string | null
           goals?: Json | null
