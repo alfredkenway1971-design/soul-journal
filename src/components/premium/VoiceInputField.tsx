@@ -1,0 +1,220 @@
+import { useState, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Mic, Square, Loader2, Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+
+interface VoiceInputFieldProps {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  summarize?: boolean;
+  summaryPrompt?: string;
+  label?: string;
+}
+
+const VoiceInputField = ({ 
+  value, 
+  onChange, 
+  placeholder = "Type or speak...",
+  summarize = false,
+  summaryPrompt = "Summarize this into a concise list of key points:",
+  label
+}: VoiceInputFieldProps) => {
+  const [isRecording, setIsRecording] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const { toast } = useToast();
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      chunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) {
+          chunksRef.current.push(e.data);
+        }
+      };
+
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(chunksRef.current, { type: "audio/webm" });
+        stream.getTracks().forEach((track) => track.stop());
+        await processAudio(audioBlob);
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+    } catch (error) {
+      console.error("Error starting recording:", error);
+      toast({
+        title: "Microphone Error",
+        description: "Could not access microphone. Please check permissions.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+  };
+
+  const processAudio = async (audioBlob: Blob) => {
+    setIsProcessing(true);
+
+    try {
+      // Convert to base64
+      const reader = new FileReader();
+      const base64Promise = new Promise<string>((resolve, reject) => {
+        reader.onloadend = () => {
+          const base64 = (reader.result as string).split(",")[1];
+          resolve(base64);
+        };
+        reader.onerror = reject;
+      });
+      reader.readAsDataURL(audioBlob);
+      const base64Audio = await base64Promise;
+
+      // Transcribe
+      const { data: transcribeData, error: transcribeError } = await supabase.functions.invoke("transcribe-audio", {
+        body: { audio: base64Audio },
+      });
+
+      if (transcribeError) throw new Error(transcribeError.message);
+      if (transcribeData.error) throw new Error(transcribeData.error);
+
+      let resultText = transcribeData.text;
+
+      // Optionally summarize with AI
+      if (summarize && resultText) {
+        const { data: enhanceData, error: enhanceError } = await supabase.functions.invoke("enhance-text", {
+          body: { 
+            text: resultText, 
+            tone: 'summary',
+            customPrompt: summaryPrompt
+          },
+        });
+
+        if (!enhanceError && enhanceData?.enhancedText) {
+          resultText = enhanceData.enhancedText;
+        }
+      }
+
+      if (resultText) {
+        onChange(value ? `${value}\n${resultText}` : resultText);
+        toast({
+          title: summarize ? "Recorded & Summarized" : "Recorded",
+          description: "Your voice has been transcribed.",
+        });
+      }
+    } catch (error) {
+      console.error("Error processing audio:", error);
+      toast({
+        title: "Transcription Failed",
+        description: "Could not transcribe your audio. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  return (
+    <div className="space-y-2">
+      {label && (
+        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+          <Mic className="w-4 h-4" />
+          <span>{label}</span>
+        </div>
+      )}
+      
+      <div className="relative">
+        <Textarea
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          className="min-h-[100px] pr-20 rounded-xl resize-none"
+        />
+        
+        <div className="absolute bottom-3 right-3 flex items-center gap-2">
+          <AnimatePresence mode="wait">
+            {isProcessing ? (
+              <motion.div
+                key="processing"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                className="flex items-center gap-1 text-muted-foreground"
+              >
+                <Loader2 className="w-4 h-4 animate-spin" />
+              </motion.div>
+            ) : isRecording ? (
+              <motion.div
+                key="recording"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                className="flex items-center gap-2"
+              >
+                <motion.div
+                  className="w-2 h-2 bg-destructive rounded-full"
+                  animate={{ opacity: [1, 0.5, 1] }}
+                  transition={{ duration: 1, repeat: Infinity }}
+                />
+                <Button
+                  size="icon"
+                  variant="destructive"
+                  className="rounded-full h-8 w-8"
+                  onClick={stopRecording}
+                >
+                  <Square className="w-3 h-3" />
+                </Button>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="idle"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+              >
+                <Button
+                  size="icon"
+                  variant="outline"
+                  className="rounded-full h-8 w-8"
+                  onClick={startRecording}
+                  title="Record voice"
+                >
+                  <Mic className="w-4 h-4" />
+                </Button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+          
+          {summarize && (
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <Sparkles className="w-3 h-3" />
+              <span>AI</span>
+            </div>
+          )}
+        </div>
+      </div>
+      
+      <p className="text-xs text-muted-foreground">
+        {summarize 
+          ? "Speak naturally - AI will summarize your thoughts" 
+          : "Type or tap the mic to speak"
+        }
+      </p>
+    </div>
+  );
+};
+
+export default VoiceInputField;

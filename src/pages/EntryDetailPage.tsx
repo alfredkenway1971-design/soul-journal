@@ -1,11 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Play, Pause, Trash2, Volume2, ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowLeft, Play, Pause, Trash2, Volume2, ChevronDown, ChevronUp, Pencil, Check, X } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useJournalAPI } from "@/hooks/useJournalAPI";
+import { supabase } from "@/integrations/supabase/client";
 import BottomNav from "@/components/BottomNav";
 import type { Mood } from "@/components/MoodSelector";
 import {
@@ -60,6 +62,9 @@ const EntryDetailPage = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isGeneratingVoice, setIsGeneratingVoice] = useState(false);
   const [generatedAudioUrl, setGeneratedAudioUrl] = useState<string | null>(null);
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [editedTitle, setEditedTitle] = useState("");
+  const [isSavingTitle, setIsSavingTitle] = useState(false);
   
   const audioRef = useRef<HTMLAudioElement>(null);
 
@@ -113,6 +118,46 @@ const EntryDetailPage = () => {
         variant: "destructive",
       });
     }
+  };
+
+  const handleEditTitle = () => {
+    setEditedTitle(entry?.title || "");
+    setIsEditingTitle(true);
+  };
+
+  const handleSaveTitle = async () => {
+    if (!id || !editedTitle.trim()) return;
+    
+    setIsSavingTitle(true);
+    try {
+      const { error } = await supabase
+        .from('journal_entries')
+        .update({ title: editedTitle.trim() })
+        .eq('id', id);
+      
+      if (error) throw error;
+      
+      setEntry(prev => prev ? { ...prev, title: editedTitle.trim() } : null);
+      setIsEditingTitle(false);
+      toast({
+        title: "Title Updated",
+        description: "Your entry title has been saved.",
+      });
+    } catch (error) {
+      console.error('Error updating title:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update title",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSavingTitle(false);
+    }
+  };
+
+  const handleCancelEditTitle = () => {
+    setIsEditingTitle(false);
+    setEditedTitle("");
   };
 
   const handleGenerateVoice = async () => {
@@ -223,10 +268,52 @@ const EntryDetailPage = () => {
               >
                 <ArrowLeft className="w-5 h-5" />
               </Button>
-              <div>
-                <h1 className="text-lg font-semibold text-foreground">
-                  {entry.title || "Journal Entry"}
-                </h1>
+              <div className="flex-1 min-w-0">
+                {isEditingTitle ? (
+                  <div className="flex items-center gap-2">
+                    <Input
+                      value={editedTitle}
+                      onChange={(e) => setEditedTitle(e.target.value)}
+                      className="h-8 text-base font-semibold"
+                      autoFocus
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleSaveTitle();
+                        if (e.key === 'Escape') handleCancelEditTitle();
+                      }}
+                    />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-green-500"
+                      onClick={handleSaveTitle}
+                      disabled={isSavingTitle}
+                    >
+                      <Check className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={handleCancelEditTitle}
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <h1 className="text-lg font-semibold text-foreground truncate">
+                      {entry.title || "Journal Entry"}
+                    </h1>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 flex-shrink-0"
+                      onClick={handleEditTitle}
+                    >
+                      <Pencil className="w-3 h-3" />
+                    </Button>
+                  </div>
+                )}
                 <p className="text-sm text-muted-foreground">
                   {formatDate(entry.created_at)}
                 </p>
@@ -267,7 +354,7 @@ const EntryDetailPage = () => {
           animate={{ opacity: 1, y: 0 }}
         >
           <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
-            <span className="text-3xl">{moodEmojis[entry.mood]}</span>
+            <span className="text-3xl">{moodEmojis[entry.mood as Mood]}</span>
           </div>
           <div>
             <p className="font-medium capitalize text-foreground">{entry.mood}</p>

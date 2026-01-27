@@ -82,13 +82,7 @@ const SettingsPage = () => {
     {
       title: "Notifications",
       items: [
-        { 
-          icon: Bell, 
-          label: "Daily Reminders", 
-          action: "toggle",
-          value: notifications,
-          onChange: setNotifications
-        },
+        { icon: Bell, label: "Daily Reminders", action: "navigate", route: "/settings/reminders" },
       ],
     },
     {
