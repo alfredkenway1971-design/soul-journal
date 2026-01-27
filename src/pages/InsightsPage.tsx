@@ -4,6 +4,7 @@ import { ArrowLeft, TrendingUp, Calendar, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import InsightsChart from "@/components/InsightsChart";
+import WeeklyMoodSummary from "@/components/premium/WeeklyMoodSummary";
 import BottomNav from "@/components/BottomNav";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -268,6 +269,9 @@ const InsightsPage = () => {
                 <p className="text-xl font-semibold text-foreground">{avgLength} min</p>
               </div>
             </motion.div>
+
+            {/* Weekly Mood Summary */}
+            <WeeklyMoodSummary />
 
             {/* Mood Distribution Chart */}
             {moodData.length > 0 && (

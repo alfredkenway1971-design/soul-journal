@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Target, Plus, X, Sparkles, Heart, Briefcase, Brain, Users, Zap, Mic } from "lucide-react";
+import { ArrowLeft, Target, Plus, X, Sparkles, Heart, Briefcase, Brain, Users, Zap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import VoiceGoalInput from "@/components/VoiceGoalInput";
+import VoiceInputField from "@/components/premium/VoiceInputField";
 
 interface Goal {
   id: string;
@@ -47,6 +47,7 @@ const GoalsSettingsPage = () => {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [interests, setInterests] = useState<string[]>([]);
   const [newGoal, setNewGoal] = useState("");
+  const [newInterest, setNewInterest] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -137,6 +138,16 @@ const GoalsSettingsPage = () => {
     );
   };
 
+  const addCustomInterest = () => {
+    if (!newInterest.trim()) return;
+    if (interests.includes(newInterest.trim())) {
+      toast({ title: "Interest already exists", variant: "destructive" });
+      return;
+    }
+    setInterests([...interests, newInterest.trim()]);
+    setNewInterest("");
+  };
+
   const getIconComponent = (iconName: string) => {
     return iconMap[iconName] || Target;
   };
@@ -221,29 +232,23 @@ const GoalsSettingsPage = () => {
           </AnimatePresence>
 
           {/* Add Custom Goal */}
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Mic className="w-4 h-4" />
-              <span>Speak or type your goal</span>
-            </div>
-            <div className="flex gap-2">
-              <Input
-                value={newGoal}
-                onChange={(e) => setNewGoal(e.target.value)}
-                placeholder="Add a custom goal..."
-                className="rounded-xl"
-                onKeyDown={(e) => e.key === "Enter" && addGoal()}
-              />
-              <VoiceGoalInput onGoalTranscribed={(text) => setNewGoal(text)} />
-              <Button 
-                onClick={() => addGoal()} 
-                size="icon" 
-                className="rounded-xl"
-                disabled={!newGoal.trim()}
-              >
-                <Plus className="w-4 h-4" />
-              </Button>
-            </div>
+          <div className="space-y-3">
+            <VoiceInputField
+              value={newGoal}
+              onChange={setNewGoal}
+              placeholder="Type your goal or tap mic to speak..."
+              summarize={true}
+              summaryPrompt="Extract and summarize the main goal from this text in one clear, actionable sentence:"
+              label="Speak or type your goal"
+            />
+            <Button 
+              onClick={() => addGoal()} 
+              className="w-full rounded-xl"
+              disabled={!newGoal.trim()}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add Goal
+            </Button>
           </div>
 
           {/* Preset Goals */}
@@ -277,24 +282,68 @@ const GoalsSettingsPage = () => {
             <h2 className="font-semibold text-foreground">Your Interests</h2>
           </div>
           <p className="text-sm text-muted-foreground">
-            Select topics you care about for more relevant insights.
+            Select topics you care about or add your own for more relevant insights.
           </p>
           
-          <div className="flex flex-wrap gap-2">
-            {PRESET_INTERESTS.map((interest) => (
-              <Badge
-                key={interest}
-                variant={interests.includes(interest) ? "default" : "outline"}
-                className={`cursor-pointer transition-all ${
-                  interests.includes(interest) 
-                    ? "bg-primary text-primary-foreground" 
-                    : "hover:bg-primary/10"
-                }`}
-                onClick={() => toggleInterest(interest)}
-              >
-                {interest}
-              </Badge>
-            ))}
+          {/* Voice input for custom interests */}
+          <VoiceInputField
+            value={newInterest}
+            onChange={setNewInterest}
+            placeholder="Describe your interests..."
+            summarize={true}
+            summaryPrompt="Extract a short list of interest topics (comma-separated) from this text:"
+            label="Speak your interests"
+          />
+          
+          {newInterest && (
+            <Button 
+              onClick={addCustomInterest} 
+              variant="outline"
+              className="w-full rounded-xl"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add Custom Interest
+            </Button>
+          )}
+          
+          {/* Current interests (custom + selected presets) */}
+          {interests.length > 0 && (
+            <div className="space-y-2">
+              <Label className="text-sm text-muted-foreground">Your interests:</Label>
+              <div className="flex flex-wrap gap-2">
+                {interests.map((interest) => (
+                  <Badge
+                    key={interest}
+                    variant="default"
+                    className="cursor-pointer bg-primary text-primary-foreground gap-1"
+                  >
+                    {interest}
+                    <X 
+                      className="w-3 h-3 ml-1" 
+                      onClick={() => toggleInterest(interest)} 
+                    />
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {/* Preset interests */}
+          <div className="space-y-2">
+            <Label className="text-sm text-muted-foreground">Quick add:</Label>
+            <div className="flex flex-wrap gap-2">
+              {PRESET_INTERESTS.filter(i => !interests.includes(i)).map((interest) => (
+                <Badge
+                  key={interest}
+                  variant="outline"
+                  className="cursor-pointer hover:bg-primary/10 transition-all"
+                  onClick={() => toggleInterest(interest)}
+                >
+                  <Plus className="w-3 h-3 mr-1" />
+                  {interest}
+                </Badge>
+              ))}
+            </div>
           </div>
         </motion.div>
 
