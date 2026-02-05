@@ -60,6 +60,10 @@ export type Database = {
           hydration_glasses: number | null
           hydration_goal: number | null
           id: string
+          reading_goal: number | null
+          reading_pages: number | null
+          running_goal: number | null
+          running_km: number | null
           sleep_hours: number | null
           updated_at: string
           user_id: string
@@ -70,6 +74,10 @@ export type Database = {
           hydration_glasses?: number | null
           hydration_goal?: number | null
           id?: string
+          reading_goal?: number | null
+          reading_pages?: number | null
+          running_goal?: number | null
+          running_km?: number | null
           sleep_hours?: number | null
           updated_at?: string
           user_id: string
@@ -80,6 +88,10 @@ export type Database = {
           hydration_glasses?: number | null
           hydration_goal?: number | null
           id?: string
+          reading_goal?: number | null
+          reading_pages?: number | null
+          running_goal?: number | null
+          running_km?: number | null
           sleep_hours?: number | null
           updated_at?: string
           user_id?: string

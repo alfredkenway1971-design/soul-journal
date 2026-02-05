@@ -1,29 +1,31 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ChevronLeft, ChevronRight, ChevronDown, ArrowRight, MoreHorizontal } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronDown, ArrowRight, MoreHorizontal, Image } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import BottomNav from "@/components/BottomNav";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { format } from "date-fns";
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, isFuture } from "date-fns";
 import type { Mood } from "@/components/MoodSelector";
 
-// Sentiment color mapping
-const sentimentColors: Record<string, string> = {
-  happy: "bg-amber-400",
-  good: "bg-amber-400",
-  fine: "bg-sky-400",
-  calm: "bg-sky-400",
-  sad: "bg-rose-300",
-  anxious: "bg-rose-300",
-  unhappy: "bg-rose-300",
+// Enhanced sentiment color mapping with intensity
+const getMoodColor = (mood: Mood, entryCount: number = 1) => {
+  const colorMap: Record<Mood, string> = {
+    happy: "bg-amber-400",
+    good: "bg-amber-300",
+    fine: "bg-sky-400",
+    sad: "bg-rose-300",
+    unhappy: "bg-rose-400",
+  };
+  
+  return colorMap[mood] || "bg-muted";
 };
 
 const sentimentLabels = [
-  { key: "good", label: "GOOD", color: "bg-amber-400" },
-  { key: "calm", label: "CALM", color: "bg-sky-400" },
-  { key: "anxious", label: "ANXIOUS", color: "bg-rose-300" },
+  { key: "happy", label: "HAPPY", color: "bg-amber-400" },
+  { key: "fine", label: "FINE", color: "bg-sky-400" },
+  { key: "sad", label: "SAD", color: "bg-rose-300" },
 ];
 
 interface CalendarEntry {
@@ -32,8 +34,9 @@ interface CalendarEntry {
   title?: string;
   preview?: string;
   tags?: string[];
-  entryCount?: number;
-  photoCount?: number;
+  entryCount: number;
+  photoCount: number;
+  entries: Array<{ id: string; title: string; mood: Mood }>;
 }
 
 const CalendarPage = () => {
@@ -41,7 +44,7 @@ const CalendarPage = () => {
   const { user } = useAuth();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [calendarData, setCalendarData] = useState<Record<string, CalendarEntry>>({});
-  const [selectedDate, setSelectedDate] = useState<number | null>(new Date().getDate());
+  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -51,33 +54,65 @@ const CalendarPage = () => {
       setLoading(true);
       
       try {
-        const year = currentDate.getFullYear();
-        const month = currentDate.getMonth();
-        const startOfMonth = new Date(year, month, 1).toISOString();
-        const endOfMonth = new Date(year, month + 1, 0, 23, 59, 59).toISOString();
+        const monthStart = startOfMonth(currentDate);
+        const monthEnd = endOfMonth(currentDate);
         
+        // Fetch entries
         const { data: entries, error } = await supabase
           .from('journal_entries')
           .select('id, mood, created_at, title, enhanced_text, original_transcription')
           .eq('user_id', user.id)
-          .gte('created_at', startOfMonth)
-          .lte('created_at', endOfMonth);
+          .gte('created_at', monthStart.toISOString())
+          .lte('created_at', monthEnd.toISOString())
+          .order('created_at', { ascending: false });
         
         if (error) throw error;
+
+        // Fetch media counts
+        const entryIds = entries?.map(e => e.id) || [];
+        let mediaCounts: Record<string, number> = {};
         
+        if (entryIds.length > 0) {
+          const { data: media } = await supabase
+            .from('entry_media')
+            .select('entry_id')
+            .in('entry_id', entryIds);
+          
+          media?.forEach(m => {
+            mediaCounts[m.entry_id] = (mediaCounts[m.entry_id] || 0) + 1;
+          });
+        }
+        
+        // Group entries by date
         const dataMap: Record<string, CalendarEntry> = {};
         entries?.forEach(entry => {
-          const dateKey = new Date(entry.created_at).toISOString().split('T')[0];
-          if (!dataMap[dateKey] && entry.mood) {
+          const dateKey = format(new Date(entry.created_at), 'yyyy-MM-dd');
+          
+          if (!dataMap[dateKey]) {
             dataMap[dateKey] = {
-              mood: entry.mood as Mood,
+              mood: (entry.mood as Mood) || "fine",
               entryId: entry.id,
-              title: entry.title || "Content & Steady",
+              title: entry.title || "Journal Entry",
               preview: entry.enhanced_text || entry.original_transcription || "",
-              tags: ["WORK", "HEALTH"],
-              entryCount: 2,
-              photoCount: 1,
+              entryCount: 0,
+              photoCount: 0,
+              entries: [],
             };
+          }
+          
+          dataMap[dateKey].entryCount++;
+          dataMap[dateKey].photoCount += mediaCounts[entry.id] || 0;
+          dataMap[dateKey].entries.push({
+            id: entry.id,
+            title: entry.title || "Untitled",
+            mood: (entry.mood as Mood) || "fine",
+          });
+          
+          // Set dominant mood (most recent for now, could be changed to most common)
+          if (dataMap[dateKey].entries.length === 1) {
+            dataMap[dateKey].mood = (entry.mood as Mood) || "fine";
+            dataMap[dateKey].title = entry.title || "Journal Entry";
+            dataMap[dateKey].preview = entry.enhanced_text || entry.original_transcription || "";
           }
         });
         
@@ -92,27 +127,17 @@ const CalendarPage = () => {
     fetchEntriesForMonth();
   }, [user, currentDate]);
 
-  const getDaysInMonth = (date: Date) => {
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const daysInMonth = lastDay.getDate();
-    // Start week on Monday
-    let startingDay = firstDay.getDay() - 1;
-    if (startingDay < 0) startingDay = 6;
-
-    const days: (number | null)[] = [];
+  const getDaysInMonth = () => {
+    const monthStart = startOfMonth(currentDate);
+    const monthEnd = endOfMonth(currentDate);
+    const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
     
-    for (let i = 0; i < startingDay; i++) {
-      days.push(null);
-    }
+    // Add padding for week start (Monday)
+    const firstDayOfWeek = monthStart.getDay();
+    const paddingDays = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1;
+    const paddedDays: (Date | null)[] = Array(paddingDays).fill(null);
     
-    for (let i = 1; i <= daysInMonth; i++) {
-      days.push(i);
-    }
-
-    return days;
+    return [...paddedDays, ...days];
   };
 
   const navigateMonth = (direction: number) => {
@@ -124,18 +149,21 @@ const CalendarPage = () => {
     setSelectedDate(null);
   };
 
-  const getDateKey = (day: number) => {
-    const year = currentDate.getFullYear();
-    const month = String(currentDate.getMonth() + 1).padStart(2, "0");
-    const dayStr = String(day).padStart(2, "0");
-    return `${year}-${month}-${dayStr}`;
-  };
+  const getDateKey = (date: Date) => format(date, 'yyyy-MM-dd');
 
-  const days = getDaysInMonth(currentDate);
+  const days = getDaysInMonth();
   const weekDays = ["M", "T", "W", "T", "F", "S", "S"];
   const monthName = format(currentDate, "MMMM");
   
   const selectedEntry = selectedDate ? calendarData[getDateKey(selectedDate)] : null;
+
+  // Calculate mood summary for the month
+  const moodSummary = Object.values(calendarData).reduce((acc, entry) => {
+    acc[entry.mood] = (acc[entry.mood] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const totalEntries = Object.values(calendarData).reduce((sum, e) => sum + e.entryCount, 0);
 
   return (
     <div className="min-h-screen gradient-warm pb-28">
@@ -173,11 +201,36 @@ const CalendarPage = () => {
       </header>
 
       <main className="max-w-lg mx-auto px-5 space-y-6">
+        {/* Month Summary */}
+        <motion.div
+          className="glass-premium p-4"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-muted-foreground">This month</p>
+              <p className="text-2xl font-semibold text-foreground">{totalEntries} entries</p>
+            </div>
+            <div className="flex gap-1">
+              {Object.entries(moodSummary).slice(0, 4).map(([mood, count]) => (
+                <div
+                  key={mood}
+                  className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium ${getMoodColor(mood as Mood)} text-charcoal`}
+                >
+                  {count}
+                </div>
+              ))}
+            </div>
+          </div>
+        </motion.div>
+
         {/* Calendar Grid */}
         <motion.div
           className="glass-premium p-5"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
         >
           {/* Week Days Header */}
           <div className="grid grid-cols-7 gap-1 mb-3">
@@ -205,34 +258,36 @@ const CalendarPage = () => {
 
                 const dateKey = getDateKey(day);
                 const entry = calendarData[dateKey];
-                const isToday = 
-                  day === new Date().getDate() &&
-                  currentDate.getMonth() === new Date().getMonth() &&
-                  currentDate.getFullYear() === new Date().getFullYear();
-                const isSelected = selectedDate === day;
-                const isPast = day < new Date().getDate() && 
-                  currentDate.getMonth() === new Date().getMonth() &&
-                  currentDate.getFullYear() === new Date().getFullYear();
-                const isFuture = day > new Date().getDate() || 
-                  currentDate.getMonth() > new Date().getMonth() ||
-                  currentDate.getFullYear() > new Date().getFullYear();
+                const isSelected = selectedDate && getDateKey(selectedDate) === dateKey;
+                const isTodayDate = isToday(day);
+                const isFutureDate = isFuture(day);
 
                 return (
                   <motion.button
-                    key={day}
-                    className={`aspect-square rounded-full flex items-center justify-center text-sm transition-all ${
+                    key={dateKey}
+                    className={`aspect-square rounded-full flex items-center justify-center text-sm transition-all relative ${
                       isSelected
-                        ? "bg-charcoal dark:bg-primary text-white"
+                        ? "bg-charcoal dark:bg-primary text-white ring-2 ring-offset-2 ring-primary"
                         : entry
-                        ? `${sentimentColors[entry.mood] || "bg-gray-300"} text-charcoal`
-                        : isFuture
-                        ? "text-muted-foreground/50"
+                        ? `${getMoodColor(entry.mood, entry.entryCount)} text-charcoal font-medium`
+                        : isFutureDate
+                        ? "text-muted-foreground/40"
                         : "text-muted-foreground hover:bg-muted"
                     }`}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => setSelectedDate(day)}
                   >
-                    {day}
+                    {day.getDate()}
+                    {/* Entry count indicator */}
+                    {entry && entry.entryCount > 1 && (
+                      <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-charcoal text-white text-[10px] rounded-full flex items-center justify-center">
+                        {entry.entryCount}
+                      </span>
+                    )}
+                    {/* Today indicator */}
+                    {isTodayDate && !isSelected && !entry && (
+                      <span className="absolute bottom-0.5 w-1.5 h-1.5 bg-primary rounded-full" />
+                    )}
                   </motion.button>
                 );
               })}
@@ -240,11 +295,11 @@ const CalendarPage = () => {
           )}
 
           {/* Legend */}
-          <div className="flex items-center justify-center gap-6 mt-5 pt-4 border-t border-border/50">
+          <div className="flex items-center justify-center gap-4 mt-5 pt-4 border-t border-border/50">
             {sentimentLabels.map((item) => (
-              <div key={item.key} className="flex items-center gap-2">
+              <div key={item.key} className="flex items-center gap-1.5">
                 <div className={`w-3 h-3 rounded-full ${item.color}`} />
-                <span className="text-xs text-muted-foreground font-medium">{item.label}</span>
+                <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">{item.label}</span>
               </div>
             ))}
           </div>
@@ -255,9 +310,10 @@ const CalendarPage = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
+            key={getDateKey(selectedDate)}
           >
             <p className="section-label mb-3">
-              SELECTED: {format(currentDate, "MMM").toUpperCase()} {selectedDate}
+              {format(selectedDate, "EEEE, MMMM d").toUpperCase()}
             </p>
             
             <div className="glass-premium p-5">
@@ -266,12 +322,17 @@ const CalendarPage = () => {
                   {/* Header */}
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
-                        <span className="text-2xl">🌤️</span>
+                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${getMoodColor(selectedEntry.mood)}`}>
+                        <span className="text-2xl">
+                          {selectedEntry.mood === "happy" ? "😊" :
+                           selectedEntry.mood === "good" ? "🙂" :
+                           selectedEntry.mood === "fine" ? "😐" :
+                           selectedEntry.mood === "sad" ? "😔" : "😢"}
+                        </span>
                       </div>
                       <div>
                         <h3 className="font-semibold text-foreground">{selectedEntry.title}</h3>
-                        <p className="text-sm text-muted-foreground">Most felt emotion today</p>
+                        <p className="text-sm text-muted-foreground capitalize">{selectedEntry.mood}</p>
                       </div>
                     </div>
                     <Button variant="ghost" size="icon" className="rounded-full">
@@ -282,32 +343,51 @@ const CalendarPage = () => {
                   {/* Quote */}
                   <div className="bg-muted/50 rounded-xl p-4 mb-4">
                     <p className="font-journal italic text-foreground leading-relaxed">
-                      "{selectedEntry.preview?.substring(0, 120)}..."
+                      "{selectedEntry.preview?.substring(0, 150)}..."
                     </p>
                   </div>
 
-                  {/* Tags */}
-                  <div className="flex gap-2 mb-4">
-                    {selectedEntry.tags?.map((tag) => (
-                      <span 
-                        key={tag}
-                        className="px-3 py-1 rounded-full text-xs font-medium bg-secondary text-secondary-foreground"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
+                  {/* Multiple entries list */}
+                  {selectedEntry.entries.length > 1 && (
+                    <div className="space-y-2 mb-4">
+                      <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">All entries</p>
+                      {selectedEntry.entries.map((e, i) => (
+                        <button
+                          key={e.id}
+                          className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-muted/50 transition-colors text-left"
+                          onClick={() => navigate(`/entry/${e.id}`)}
+                        >
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${getMoodColor(e.mood)}`}>
+                            <span className="text-sm">
+                              {e.mood === "happy" ? "😊" :
+                               e.mood === "good" ? "🙂" :
+                               e.mood === "fine" ? "😐" :
+                               e.mood === "sad" ? "😔" : "😢"}
+                            </span>
+                          </div>
+                          <span className="flex-1 text-sm font-medium text-foreground truncate">{e.title}</span>
+                          <ArrowRight className="w-4 h-4 text-muted-foreground" />
+                        </button>
+                      ))}
+                    </div>
+                  )}
 
                   {/* Footer */}
                   <div className="flex items-center justify-between pt-4 border-t border-border/50">
-                    <span className="text-sm text-muted-foreground">
-                      {selectedEntry.entryCount} Entries · {selectedEntry.photoCount} Photo
-                    </span>
+                    <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                      <span>{selectedEntry.entryCount} {selectedEntry.entryCount === 1 ? 'Entry' : 'Entries'}</span>
+                      {selectedEntry.photoCount > 0 && (
+                        <span className="flex items-center gap-1">
+                          <Image className="w-4 h-4" />
+                          {selectedEntry.photoCount}
+                        </span>
+                      )}
+                    </div>
                     <button 
                       className="flex items-center gap-1 text-sm font-medium text-foreground hover:text-primary transition-colors"
                       onClick={() => navigate(`/entry/${selectedEntry.entryId}`)}
                     >
-                      View Full Day
+                      View Entry
                       <ArrowRight className="w-4 h-4" />
                     </button>
                   </div>
@@ -316,12 +396,14 @@ const CalendarPage = () => {
                 <div className="text-center py-8">
                   <span className="text-4xl mb-3 block">📝</span>
                   <p className="text-muted-foreground mb-4">No entries for this day</p>
-                  <Button
-                    className="gradient-primary rounded-full px-6"
-                    onClick={() => navigate("/record")}
-                  >
-                    Create Entry
-                  </Button>
+                  {!isFuture(selectedDate) && (
+                    <Button
+                      className="gradient-primary rounded-full px-6"
+                      onClick={() => navigate("/record")}
+                    >
+                      Create Entry
+                    </Button>
+                  )}
                 </div>
               )}
             </div>

@@ -13,7 +13,8 @@ import {
   Type,
   Mic,
   Target,
-  Brain
+  Brain,
+  Download
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -83,6 +84,12 @@ const SettingsPage = () => {
       title: "Notifications",
       items: [
         { icon: Bell, label: "Daily Reminders", action: "navigate", route: "/settings/reminders" },
+      ],
+    },
+    {
+      title: "Data",
+      items: [
+        { icon: Download, label: "Export Journal", action: "navigate", route: "/settings/export" },
       ],
     },
     {
