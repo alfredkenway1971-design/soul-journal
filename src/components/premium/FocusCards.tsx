@@ -8,6 +8,7 @@ interface FocusItem {
   label: string;
   progress?: number;
   isDark?: boolean;
+  onClick?: () => void;
 }
 
 interface FocusCardsProps {
@@ -33,9 +34,9 @@ const FocusCards = ({ items = defaultItems }: FocusCardsProps) => {
         const Icon = iconMap[item.icon];
         
         return (
-          <motion.div
+          <motion.button
             key={item.id}
-            className={`flex-shrink-0 w-[140px] p-4 ${
+            className={`flex-shrink-0 w-[140px] p-4 text-left ${
               item.isDark 
                 ? "focus-card-dark" 
                 : "vitality-card"
@@ -44,6 +45,8 @@ const FocusCards = ({ items = defaultItems }: FocusCardsProps) => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.1 + index * 0.05 }}
             whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={item.onClick}
           >
             <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-3 ${
               item.isDark 
@@ -69,15 +72,15 @@ const FocusCards = ({ items = defaultItems }: FocusCardsProps) => {
               <div className="mt-3 h-1 bg-muted rounded-full overflow-hidden">
                 <motion.div 
                   className={`h-full rounded-full ${
-                    item.progress === 100 ? "bg-green-500" : "bg-charcoal"
+                    item.progress >= 100 ? "bg-green-500" : "bg-charcoal"
                   }`}
                   initial={{ width: 0 }}
-                  animate={{ width: `${item.progress}%` }}
+                  animate={{ width: `${Math.min(item.progress, 100)}%` }}
                   transition={{ delay: 0.5, duration: 0.5 }}
                 />
               </div>
             )}
-          </motion.div>
+          </motion.button>
         );
       })}
     </div>

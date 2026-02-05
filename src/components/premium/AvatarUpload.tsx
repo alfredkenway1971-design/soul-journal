@@ -59,21 +59,24 @@ const AvatarUpload = ({ userId, currentAvatarUrl, displayName, onAvatarChange }:
 
       if (uploadError) throw uploadError;
 
-      // Get public URL
+      // Get public URL with cache buster
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
         .getPublicUrl(fileName);
 
+      // Add cache buster to URL
+      const urlWithCacheBuster = `${publicUrl}?t=${Date.now()}`;
+
       // Update profile
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({ avatar_url: publicUrl })
+        .update({ avatar_url: urlWithCacheBuster })
         .eq('id', userId);
 
       if (updateError) throw updateError;
 
-      setAvatarUrl(publicUrl);
-      onAvatarChange(publicUrl);
+      setAvatarUrl(urlWithCacheBuster);
+      onAvatarChange(urlWithCacheBuster);
 
       toast({
         title: "Avatar updated! 📸",

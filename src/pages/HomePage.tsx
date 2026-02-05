@@ -12,6 +12,7 @@ import FocusCards from "@/components/premium/FocusCards";
 import QuickCapture from "@/components/premium/QuickCapture";
 import RecentEntryCard from "@/components/premium/RecentEntryCard";
 import { SleepModal, HydrationModal } from "@/components/premium/TrackingModals";
+import { ReadingModal, RunningModal } from "@/components/premium/FocusTrackingModals";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
 import type { Mood } from "@/components/MoodSelector";
@@ -29,7 +30,7 @@ const HomePage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const api = useJournalAPI();
-  const { tracking, updateSleep, updateHydration } = useDailyTracking();
+  const { tracking, updateSleep, updateHydration, updateReading, updateRunning } = useDailyTracking();
   
   const [entries, setEntries] = useState<Entry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -38,6 +39,8 @@ const HomePage = () => {
   const [latestInsight, setLatestInsight] = useState<string | null>(null);
   const [showSleepModal, setShowSleepModal] = useState(false);
   const [showHydrationModal, setShowHydrationModal] = useState(false);
+  const [showReadingModal, setShowReadingModal] = useState(false);
+  const [showRunningModal, setShowRunningModal] = useState(false);
   
   const currentDate = new Date();
   const dayOfWeek = format(currentDate, "EEEE");
@@ -165,15 +168,7 @@ const HomePage = () => {
 
         {/* Today's Focus */}
         <section>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="font-semibold text-foreground">Today's Focus</h2>
-            <button 
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-              onClick={() => setShowHydrationModal(true)}
-            >
-              Log Water
-            </button>
-          </div>
+          <h2 className="font-semibold text-foreground mb-3">Today's Focus</h2>
           <FocusCards 
             items={[
               { 
@@ -181,10 +176,25 @@ const HomePage = () => {
                 icon: "hydration", 
                 value: `${Math.round(((tracking?.hydration_glasses || 0) / (tracking?.hydration_goal || 8)) * 100)}%`, 
                 label: "Hydration", 
-                isDark: true 
+                isDark: true,
+                onClick: () => setShowHydrationModal(true),
               },
-              { id: "2", icon: "reading", value: "0/15", label: "Reading", progress: 0 },
-              { id: "3", icon: "running", value: "3km", label: "Running", progress: 100 },
+              { 
+                id: "2", 
+                icon: "reading", 
+                value: `${tracking?.reading_pages || 0}/${tracking?.reading_goal || 15}`, 
+                label: "Reading", 
+                progress: Math.round(((tracking?.reading_pages || 0) / (tracking?.reading_goal || 15)) * 100),
+                onClick: () => setShowReadingModal(true),
+              },
+              { 
+                id: "3", 
+                icon: "running", 
+                value: `${tracking?.running_km || 0}km`, 
+                label: "Running", 
+                progress: Math.round(((tracking?.running_km || 0) / (tracking?.running_goal || 5)) * 100),
+                onClick: () => setShowRunningModal(true),
+              },
             ]}
           />
         </section>
@@ -263,6 +273,20 @@ const HomePage = () => {
         currentGlasses={tracking?.hydration_glasses || 0}
         goal={tracking?.hydration_goal || 8}
         onSave={updateHydration}
+      />
+      <ReadingModal
+        isOpen={showReadingModal}
+        onClose={() => setShowReadingModal(false)}
+        currentPages={tracking?.reading_pages || 0}
+        goal={tracking?.reading_goal || 15}
+        onSave={updateReading}
+      />
+      <RunningModal
+        isOpen={showRunningModal}
+        onClose={() => setShowRunningModal(false)}
+        currentKm={tracking?.running_km || 0}
+        goal={tracking?.running_goal || 5}
+        onSave={updateRunning}
       />
 
       <BottomNav />
