@@ -3,16 +3,12 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useJournalAPI } from "@/hooks/useJournalAPI";
-import { useDailyTracking } from "@/hooks/useDailyTracking";
+
 import { supabase } from "@/integrations/supabase/client";
 import BottomNav from "@/components/BottomNav";
 import AIInsightCard from "@/components/premium/AIInsightCard";
-import VitalityCards from "@/components/premium/VitalityCards";
-import FocusCards from "@/components/premium/FocusCards";
 import QuickCapture from "@/components/premium/QuickCapture";
 import RecentEntryCard from "@/components/premium/RecentEntryCard";
-import { SleepModal, HydrationModal } from "@/components/premium/TrackingModals";
-import { ReadingModal, RunningModal } from "@/components/premium/FocusTrackingModals";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
 import type { Mood } from "@/components/MoodSelector";
@@ -30,17 +26,13 @@ const HomePage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const api = useJournalAPI();
-  const { tracking, updateSleep, updateHydration, updateReading, updateRunning } = useDailyTracking();
+  
   
   const [entries, setEntries] = useState<Entry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [displayName, setDisplayName] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [latestInsight, setLatestInsight] = useState<string | null>(null);
-  const [showSleepModal, setShowSleepModal] = useState(false);
-  const [showHydrationModal, setShowHydrationModal] = useState(false);
-  const [showReadingModal, setShowReadingModal] = useState(false);
-  const [showRunningModal, setShowRunningModal] = useState(false);
   
   const currentDate = new Date();
   const dayOfWeek = format(currentDate, "EEEE");
@@ -157,47 +149,7 @@ const HomePage = () => {
           <AIInsightCard insight={latestInsight || undefined} userName={firstName} />
         </motion.div>
 
-        {/* Your Vitality */}
-        <section>
-          <h2 className="font-semibold text-foreground mb-3">Your Vitality</h2>
-          <VitalityCards 
-            sleepHours={tracking?.sleep_hours || undefined}
-            onSleepClick={() => setShowSleepModal(true)}
-          />
-        </section>
-
-        {/* Today's Focus */}
-        <section>
-          <h2 className="font-semibold text-foreground mb-3">Today's Focus</h2>
-          <FocusCards 
-            items={[
-              { 
-                id: "1", 
-                icon: "hydration", 
-                value: `${Math.round(((tracking?.hydration_glasses || 0) / (tracking?.hydration_goal || 8)) * 100)}%`, 
-                label: "Hydration", 
-                isDark: true,
-                onClick: () => setShowHydrationModal(true),
-              },
-              { 
-                id: "2", 
-                icon: "reading", 
-                value: `${tracking?.reading_pages || 0}/${tracking?.reading_goal || 15}`, 
-                label: "Reading", 
-                progress: Math.round(((tracking?.reading_pages || 0) / (tracking?.reading_goal || 15)) * 100),
-                onClick: () => setShowReadingModal(true),
-              },
-              { 
-                id: "3", 
-                icon: "running", 
-                value: `${tracking?.running_km || 0}km`, 
-                label: "Running", 
-                progress: Math.round(((tracking?.running_km || 0) / (tracking?.running_goal || 5)) * 100),
-                onClick: () => setShowRunningModal(true),
-              },
-            ]}
-          />
-        </section>
+        {/* Quick Capture - moved up */}
 
         {/* Quick Capture */}
         <section>
@@ -260,34 +212,6 @@ const HomePage = () => {
         </section>
       </main>
 
-      {/* Tracking Modals */}
-      <SleepModal
-        isOpen={showSleepModal}
-        onClose={() => setShowSleepModal(false)}
-        currentHours={tracking?.sleep_hours || null}
-        onSave={updateSleep}
-      />
-      <HydrationModal
-        isOpen={showHydrationModal}
-        onClose={() => setShowHydrationModal(false)}
-        currentGlasses={tracking?.hydration_glasses || 0}
-        goal={tracking?.hydration_goal || 8}
-        onSave={updateHydration}
-      />
-      <ReadingModal
-        isOpen={showReadingModal}
-        onClose={() => setShowReadingModal(false)}
-        currentPages={tracking?.reading_pages || 0}
-        goal={tracking?.reading_goal || 15}
-        onSave={updateReading}
-      />
-      <RunningModal
-        isOpen={showRunningModal}
-        onClose={() => setShowRunningModal(false)}
-        currentKm={tracking?.running_km || 0}
-        goal={tracking?.running_goal || 5}
-        onSave={updateRunning}
-      />
 
       <BottomNav />
     </div>
