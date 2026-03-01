@@ -77,8 +77,13 @@ const PhotoCapture = ({ photos, onPhotosChange, maxPhotos = 5 }: PhotoCapturePro
         type="file"
         accept="image/*"
         multiple
+        capture="environment"
         className="hidden"
         onChange={handleFileSelect}
+        onClick={(e) => {
+          // Reset value so same file can be selected again
+          (e.target as HTMLInputElement).value = '';
+        }}
       />
 
       {photos.length === 0 && (

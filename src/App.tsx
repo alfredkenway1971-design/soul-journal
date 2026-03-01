@@ -207,20 +207,24 @@ const App = () => {
     
     // Apply saved theme
     const savedTheme = localStorage.getItem('app-theme');
+    const savedBg = localStorage.getItem('app-background');
     if (savedTheme) {
-      document.documentElement.setAttribute('data-theme', savedTheme);
-      const root = document.documentElement;
-      // Apply theme colors to primary CSS variable
-      if (savedTheme === 'warm') {
-        root.style.setProperty('--primary', '35 90% 55%');
-      } else if (savedTheme === 'sage') {
-        root.style.setProperty('--primary', '145 30% 60%');
-      } else if (savedTheme === 'coral') {
-        root.style.setProperty('--primary', '15 85% 65%');
-      } else if (savedTheme === 'lavender') {
-        root.style.setProperty('--primary', '270 50% 70%');
-      } else if (savedTheme === 'sky') {
-        root.style.setProperty('--primary', '200 70% 70%');
+      const themeColors: Record<string, Record<string, string>> = {
+        warm: { '--primary': '35 90% 55%', '--accent': '35 80% 55%', '--ring': '35 90% 55%', '--gradient-cream': 'linear-gradient(180deg, hsl(36 33% 96%) 0%, hsl(36 25% 91%) 100%)' },
+        sage: { '--primary': '145 30% 50%', '--accent': '145 25% 50%', '--ring': '145 30% 50%', '--gradient-cream': 'linear-gradient(180deg, hsl(140 20% 95%) 0%, hsl(145 18% 90%) 100%)' },
+        coral: { '--primary': '15 85% 60%', '--accent': '15 75% 60%', '--ring': '15 85% 60%', '--gradient-cream': 'linear-gradient(180deg, hsl(15 40% 96%) 0%, hsl(20 30% 91%) 100%)' },
+        lavender: { '--primary': '270 50% 65%', '--accent': '270 45% 65%', '--ring': '270 50% 65%', '--gradient-cream': 'linear-gradient(180deg, hsl(270 30% 96%) 0%, hsl(275 25% 91%) 100%)' },
+        sky: { '--primary': '200 70% 55%', '--accent': '200 60% 55%', '--ring': '200 70% 55%', '--gradient-cream': 'linear-gradient(180deg, hsl(200 30% 96%) 0%, hsl(205 25% 91%) 100%)' },
+      };
+      const colors = themeColors[savedTheme];
+      if (colors) {
+        const root = document.documentElement;
+        Object.entries(colors).forEach(([prop, value]) => {
+          root.style.setProperty(prop, value);
+        });
+      }
+      if (savedBg === 'solid') {
+        document.documentElement.style.setProperty('--gradient-cream', 'none');
       }
     }
     

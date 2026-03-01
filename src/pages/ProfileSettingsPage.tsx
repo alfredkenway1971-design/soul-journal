@@ -18,7 +18,7 @@ const ProfileSettingsPage = () => {
   
   const [displayName, setDisplayName] = useState("Alex Morgan");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [bio, setBio] = useState("Mindful Explorer · San Francisco");
+  
   const [manifesto, setManifesto] = useState('"To live with intention, embrace the chaos, and find stillness in the motion."');
   const [isEditingManifesto, setIsEditingManifesto] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -171,7 +171,7 @@ const ProfileSettingsPage = () => {
             )}
           </div>
           <h1 className="text-2xl font-display font-semibold text-foreground">{displayName}</h1>
-          <p className="text-muted-foreground">{bio}</p>
+          
         </motion.div>
 
         {/* Stats */}
