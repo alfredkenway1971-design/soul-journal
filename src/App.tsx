@@ -21,6 +21,7 @@ import ThemesSettingsPage from "@/pages/ThemesSettingsPage";
 import FontsSettingsPage from "@/pages/FontsSettingsPage";
 import RemindersSettingsPage from "@/pages/RemindersSettingsPage";
 import ExportPage from "@/pages/ExportPage";
+import BookBuilderPage from "@/pages/BookBuilderPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -173,6 +174,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <ExportPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/settings/export/book-builder"
+        element={
+          <ProtectedRoute>
+            <BookBuilderPage />
           </ProtectedRoute>
         }
       />
