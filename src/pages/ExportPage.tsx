@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, FileText, Download, Loader2, CheckCircle } from "lucide-react";
+import { ArrowLeft, FileText, Download, Loader2, CheckCircle, BookOpen } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -256,11 +256,32 @@ const ExportPage = () => {
 
         {/* Export Options */}
         <div className="space-y-4">
+          {/* Soul Book Builder */}
           <motion.button
             className="w-full glass-premium p-5 flex items-center gap-4"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => navigate("/settings/export/book-builder")}
+          >
+            <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center">
+              <BookOpen className="w-7 h-7 text-primary" />
+            </div>
+            <div className="flex-1 text-left">
+              <h3 className="font-semibold text-foreground">Soul Book Builder (PDF)</h3>
+              <p className="text-sm text-muted-foreground">
+                Customizable cover, fonts & layout for printing
+              </p>
+            </div>
+          </motion.button>
+
+          {/* Quick Markdown */}
+          <motion.button
+            className="w-full glass-premium p-5 flex items-center gap-4"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
             whileTap={{ scale: 0.98 }}
             onClick={exportToMarkdown}
             disabled={exporting !== null}
@@ -275,18 +296,19 @@ const ExportPage = () => {
               )}
             </div>
             <div className="flex-1 text-left">
-              <h3 className="font-semibold text-foreground">Markdown (.md)</h3>
+              <h3 className="font-semibold text-foreground">Quick JSON / Markdown</h3>
               <p className="text-sm text-muted-foreground">
-                Plain text format, great for notes apps
+                Plain text backup of all entries
               </p>
             </div>
           </motion.button>
 
+          {/* Simple PDF */}
           <motion.button
             className="w-full glass-premium p-5 flex items-center gap-4"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
+            transition={{ delay: 0.3 }}
             whileTap={{ scale: 0.98 }}
             onClick={exportToPDF}
             disabled={exporting !== null}
@@ -301,9 +323,9 @@ const ExportPage = () => {
               )}
             </div>
             <div className="flex-1 text-left">
-              <h3 className="font-semibold text-foreground">PDF Document</h3>
+              <h3 className="font-semibold text-foreground">Quick PDF</h3>
               <p className="text-sm text-muted-foreground">
-                Beautifully formatted, ready to print
+                Simple formatted export, no customization
               </p>
             </div>
           </motion.button>
