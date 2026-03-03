@@ -13,7 +13,7 @@ import CoverTemplates, { type CoverTemplate } from "@/components/book-builder/Co
 import FontSelector, { type BookFont } from "@/components/book-builder/FontSelector";
 import PageStyleSelector, { type PageBackground, type EntryLayout } from "@/components/book-builder/PageStyleSelector";
 import BookPreview from "@/components/book-builder/BookPreview";
-import { generateBookHTML, openBookPDF } from "@/lib/generateBookPDF";
+import { generateAndDownloadPDF } from "@/lib/generateBookPDF";
 
 type Step = 1 | 2 | 3 | 4;
 
@@ -87,9 +87,12 @@ const BookBuilderPage = () => {
     })();
   }, [user, startDate, endDate]);
 
+  const [progressMsg, setProgressMsg] = useState("");
+
   const handleGenerate = async () => {
     if (!user) return;
     setGenerating(true);
+    setProgressMsg("Fetching entries...");
     try {
       let query = supabase
         .from("journal_entries")
@@ -108,18 +111,19 @@ const BookBuilderPage = () => {
         return;
       }
 
-      const html = generateBookHTML(
+      await generateAndDownloadPDF(
         { cover, font, background, layout, watermark, userName: displayName, yearRange, avatarUrl, showAvatar },
-        entries
+        entries,
+        setProgressMsg
       );
-      openBookPDF(html);
 
-      toast({ title: "Book Generated! 📖", description: `${entries.length} entries compiled. Use print dialog to save as PDF.` });
+      toast({ title: "Book Downloaded! 📖", description: `${entries.length} entries compiled into your Soul Book PDF.` });
     } catch (err) {
       console.error(err);
       toast({ title: "Generation Failed", description: "Something went wrong.", variant: "destructive" });
     } finally {
       setGenerating(false);
+      setProgressMsg("");
     }
   };
 
@@ -302,7 +306,7 @@ const BookBuilderPage = () => {
                   {generating ? (
                     <>
                       <Loader2 className="w-5 h-5 animate-spin" />
-                      Generating Book...
+                      {progressMsg || "Generating Book..."}
                     </>
                   ) : (
                     <>
