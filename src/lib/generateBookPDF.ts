@@ -41,23 +41,35 @@ const coverTextColors: Record<CoverTemplate, string> = {
   sunrise: "#ffffff",
 };
 
-const getPageBackgroundCSS = (bg: PageBackground): string => {
+// SVG-based backgrounds so html2canvas captures them as real DOM
+const getPageBackgroundHTML = (bg: PageBackground, w: number, h: number): string => {
   if (bg === "lined") {
-    return `background-image: repeating-linear-gradient(to bottom, transparent, transparent 27px, rgba(147,197,253,0.2) 27px, rgba(147,197,253,0.2) 28px); background-color: white;`;
+    const spacing = 28;
+    let lines = "";
+    for (let y = spacing; y < h; y += spacing) {
+      lines += `<line x1="0" y1="${y}" x2="${w}" y2="${y}" stroke="rgba(147,197,253,0.25)" stroke-width="1"/>`;
+    }
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" style="position:absolute;top:0;left:0;z-index:0;">${lines}</svg>`;
   }
   if (bg === "dotted") {
-    return `background-image: radial-gradient(circle, rgba(120,120,120,0.15) 1px, transparent 1px); background-size: 16px 16px; background-color: white;`;
+    const spacing = 16;
+    let dots = "";
+    for (let y = spacing; y < h; y += spacing) {
+      for (let x = spacing; x < w; x += spacing) {
+        dots += `<circle cx="${x}" cy="${y}" r="1.2" fill="rgba(120,120,120,0.18)"/>`;
+      }
+    }
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" style="position:absolute;top:0;left:0;z-index:0;">${dots}</svg>`;
   }
-  return "background-color: white;";
+  return "";
 };
 
 // A5 dimensions in mm
 const PAGE_W_MM = 148;
 const PAGE_H_MM = 210;
-// Render at 2x for quality
 const SCALE = 2;
-const PAGE_W_PX = Math.round(PAGE_W_MM * 3.78 * SCALE); // ~1119px
-const PAGE_H_PX = Math.round(PAGE_H_MM * 3.78 * SCALE); // ~1588px
+const PAGE_W_PX = Math.round(PAGE_W_MM * 3.78 * SCALE);
+const PAGE_H_PX = Math.round(PAGE_H_MM * 3.78 * SCALE);
 
 const buildPageHTML = (innerContent: string, fontCSS: string, fontImportUrl: string): string => {
   return `<!DOCTYPE html><html><head><meta charset="utf-8">
@@ -80,13 +92,12 @@ const renderHTMLToCanvas = async (html: string): Promise<HTMLCanvasElement> => {
   iframeDoc.write(html);
   iframeDoc.close();
 
-  // Wait for fonts/images to load
-  await new Promise((r) => setTimeout(r, 800));
+  await new Promise((r) => setTimeout(r, 1000));
 
   const canvas = await html2canvas(iframeDoc.body, {
     width: PAGE_W_PX,
     height: PAGE_H_PX,
-    scale: 1, // already scaled via pixel dimensions
+    scale: 1,
     useCORS: true,
     logging: false,
     backgroundColor: null,
@@ -145,16 +156,16 @@ const buildCoverHTML = (config: BookConfig, fontCSS: string, fontImportUrl: stri
   return buildPageHTML(inner, fontCSS, fontImportUrl);
 };
 
-// ── Build entry page HTML ──
+// ── Build entry page HTML (continuous mode) ──
 const buildEntryPageHTML = (
   entries: JournalEntry[],
   config: BookConfig,
   fontCSS: string,
   fontImportUrl: string
 ): string => {
-  const pageBgCSS = getPageBackgroundCSS(config.background);
+  const bgSVG = getPageBackgroundHTML(config.background, PAGE_W_PX, PAGE_H_PX);
   const watermarkHTML = config.watermark
-    ? `<div style="position:absolute;bottom:30px;right:36px;font-size:24px;opacity:0.06;font-family:Georgia,serif;">✦</div>`
+    ? `<div style="position:absolute;bottom:30px;right:36px;font-size:24px;opacity:0.06;font-family:Georgia,serif;z-index:2;">✦</div>`
     : "";
 
   let entriesHTML = "";
@@ -165,7 +176,7 @@ const buildEntryPageHTML = (
     const moodBadge = mood ? `<span style="display:inline-block;background:#f5f5f5;padding:2px 10px;border-radius:10px;font-size:12px;margin-left:10px;font-style:normal;">${mood}</span>` : "";
 
     entriesHTML += `
-      <div style="margin-bottom:${idx < entries.length - 1 ? '0' : '0'}px;">
+      <div style="margin-bottom:0;">
         <div style="font-size:22px;font-weight:600;color:#0a0a0a;margin-bottom:8px;">${entry.title || "Untitled Entry"}</div>
         <div style="font-size:13px;color:#9ca3af;margin-bottom:20px;font-style:italic;">${date}${moodBadge}</div>
         <div style="font-size:16px;line-height:2;color:#374151;">${content}</div>
@@ -176,9 +187,12 @@ const buildEntryPageHTML = (
   });
 
   const inner = `
-    <div style="width:100%;height:100%;${pageBgCSS}padding:60px 48px;position:relative;overflow:hidden;">
+    <div style="width:100%;height:100%;background-color:white;padding:60px 48px;position:relative;overflow:hidden;">
+      ${bgSVG}
       ${watermarkHTML}
-      ${entriesHTML}
+      <div style="position:relative;z-index:1;">
+        ${entriesHTML}
+      </div>
     </div>`;
 
   return buildPageHTML(inner, fontCSS, fontImportUrl);
@@ -191,9 +205,9 @@ const buildSingleEntryHTML = (
   fontCSS: string,
   fontImportUrl: string
 ): string => {
-  const pageBgCSS = getPageBackgroundCSS(config.background);
+  const bgSVG = getPageBackgroundHTML(config.background, PAGE_W_PX, PAGE_H_PX);
   const watermarkHTML = config.watermark
-    ? `<div style="position:absolute;bottom:30px;right:36px;font-size:24px;opacity:0.06;font-family:Georgia,serif;">✦</div>`
+    ? `<div style="position:absolute;bottom:30px;right:36px;font-size:24px;opacity:0.06;font-family:Georgia,serif;z-index:2;">✦</div>`
     : "";
 
   const date = format(new Date(entry.created_at), "EEEE, MMMM d, yyyy");
@@ -202,11 +216,14 @@ const buildSingleEntryHTML = (
   const moodBadge = mood ? `<span style="display:inline-block;background:#f5f5f5;padding:2px 10px;border-radius:10px;font-size:12px;margin-left:10px;font-style:normal;">${mood}</span>` : "";
 
   const inner = `
-    <div style="width:100%;height:100%;${pageBgCSS}padding:60px 48px;position:relative;overflow:hidden;">
+    <div style="width:100%;height:100%;background-color:white;padding:60px 48px;position:relative;overflow:hidden;">
+      ${bgSVG}
       ${watermarkHTML}
-      <div style="font-size:22px;font-weight:600;color:#0a0a0a;margin-bottom:8px;">${entry.title || "Untitled Entry"}</div>
-      <div style="font-size:13px;color:#9ca3af;margin-bottom:20px;font-style:italic;">${date}${moodBadge}</div>
-      <div style="font-size:16px;line-height:2;color:#374151;">${content}</div>
+      <div style="position:relative;z-index:1;">
+        <div style="font-size:22px;font-weight:600;color:#0a0a0a;margin-bottom:8px;">${entry.title || "Untitled Entry"}</div>
+        <div style="font-size:13px;color:#9ca3af;margin-bottom:20px;font-style:italic;">${date}${moodBadge}</div>
+        <div style="font-size:16px;line-height:2;color:#374151;">${content}</div>
+      </div>
     </div>`;
 
   return buildPageHTML(inner, fontCSS, fontImportUrl);
@@ -226,10 +243,8 @@ const buildBackCoverHTML = (fontCSS: string, fontImportUrl: string): string => {
   return buildPageHTML(inner, fontCSS, fontImportUrl);
 };
 
-// ── Chunk entries for continuous mode ──
 const ENTRIES_PER_PAGE = 3;
 
-// ── Main export: generate and download PDF ──
 export const generateAndDownloadPDF = async (
   config: BookConfig,
   entries: JournalEntry[],
@@ -251,7 +266,6 @@ export const generateAndDownloadPDF = async (
       addCanvasToPDF(pdf, canvas, true);
     }
   } else {
-    // Continuous: group entries into chunks
     const chunks: JournalEntry[][] = [];
     for (let i = 0; i < entries.length; i += ENTRIES_PER_PAGE) {
       chunks.push(entries.slice(i, i + ENTRIES_PER_PAGE));
@@ -273,12 +287,11 @@ export const generateAndDownloadPDF = async (
   pdf.save(`Soul-Journal-${config.userName.replace(/\s+/g, "-")}.pdf`);
 };
 
-// Keep legacy HTML export as fallback
+// Legacy HTML export
 export const generateBookHTML = (config: BookConfig, entries: JournalEntry[]): string => {
   const fontConfig = getFontConfig(config.font);
   const coverColor = coverTextColors[config.cover];
   const coverGradient = coverGradients[config.cover];
-  const pageBgCSS = getPageBackgroundCSS(config.background);
   const isOnePerPage = config.layout === "one-per-page";
   const watermarkHTML = config.watermark
     ? `<div style="position:absolute;bottom:20px;right:24px;font-size:18px;opacity:0.06;font-family:Georgia,serif;">✦</div>`
@@ -296,7 +309,7 @@ export const generateBookHTML = (config: BookConfig, entries: JournalEntry[]): s
   .cover-page .cover-name { font-size:28px;font-weight:600;margin-bottom:4px;${config.cover === "minimalist" ? "font-style:italic;" : ""} }
   .cover-page .cover-year { font-size:9px;letter-spacing:0.2em;text-transform:uppercase;opacity:0.5;margin-top:12px; }
   .cover-avatar { width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid ${config.cover === "minimalist" || config.cover === "botanical" ? "#d6d3d1" : "rgba(255,255,255,0.3)"};margin-bottom:16px; }
-  .entry-page { width:100%;min-height:${isOnePerPage ? "100vh" : "auto"};padding:48px 36px;position:relative;${pageBgCSS}${isOnePerPage ? "page-break-after:always;" : ""} }
+  .entry-page { width:100%;min-height:${isOnePerPage ? "100vh" : "auto"};padding:48px 36px;position:relative;background-color:white;${isOnePerPage ? "page-break-after:always;" : ""} }
   .entry-title { font-size:18px;font-weight:600;color:#0a0a0a;margin-bottom:6px; }
   .entry-meta { font-size:11px;color:#9ca3af;margin-bottom:16px;font-style:italic; }
   .mood-badge { display:inline-block;background:#f5f5f5;padding:2px 8px;border-radius:10px;font-size:10px;margin-left:8px;font-style:normal; }
