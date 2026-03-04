@@ -76,8 +76,21 @@ const buildPageHTML = (innerContent: string, fontCSS: string, fontImportUrl: str
 <link href="${fontImportUrl}" rel="stylesheet">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { width: ${PAGE_W_PX}px; height: ${PAGE_H_PX}px; overflow: hidden; font-family: ${fontCSS}; }
+  body { width: ${PAGE_W_PX}px; height: ${PAGE_H_PX}px; overflow: hidden; font-family: ${fontCSS}; word-spacing: 0.15em; letter-spacing: 0.01em; }
 </style></head><body>${innerContent}</body></html>`;
+};
+
+const waitForFonts = async (doc: Document, timeoutMs = 8000): Promise<void> => {
+  try {
+    await Promise.race([
+      doc.fonts.ready,
+      new Promise((r) => setTimeout(r, timeoutMs)),
+    ]);
+    // Extra settle time for rendering
+    await new Promise((r) => setTimeout(r, 300));
+  } catch {
+    await new Promise((r) => setTimeout(r, 2000));
+  }
 };
 
 const renderHTMLToCanvas = async (html: string): Promise<HTMLCanvasElement> => {
@@ -92,7 +105,12 @@ const renderHTMLToCanvas = async (html: string): Promise<HTMLCanvasElement> => {
   iframeDoc.write(html);
   iframeDoc.close();
 
-  await new Promise((r) => setTimeout(r, 1000));
+  // Wait for the iframe to load and fonts to be ready
+  await new Promise<void>((resolve) => {
+    iframe.onload = () => resolve();
+    setTimeout(resolve, 3000); // fallback
+  });
+  await waitForFonts(iframeDoc);
 
   const canvas = await html2canvas(iframeDoc.body, {
     width: PAGE_W_PX,
@@ -252,6 +270,15 @@ export const generateAndDownloadPDF = async (
 ): Promise<void> => {
   const fontConfig = getFontConfig(config.font);
   const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: [PAGE_W_MM, PAGE_H_MM] });
+
+  // Preload the selected font on the main document so the browser caches it
+  onProgress?.("Loading font...");
+  const preloadLink = document.createElement("link");
+  preloadLink.href = fontConfig.importUrl;
+  preloadLink.rel = "stylesheet";
+  document.head.appendChild(preloadLink);
+  await document.fonts.ready;
+  await new Promise((r) => setTimeout(r, 500));
 
   onProgress?.("Rendering cover...");
   const coverHTML = buildCoverHTML(config, fontConfig.css, fontConfig.importUrl);
