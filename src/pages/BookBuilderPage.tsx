@@ -13,7 +13,9 @@ import CoverTemplates, { type CoverTemplate } from "@/components/book-builder/Co
 import FontSelector, { type BookFont } from "@/components/book-builder/FontSelector";
 import PageStyleSelector, { type PageBackground, type EntryLayout } from "@/components/book-builder/PageStyleSelector";
 import BookPreview from "@/components/book-builder/BookPreview";
-import { generateAndDownloadPDF } from "@/lib/generateBookPDF";
+import { generateAndDownloadPDF, type PhotoSize } from "@/lib/generateBookPDF";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ImageIcon } from "lucide-react";
 
 type Step = 1 | 2 | 3 | 4;
 
@@ -51,6 +53,7 @@ const BookBuilderPage = () => {
   const [background, setBackground] = useState<PageBackground>("blank");
   const [layout, setLayout] = useState<EntryLayout>("one-per-page");
   const [watermark, setWatermark] = useState(true);
+  const [photoSize, setPhotoSize] = useState<PhotoSize>("medium");
 
   const yearRange = (() => {
     if (startDate && endDate) {
@@ -139,7 +142,7 @@ const BookBuilderPage = () => {
       }));
 
       await generateAndDownloadPDF(
-        { cover, font, background, layout, watermark, userName: displayName, yearRange, avatarUrl, showAvatar },
+        { cover, font, background, layout, watermark, userName: displayName, yearRange, avatarUrl, showAvatar, photoSize },
         entriesWithPhotos,
         setProgressMsg
       );
@@ -279,6 +282,24 @@ const BookBuilderPage = () => {
                   watermark={watermark}
                   onWatermarkChange={setWatermark}
                 />
+
+                {/* Photo Size */}
+                <div>
+                  <p className="text-sm font-medium text-foreground mb-3 flex items-center gap-2">
+                    <ImageIcon className="w-4 h-4" />
+                    Photo Size in PDF
+                  </p>
+                  <Select value={photoSize} onValueChange={(v) => setPhotoSize(v as PhotoSize)}>
+                    <SelectTrigger className="rounded-xl">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="small">Small (thumbnail)</SelectItem>
+                      <SelectItem value="medium">Medium (default)</SelectItem>
+                      <SelectItem value="large">Large (prominent)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </motion.div>
           )}
