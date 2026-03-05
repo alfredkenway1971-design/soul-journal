@@ -14,17 +14,28 @@ import {
   Mic,
   Target,
   Brain,
-  Download
+  Download,
+  LogOut
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import BottomNav from "@/components/BottomNav";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 const SettingsPage = () => {
   const navigate = useNavigate();
+  const { signOut } = useAuth();
+  const { toast } = useToast();
   const [notifications, setNotifications] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
+
+  const handleSignOut = async () => {
+    await signOut();
+    toast({ title: "Signed out", description: "You have been logged out." });
+    navigate("/auth");
+  };
 
   useEffect(() => {
     // Load dark mode preference and apply it
@@ -96,6 +107,7 @@ const SettingsPage = () => {
       title: "Support",
       items: [
         { icon: HelpCircle, label: "Help & FAQ", action: "navigate", route: "" },
+        { icon: LogOut, label: "Sign Out", action: "signout", route: "" },
       ],
     },
   ];
@@ -145,7 +157,9 @@ const SettingsPage = () => {
                     }`}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => {
-                      if (item.action === "navigate" && item.route) {
+                      if (item.action === "signout") {
+                        handleSignOut();
+                      } else if (item.action === "navigate" && item.route) {
                         navigate(item.route);
                       }
                     }}
