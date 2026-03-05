@@ -111,9 +111,36 @@ const BookBuilderPage = () => {
         return;
       }
 
+      // Fetch photos for each entry
+      setProgressMsg("Loading photos...");
+      const entryIds = entries.map(e => e.id);
+      const { data: mediaData } = await supabase
+        .from("entry_media")
+        .select("entry_id, storage_path")
+        .in("entry_id", entryIds)
+        .eq("media_type", "photo");
+
+      const photoMap: Record<string, string[]> = {};
+      if (mediaData && mediaData.length > 0) {
+        for (const m of mediaData) {
+          const { data: urlData } = await supabase.storage
+            .from("journal-photos")
+            .createSignedUrl(m.storage_path, 3600);
+          if (urlData?.signedUrl) {
+            if (!photoMap[m.entry_id]) photoMap[m.entry_id] = [];
+            photoMap[m.entry_id].push(urlData.signedUrl);
+          }
+        }
+      }
+
+      const entriesWithPhotos = entries.map(e => ({
+        ...e,
+        photoUrls: photoMap[e.id] || [],
+      }));
+
       await generateAndDownloadPDF(
         { cover, font, background, layout, watermark, userName: displayName, yearRange, avatarUrl, showAvatar },
-        entries,
+        entriesWithPhotos,
         setProgressMsg
       );
 

@@ -23,6 +23,7 @@ interface JournalEntry {
   original_transcription: string | null;
   mood: string | null;
   created_at: string;
+  photoUrls?: string[];
 }
 
 const coverGradients: Record<CoverTemplate, string> = {
@@ -193,11 +194,16 @@ const buildEntryPageHTML = (
     const content = (entry.enhanced_text || entry.original_transcription || "No content").replace(/\n/g, "<br>");
     const moodBadge = mood ? `<span style="display:inline-block;background:#f5f5f5;padding:2px 10px;border-radius:10px;font-size:12px;margin-left:10px;font-style:normal;">${mood}</span>` : "";
 
+    const photoHTML = entry.photoUrls && entry.photoUrls.length > 0
+      ? `<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;">${entry.photoUrls.map(url => `<img src="${url}" style="width:140px;height:105px;object-fit:cover;border-radius:8px;border:1px solid #e5e7eb;" crossorigin="anonymous" />`).join("")}</div>`
+      : "";
+
     entriesHTML += `
       <div style="margin-bottom:0;">
         <div style="font-size:22px;font-weight:600;color:#0a0a0a;margin-bottom:8px;">${entry.title || "Untitled Entry"}</div>
         <div style="font-size:13px;color:#9ca3af;margin-bottom:20px;font-style:italic;">${date}${moodBadge}</div>
         <div style="font-size:16px;line-height:2;color:#374151;">${content}</div>
+        ${photoHTML}
       </div>`;
     if (idx < entries.length - 1) {
       entriesHTML += `<div style="height:1px;background:#e5e7eb;margin:40px 0;"></div>`;
@@ -233,6 +239,10 @@ const buildSingleEntryHTML = (
   const content = (entry.enhanced_text || entry.original_transcription || "No content").replace(/\n/g, "<br>");
   const moodBadge = mood ? `<span style="display:inline-block;background:#f5f5f5;padding:2px 10px;border-radius:10px;font-size:12px;margin-left:10px;font-style:normal;">${mood}</span>` : "";
 
+  const photoHTML = entry.photoUrls && entry.photoUrls.length > 0
+    ? `<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;">${entry.photoUrls.map(url => `<img src="${url}" style="width:160px;height:120px;object-fit:cover;border-radius:8px;border:1px solid #e5e7eb;" crossorigin="anonymous" />`).join("")}</div>`
+    : "";
+
   const inner = `
     <div style="width:100%;height:100%;background-color:white;padding:60px 48px;position:relative;overflow:hidden;">
       ${bgSVG}
@@ -241,6 +251,7 @@ const buildSingleEntryHTML = (
         <div style="font-size:22px;font-weight:600;color:#0a0a0a;margin-bottom:8px;">${entry.title || "Untitled Entry"}</div>
         <div style="font-size:13px;color:#9ca3af;margin-bottom:20px;font-style:italic;">${date}${moodBadge}</div>
         <div style="font-size:16px;line-height:2;color:#374151;">${content}</div>
+        ${photoHTML}
       </div>
     </div>`;
 
