@@ -5,6 +5,8 @@ import { type BookFont, getFontConfig } from "@/components/book-builder/FontSele
 import { type PageBackground, type EntryLayout } from "@/components/book-builder/PageStyleSelector";
 import { format } from "date-fns";
 
+export type PhotoSize = "small" | "medium" | "large";
+
 interface BookConfig {
   cover: CoverTemplate;
   font: BookFont;
@@ -15,6 +17,7 @@ interface BookConfig {
   yearRange: string;
   avatarUrl: string | null;
   showAvatar: boolean;
+  photoSize?: PhotoSize;
 }
 
 interface JournalEntry {
@@ -194,8 +197,9 @@ const buildEntryPageHTML = (
     const content = (entry.enhanced_text || entry.original_transcription || "No content").replace(/\n/g, "<br>");
     const moodBadge = mood ? `<span style="display:inline-block;background:#f5f5f5;padding:2px 10px;border-radius:10px;font-size:12px;margin-left:10px;font-style:normal;">${mood}</span>` : "";
 
+    const photoDims = getPhotoDimensions(config.photoSize || "medium");
     const photoHTML = entry.photoUrls && entry.photoUrls.length > 0
-      ? `<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;">${entry.photoUrls.map(url => `<img src="${url}" style="width:140px;height:105px;object-fit:cover;border-radius:8px;border:1px solid #e5e7eb;" crossorigin="anonymous" />`).join("")}</div>`
+      ? `<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;">${entry.photoUrls.map(url => `<img src="${url}" style="width:${photoDims.w}px;height:${photoDims.h}px;object-fit:cover;border-radius:8px;border:1px solid #e5e7eb;" crossorigin="anonymous" />`).join("")}</div>`
       : "";
 
     entriesHTML += `
@@ -239,8 +243,9 @@ const buildSingleEntryHTML = (
   const content = (entry.enhanced_text || entry.original_transcription || "No content").replace(/\n/g, "<br>");
   const moodBadge = mood ? `<span style="display:inline-block;background:#f5f5f5;padding:2px 10px;border-radius:10px;font-size:12px;margin-left:10px;font-style:normal;">${mood}</span>` : "";
 
+  const photoDims = getPhotoDimensions(config.photoSize || "medium");
   const photoHTML = entry.photoUrls && entry.photoUrls.length > 0
-    ? `<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;">${entry.photoUrls.map(url => `<img src="${url}" style="width:160px;height:120px;object-fit:cover;border-radius:8px;border:1px solid #e5e7eb;" crossorigin="anonymous" />`).join("")}</div>`
+    ? `<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;">${entry.photoUrls.map(url => `<img src="${url}" style="width:${photoDims.w}px;height:${photoDims.h}px;object-fit:cover;border-radius:8px;border:1px solid #e5e7eb;" crossorigin="anonymous" />`).join("")}</div>`
     : "";
 
   const inner = `
@@ -270,6 +275,15 @@ const buildBackCoverHTML = (fontCSS: string, fontImportUrl: string): string => {
     </div>`;
 
   return buildPageHTML(inner, fontCSS, fontImportUrl);
+};
+
+const getPhotoDimensions = (size: PhotoSize): { w: number; h: number } => {
+  switch (size) {
+    case "small": return { w: 100, h: 75 };
+    case "large": return { w: 240, h: 180 };
+    case "medium":
+    default: return { w: 160, h: 120 };
+  }
 };
 
 const ENTRIES_PER_PAGE = 3;

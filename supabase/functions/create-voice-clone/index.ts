@@ -6,7 +6,6 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -21,10 +20,10 @@ serve(async (req) => {
       );
     }
 
-    const elevenLabsApiKey = Deno.env.get('ELEVENLABS_API_KEY');
-    if (!elevenLabsApiKey) {
+    const cartesiaApiKey = Deno.env.get('CARTESIA_API_KEY');
+    if (!cartesiaApiKey) {
       return new Response(
-        JSON.stringify({ error: 'ElevenLabs API key not configured' }),
+        JSON.stringify({ error: 'Cartesia API key not configured' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -37,26 +36,25 @@ serve(async (req) => {
     }
     const audioBlob = new Blob([bytes], { type: 'audio/webm' });
 
-    // Create form data for ElevenLabs API
+    // Create form data for Cartesia Voice Clone API
     const formData = new FormData();
-    formData.append('name', name || 'Voice Clone');
-    formData.append('files', audioBlob, 'voice_sample.webm');
-    formData.append('description', 'Voice clone created from Voice Journal app');
+    formData.append('clip', audioBlob, 'voice_sample.webm');
 
-    console.log('Creating voice clone with ElevenLabs...');
+    console.log('Creating voice clone with Cartesia...');
 
-    // Call ElevenLabs Voice Add API
-    const response = await fetch('https://api.elevenlabs.io/v1/voices/add', {
+    // Call Cartesia Voice Clone API
+    const response = await fetch('https://api.cartesia.ai/voices/clone', {
       method: 'POST',
       headers: {
-        'xi-api-key': elevenLabsApiKey,
+        'X-API-Key': cartesiaApiKey,
+        'Cartesia-Version': '2025-04-16',
       },
       body: formData,
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('ElevenLabs API error:', errorText);
+      console.error('Cartesia API error:', errorText);
       return new Response(
         JSON.stringify({ error: `Voice cloning failed: ${errorText}` }),
         { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -64,11 +62,11 @@ serve(async (req) => {
     }
 
     const result = await response.json();
-    console.log('Voice clone created:', result.voice_id);
+    console.log('Voice clone created:', result.id);
 
     return new Response(
       JSON.stringify({ 
-        voiceId: result.voice_id,
+        voiceId: result.id,
         message: 'Voice clone created successfully'
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
