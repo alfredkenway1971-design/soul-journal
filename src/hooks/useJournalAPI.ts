@@ -256,6 +256,7 @@ export const useJournalAPI = () => {
     generateTitle,
     translateText,
     generateVoice,
+    generateSoulReflection,
     uploadAudio,
     uploadPhoto,
     saveEntry,
