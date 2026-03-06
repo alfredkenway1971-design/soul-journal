@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Target, Plus, X, Sparkles, Heart, Briefcase, Brain, Users, Zap } from "lucide-react";
+import { ArrowLeft, Target, Plus, X, Sparkles, Heart, Briefcase, Brain, Users, Zap, Shield, AlertTriangle, Globe } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,6 +35,27 @@ const PRESET_INTERESTS = [
   "Time Management", "Personal Finance", "Learning", "Self-Reflection"
 ];
 
+const PRESET_STRENGTHS = [
+  "Resilience", "Empathy", "Discipline", "Creativity", "Leadership",
+  "Patience", "Courage", "Honesty", "Adaptability", "Gratitude"
+];
+
+const PRESET_FEARS = [
+  "Failure", "Rejection", "Loneliness", "Losing control", "Not being enough",
+  "Change", "Vulnerability", "Missing out", "Disappointing others"
+];
+
+const WORLDVIEW_OPTIONS = [
+  { label: "Islam", emoji: "☪️" },
+  { label: "Christianity", emoji: "✝️" },
+  { label: "Judaism", emoji: "✡️" },
+  { label: "Buddhism", emoji: "☸️" },
+  { label: "Hinduism", emoji: "🕉️" },
+  { label: "Sikhism", emoji: "🙏" },
+  { label: "Spiritual (non-religious)", emoji: "✨" },
+  { label: "Secular / No preference", emoji: "🌍" },
+];
+
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Briefcase, Users, Heart, Zap, Brain, Sparkles, Target
 };
@@ -46,8 +67,13 @@ const GoalsSettingsPage = () => {
   
   const [goals, setGoals] = useState<Goal[]>([]);
   const [interests, setInterests] = useState<string[]>([]);
+  const [strengths, setStrengths] = useState<string[]>([]);
+  const [fears, setFears] = useState<string[]>([]);
+  const [worldview, setWorldview] = useState<string | null>(null);
   const [newGoal, setNewGoal] = useState("");
   const [newInterest, setNewInterest] = useState("");
+  const [newStrength, setNewStrength] = useState("");
+  const [newFear, setNewFear] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
