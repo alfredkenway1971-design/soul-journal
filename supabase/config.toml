@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.generate-coaching-insights]
 verify_jwt = false
+
+[functions.generate-soul-reflection]
+verify_jwt = false

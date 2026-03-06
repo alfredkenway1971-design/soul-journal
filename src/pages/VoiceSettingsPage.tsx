@@ -357,7 +357,7 @@ const VoiceSettingsPage = () => {
                 <li>• Find a quiet environment</li>
                 <li>• Speak clearly and naturally</li>
                 <li>• Hold device at consistent distance</li>
-                <li>• Record 5 seconds to 2 minutes</li>
+                <li>• Record 30 seconds to 2 minutes</li>
               </ul>
             </div>
           </motion.div>
