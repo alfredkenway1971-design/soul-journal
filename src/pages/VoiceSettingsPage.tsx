@@ -348,7 +348,7 @@ const VoiceSettingsPage = () => {
               Create Your Voice Clone
             </h2>
             <p className="text-muted-foreground text-sm mb-6">
-              Record at least 5 seconds of clear speech. Read a passage or speak naturally about your day.
+              Record at least 30 seconds of clear speech. Read a passage or speak naturally about your day.
             </p>
             
             <div className="bg-muted/50 rounded-xl p-4 mb-6 text-left">
