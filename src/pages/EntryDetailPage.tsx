@@ -195,6 +195,29 @@ const EntryDetailPage = () => {
     }
   };
 
+  const handleGenerateVoiceForText = async (text: string) => {
+    setIsGeneratingVoice(true);
+    try {
+      const audioUrl = await api.generateVoice(text);
+      setGeneratedAudioUrl(audioUrl);
+      setTimeout(() => {
+        if (audioRef.current) {
+          audioRef.current.play();
+          setIsPlaying(true);
+        }
+      }, 100);
+    } catch (error) {
+      console.error('Error generating voice:', error);
+      toast({
+        title: "Voice Generation Failed",
+        description: error instanceof Error ? error.message : "Failed to generate voice",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingVoice(false);
+    }
+  };
+
   const handlePlayPause = () => {
     if (audioRef.current) {
       if (isPlaying) {
