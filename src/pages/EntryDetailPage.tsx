@@ -39,6 +39,7 @@ interface EntryData {
   playback_language: string | null;
   created_at: string;
   audio_url?: string | null;
+  soul_reflection?: string | null;
 }
 
 interface MediaData {
