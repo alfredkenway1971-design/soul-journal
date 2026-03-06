@@ -529,6 +529,7 @@ const GoalsSettingsPage = () => {
               </button>
             ))}
           </div>
+        </motion.div>
 
         {/* Save Button */}
         <motion.div
