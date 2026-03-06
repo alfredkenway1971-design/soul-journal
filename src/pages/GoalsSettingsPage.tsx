@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Target, Plus, X, Sparkles, Heart, Briefcase, Brain, Users, Zap } from "lucide-react";
+import { ArrowLeft, Target, Plus, X, Sparkles, Heart, Briefcase, Brain, Users, Zap, Shield, AlertTriangle, Globe } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,6 +35,27 @@ const PRESET_INTERESTS = [
   "Time Management", "Personal Finance", "Learning", "Self-Reflection"
 ];
 
+const PRESET_STRENGTHS = [
+  "Resilience", "Empathy", "Discipline", "Creativity", "Leadership",
+  "Patience", "Courage", "Honesty", "Adaptability", "Gratitude"
+];
+
+const PRESET_FEARS = [
+  "Failure", "Rejection", "Loneliness", "Losing control", "Not being enough",
+  "Change", "Vulnerability", "Missing out", "Disappointing others"
+];
+
+const WORLDVIEW_OPTIONS = [
+  { label: "Islam", emoji: "☪️" },
+  { label: "Christianity", emoji: "✝️" },
+  { label: "Judaism", emoji: "✡️" },
+  { label: "Buddhism", emoji: "☸️" },
+  { label: "Hinduism", emoji: "🕉️" },
+  { label: "Sikhism", emoji: "🙏" },
+  { label: "Spiritual (non-religious)", emoji: "✨" },
+  { label: "Secular / No preference", emoji: "🌍" },
+];
+
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Briefcase, Users, Heart, Zap, Brain, Sparkles, Target
 };
@@ -46,8 +67,13 @@ const GoalsSettingsPage = () => {
   
   const [goals, setGoals] = useState<Goal[]>([]);
   const [interests, setInterests] = useState<string[]>([]);
+  const [strengths, setStrengths] = useState<string[]>([]);
+  const [fears, setFears] = useState<string[]>([]);
+  const [worldview, setWorldview] = useState<string | null>(null);
   const [newGoal, setNewGoal] = useState("");
   const [newInterest, setNewInterest] = useState("");
+  const [newStrength, setNewStrength] = useState("");
+  const [newFear, setNewFear] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -58,7 +84,7 @@ const GoalsSettingsPage = () => {
       try {
         const { data, error } = await supabase
           .from('profiles')
-          .select('goals, interests')
+          .select('goals, interests, fears, strengths, worldview')
           .eq('id', user.id)
           .maybeSingle();
         
@@ -68,6 +94,10 @@ const GoalsSettingsPage = () => {
           const goalsData = Array.isArray(data.goals) ? data.goals as unknown as Goal[] : [];
           setGoals(goalsData);
           setInterests(data.interests || []);
+          setFears((data as any).fears || []);
+          setStrengths((data as any).strengths || []);
+          setWorldview((data as any).worldview || null);
+          setWorldview((data as any).worldview || null);
         }
       } catch (error) {
         console.error('Error fetching profile:', error);
@@ -89,8 +119,11 @@ const GoalsSettingsPage = () => {
         .from('profiles')
         .update({ 
           goals: JSON.parse(JSON.stringify(goals)),
-          interests: interests
-        })
+          interests: interests,
+          fears: fears,
+          strengths: strengths,
+          worldview: worldview,
+        } as any)
         .eq('id', user.id);
       
       if (error) throw error;
@@ -344,6 +377,155 @@ const GoalsSettingsPage = () => {
                 </Badge>
               ))}
             </div>
+          </div>
+        </motion.div>
+
+        {/* Strengths Section */}
+        <motion.div
+          className="glass-card rounded-2xl p-6 space-y-4"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+        >
+          <div className="flex items-center gap-2 mb-2">
+            <Shield className="w-5 h-5 text-primary" />
+            <h2 className="font-semibold text-foreground">Your Strengths</h2>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            What are your core strengths? Your Soul Mirror will remind you of these when you need it most.
+          </p>
+          
+          {strengths.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {strengths.map((s) => (
+                <Badge key={s} variant="default" className="cursor-pointer bg-primary text-primary-foreground gap-1">
+                  {s}
+                  <X className="w-3 h-3 ml-1" onClick={() => setStrengths(strengths.filter(x => x !== s))} />
+                </Badge>
+              ))}
+            </div>
+          )}
+
+          <div className="flex gap-2">
+            <Input
+              value={newStrength}
+              onChange={(e) => setNewStrength(e.target.value)}
+              placeholder="Add a strength..."
+              className="flex-1"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && newStrength.trim()) {
+                  setStrengths([...strengths, newStrength.trim()]);
+                  setNewStrength("");
+                }
+              }}
+            />
+            <Button size="icon" variant="outline" onClick={() => {
+              if (newStrength.trim()) {
+                setStrengths([...strengths, newStrength.trim()]);
+                setNewStrength("");
+              }
+            }}>
+              <Plus className="w-4 h-4" />
+            </Button>
+          </div>
+          
+          <div className="flex flex-wrap gap-2">
+            {PRESET_STRENGTHS.filter(s => !strengths.includes(s)).map((s) => (
+              <Badge key={s} variant="outline" className="cursor-pointer hover:bg-primary/10" onClick={() => setStrengths([...strengths, s])}>
+                <Plus className="w-3 h-3 mr-1" />{s}
+              </Badge>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Fears Section */}
+        <motion.div
+          className="glass-card rounded-2xl p-6 space-y-4"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <div className="flex items-center gap-2 mb-2">
+            <AlertTriangle className="w-5 h-5 text-primary" />
+            <h2 className="font-semibold text-foreground">Your Fears</h2>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            What holds you back? Naming your fears helps your Soul Mirror address them with wisdom.
+          </p>
+          
+          {fears.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {fears.map((f) => (
+                <Badge key={f} variant="default" className="cursor-pointer bg-primary text-primary-foreground gap-1">
+                  {f}
+                  <X className="w-3 h-3 ml-1" onClick={() => setFears(fears.filter(x => x !== f))} />
+                </Badge>
+              ))}
+            </div>
+          )}
+
+          <div className="flex gap-2">
+            <Input
+              value={newFear}
+              onChange={(e) => setNewFear(e.target.value)}
+              placeholder="Add a fear..."
+              className="flex-1"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && newFear.trim()) {
+                  setFears([...fears, newFear.trim()]);
+                  setNewFear("");
+                }
+              }}
+            />
+            <Button size="icon" variant="outline" onClick={() => {
+              if (newFear.trim()) {
+                setFears([...fears, newFear.trim()]);
+                setNewFear("");
+              }
+            }}>
+              <Plus className="w-4 h-4" />
+            </Button>
+          </div>
+          
+          <div className="flex flex-wrap gap-2">
+            {PRESET_FEARS.filter(f => !fears.includes(f)).map((f) => (
+              <Badge key={f} variant="outline" className="cursor-pointer hover:bg-primary/10" onClick={() => setFears([...fears, f])}>
+                <Plus className="w-3 h-3 mr-1" />{f}
+              </Badge>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Worldview Section */}
+        <motion.div
+          className="glass-card rounded-2xl p-6 space-y-4"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25 }}
+        >
+          <div className="flex items-center gap-2 mb-2">
+            <Globe className="w-5 h-5 text-primary" />
+            <h2 className="font-semibold text-foreground">Your Worldview</h2>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Your Soul Mirror will draw wisdom from your faith or philosophical tradition.
+          </p>
+          
+          <div className="grid grid-cols-2 gap-2">
+            {WORLDVIEW_OPTIONS.map((option) => (
+              <button
+                key={option.label}
+                className={`flex items-center gap-2 p-3 rounded-xl border transition-all text-left text-sm ${
+                  worldview === option.label
+                    ? 'border-primary bg-primary/10 text-foreground font-medium'
+                    : 'border-border bg-muted/30 text-muted-foreground hover:bg-muted/50'
+                }`}
+                onClick={() => setWorldview(worldview === option.label ? null : option.label)}
+              >
+                <span className="text-lg">{option.emoji}</span>
+                <span>{option.label}</span>
+              </button>
+            ))}
           </div>
         </motion.div>
 

@@ -62,8 +62,24 @@ export const useJournalAPI = () => {
   };
 
   const generateVoice = async (text: string, voiceId?: string): Promise<string> => {
+    // Fetch user's voice clone ID if not provided
+    let selectedVoiceId = voiceId;
+    if (!selectedVoiceId) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('voice_clone_id')
+          .eq('id', user.id)
+          .single();
+        if (profile?.voice_clone_id) {
+          selectedVoiceId = profile.voice_clone_id;
+        }
+      }
+    }
+
     const { data, error } = await supabase.functions.invoke('generate-voice', {
-      body: { text, voiceId },
+      body: { text, voiceId: selectedVoiceId },
     });
 
     if (error) throw new Error(error.message);
@@ -71,6 +87,32 @@ export const useJournalAPI = () => {
     
     // Return audio URL from base64
     return `data:audio/mpeg;base64,${data.audioContent}`;
+  };
+
+  const generateSoulReflection = async (entryText: string): Promise<string> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('goals, fears, strengths, worldview')
+      .eq('id', user.id)
+      .single();
+
+    const { data, error } = await supabase.functions.invoke('generate-soul-reflection', {
+      body: {
+        entryText,
+        goals: profile?.goals || [],
+        fears: (profile as any)?.fears || [],
+        strengths: (profile as any)?.strengths || [],
+        worldview: (profile as any)?.worldview || null,
+      },
+    });
+
+    if (error) throw new Error(error.message);
+    if (data.error) throw new Error(data.error);
+
+    return data.reflection;
   };
 
   const uploadAudio = async (audioBlob: Blob, userId: string): Promise<string> => {
@@ -214,6 +256,7 @@ export const useJournalAPI = () => {
     generateTitle,
     translateText,
     generateVoice,
+    generateSoulReflection,
     uploadAudio,
     uploadPhoto,
     saveEntry,

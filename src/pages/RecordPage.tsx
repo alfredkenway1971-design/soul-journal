@@ -267,6 +267,20 @@ const RecordPage = () => {
           }
         }
       }
+
+      // Generate Soul Mirror reflection in the background
+      if (entry?.id && enhancedText) {
+        api.generateSoulReflection(enhancedText).then(async (reflection) => {
+          try {
+            await supabase
+              .from('journal_entries')
+              .update({ soul_reflection: reflection } as any)
+              .eq('id', entry.id);
+          } catch (err) {
+            console.error('Failed to save soul reflection:', err);
+          }
+        }).catch(err => console.error('Soul reflection error:', err));
+      }
       
       setStep("complete");
       toast({

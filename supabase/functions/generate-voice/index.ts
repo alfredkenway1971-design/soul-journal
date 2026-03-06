@@ -17,36 +17,32 @@ serve(async (req) => {
       throw new Error('No text provided');
     }
 
-    const cartesiaApiKey = Deno.env.get('CARTESIA_API_KEY');
-    if (!cartesiaApiKey) {
-      throw new Error('Cartesia API key not configured');
+    const elevenLabsApiKey = Deno.env.get('ELEVENLABS_API_KEY');
+    if (!elevenLabsApiKey) {
+      throw new Error('ElevenLabs API key not configured');
     }
 
-    // Use provided voiceId or default to a Cartesia stock voice
-    const selectedVoiceId = voiceId || '694f9389-aac1-45b6-b726-9d9369183238'; // Default Cartesia voice
+    // Use provided voiceId or default to "George" stock voice
+    const selectedVoiceId = voiceId || 'JBFqnCBsd6RMkjVDRZzb';
     
-    console.log('Generating voice with Cartesia, voice ID:', selectedVoiceId);
+    console.log('Generating voice with ElevenLabs, voice ID:', selectedVoiceId);
 
     const response = await fetch(
-      'https://api.cartesia.ai/tts/bytes',
+      `https://api.elevenlabs.io/v1/text-to-speech/${selectedVoiceId}?output_format=mp3_44100_128`,
       {
         method: 'POST',
         headers: {
-          'X-API-Key': cartesiaApiKey,
-          'Cartesia-Version': '2025-04-16',
+          'xi-api-key': elevenLabsApiKey,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model_id: 'sonic-2',
-          transcript: text,
-          voice: {
-            mode: 'id',
-            id: selectedVoiceId,
-          },
-          language: 'en',
-          output_format: {
-            container: 'mp3',
-            bit_rate: 128000,
+          text,
+          model_id: 'eleven_multilingual_v2',
+          voice_settings: {
+            stability: 0.5,
+            similarity_boost: 0.75,
+            style: 0.5,
+            use_speaker_boost: true,
           },
         }),
       }
@@ -54,13 +50,13 @@ serve(async (req) => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Cartesia API error:', errorText);
-      throw new Error(`Cartesia API error: ${errorText}`);
+      console.error('ElevenLabs API error:', errorText);
+      throw new Error(`ElevenLabs API error: ${errorText}`);
     }
 
     const audioBuffer = await response.arrayBuffer();
     
-    // Encode as base64 using Deno standard library
+    // Encode as base64
     const { encode: base64Encode } = await import("https://deno.land/std@0.168.0/encoding/base64.ts");
     const base64Audio = base64Encode(audioBuffer);
 

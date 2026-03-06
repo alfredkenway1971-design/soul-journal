@@ -20,10 +20,10 @@ serve(async (req) => {
       );
     }
 
-    const cartesiaApiKey = Deno.env.get('CARTESIA_API_KEY');
-    if (!cartesiaApiKey) {
+    const elevenLabsApiKey = Deno.env.get('ELEVENLABS_API_KEY');
+    if (!elevenLabsApiKey) {
       return new Response(
-        JSON.stringify({ error: 'Cartesia API key not configured' }),
+        JSON.stringify({ error: 'ElevenLabs API key not configured' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -36,25 +36,25 @@ serve(async (req) => {
     }
     const audioBlob = new Blob([bytes], { type: 'audio/webm' });
 
-    // Create form data for Cartesia Voice Clone API
+    // Create form data for ElevenLabs Voice Clone (Instant Voice Cloning)
     const formData = new FormData();
-    formData.append('clip', audioBlob, 'voice_sample.webm');
+    formData.append('files', audioBlob, 'voice_sample.webm');
+    formData.append('name', name || 'My Voice Clone');
+    formData.append('description', 'Voice clone created from journal app');
 
-    console.log('Creating voice clone with Cartesia...');
+    console.log('Creating voice clone with ElevenLabs...');
 
-    // Call Cartesia Voice Clone API
-    const response = await fetch('https://api.cartesia.ai/voices/clone', {
+    const response = await fetch('https://api.elevenlabs.io/v1/voices/add', {
       method: 'POST',
       headers: {
-        'X-API-Key': cartesiaApiKey,
-        'Cartesia-Version': '2025-04-16',
+        'xi-api-key': elevenLabsApiKey,
       },
       body: formData,
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Cartesia API error:', errorText);
+      console.error('ElevenLabs API error:', errorText);
       return new Response(
         JSON.stringify({ error: `Voice cloning failed: ${errorText}` }),
         { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -62,11 +62,11 @@ serve(async (req) => {
     }
 
     const result = await response.json();
-    console.log('Voice clone created:', result.id);
+    console.log('Voice clone created:', result.voice_id);
 
     return new Response(
       JSON.stringify({ 
-        voiceId: result.id,
+        voiceId: result.voice_id,
         message: 'Voice clone created successfully'
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

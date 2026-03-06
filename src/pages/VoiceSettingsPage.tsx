@@ -28,7 +28,7 @@ const VoiceSettingsPage = () => {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  const MIN_RECORDING_TIME = 5; // Cartesia needs ~5 seconds minimum
+  const MIN_RECORDING_TIME = 30; // ElevenLabs needs ~30 seconds minimum
   const MAX_RECORDING_TIME = 120; // 2 minutes maximum
 
   useEffect(() => {
@@ -348,7 +348,7 @@ const VoiceSettingsPage = () => {
               Create Your Voice Clone
             </h2>
             <p className="text-muted-foreground text-sm mb-6">
-              Record at least 5 seconds of clear speech. Read a passage or speak naturally about your day.
+              Record at least 30 seconds of clear speech. Read a passage or speak naturally about your day.
             </p>
             
             <div className="bg-muted/50 rounded-xl p-4 mb-6 text-left">
@@ -357,7 +357,7 @@ const VoiceSettingsPage = () => {
                 <li>• Find a quiet environment</li>
                 <li>• Speak clearly and naturally</li>
                 <li>• Hold device at consistent distance</li>
-                <li>• Record 5 seconds to 2 minutes</li>
+                <li>• Record 30 seconds to 2 minutes</li>
               </ul>
             </div>
           </motion.div>

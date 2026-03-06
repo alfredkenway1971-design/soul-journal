@@ -147,6 +147,7 @@ export type Database = {
           mood: string | null
           original_transcription: string | null
           playback_language: string | null
+          soul_reflection: string | null
           title: string | null
           updated_at: string
           user_id: string
@@ -159,6 +160,7 @@ export type Database = {
           mood?: string | null
           original_transcription?: string | null
           playback_language?: string | null
+          soul_reflection?: string | null
           title?: string | null
           updated_at?: string
           user_id: string
@@ -171,6 +173,7 @@ export type Database = {
           mood?: string | null
           original_transcription?: string | null
           playback_language?: string | null
+          soul_reflection?: string | null
           title?: string | null
           updated_at?: string
           user_id?: string
@@ -190,34 +193,43 @@ export type Database = {
           avatar_url: string | null
           created_at: string
           display_name: string | null
+          fears: string[] | null
           goals: Json | null
           id: string
           interests: string[] | null
           pin_hash: string | null
+          strengths: string[] | null
           updated_at: string
           voice_clone_id: string | null
+          worldview: string | null
         }
         Insert: {
           avatar_url?: string | null
           created_at?: string
           display_name?: string | null
+          fears?: string[] | null
           goals?: Json | null
           id: string
           interests?: string[] | null
           pin_hash?: string | null
+          strengths?: string[] | null
           updated_at?: string
           voice_clone_id?: string | null
+          worldview?: string | null
         }
         Update: {
           avatar_url?: string | null
           created_at?: string
           display_name?: string | null
+          fears?: string[] | null
           goals?: Json | null
           id?: string
           interests?: string[] | null
           pin_hash?: string | null
+          strengths?: string[] | null
           updated_at?: string
           voice_clone_id?: string | null
+          worldview?: string | null
         }
         Relationships: []
       }
