@@ -94,11 +94,9 @@ const GoalsSettingsPage = () => {
           const goalsData = Array.isArray(data.goals) ? data.goals as unknown as Goal[] : [];
           setGoals(goalsData);
           setInterests(data.interests || []);
-          setStrengths((data as any).fears || []);
-          setFears((data as any).strengths || []);
-          // Fix: fears/strengths were swapped above, correct:
           setFears((data as any).fears || []);
           setStrengths((data as any).strengths || []);
+          setWorldview((data as any).worldview || null);
           setWorldview((data as any).worldview || null);
         }
       } catch (error) {
