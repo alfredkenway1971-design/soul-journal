@@ -28,7 +28,7 @@ const VoiceSettingsPage = () => {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  const MIN_RECORDING_TIME = 5; // Cartesia needs ~5 seconds minimum
+  const MIN_RECORDING_TIME = 30; // ElevenLabs needs ~30 seconds minimum
   const MAX_RECORDING_TIME = 120; // 2 minutes maximum
 
   useEffect(() => {
