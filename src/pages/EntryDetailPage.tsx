@@ -437,7 +437,47 @@ const EntryDetailPage = () => {
           )}
         </motion.div>
 
-        {/* Original Transcription (Collapsible) */}
+        {/* Soul Mirror Reflection */}
+        {entry.soul_reflection && (
+          <motion.div
+            className="rounded-2xl p-6 relative overflow-hidden"
+            style={{
+              background: 'linear-gradient(135deg, hsl(var(--primary) / 0.08), hsl(var(--accent) / 0.12))',
+              backdropFilter: 'blur(20px)',
+              border: '1px solid hsl(var(--primary) / 0.2)',
+            }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25 }}
+          >
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                <Sparkles className="w-4 h-4 text-primary" />
+              </div>
+              <h3 className="text-sm font-semibold text-primary tracking-wide uppercase">
+                Message from your Soul
+              </h3>
+            </div>
+            <p className="font-journal text-foreground leading-relaxed italic text-base">
+              "{entry.soul_reflection}"
+            </p>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="mt-3 gap-1 text-xs text-primary"
+              onClick={() => {
+                if (entry.soul_reflection) {
+                  handleGenerateVoiceForText(entry.soul_reflection);
+                }
+              }}
+              disabled={isGeneratingVoice}
+            >
+              <Volume2 className="w-3 h-3" />
+              Listen to reflection
+            </Button>
+          </motion.div>
+        )}
+
         <motion.div
           className="glass-card rounded-2xl overflow-hidden"
           initial={{ opacity: 0, y: 20 }}
