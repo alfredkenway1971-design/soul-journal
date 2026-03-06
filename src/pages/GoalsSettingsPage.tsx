@@ -84,7 +84,7 @@ const GoalsSettingsPage = () => {
       try {
         const { data, error } = await supabase
           .from('profiles')
-          .select('goals, interests')
+          .select('goals, interests, fears, strengths, worldview')
           .eq('id', user.id)
           .maybeSingle();
         
@@ -94,6 +94,12 @@ const GoalsSettingsPage = () => {
           const goalsData = Array.isArray(data.goals) ? data.goals as unknown as Goal[] : [];
           setGoals(goalsData);
           setInterests(data.interests || []);
+          setStrengths((data as any).fears || []);
+          setFears((data as any).strengths || []);
+          // Fix: fears/strengths were swapped above, correct:
+          setFears((data as any).fears || []);
+          setStrengths((data as any).strengths || []);
+          setWorldview((data as any).worldview || null);
         }
       } catch (error) {
         console.error('Error fetching profile:', error);
