@@ -121,8 +121,11 @@ const GoalsSettingsPage = () => {
         .from('profiles')
         .update({ 
           goals: JSON.parse(JSON.stringify(goals)),
-          interests: interests
-        })
+          interests: interests,
+          fears: fears,
+          strengths: strengths,
+          worldview: worldview,
+        } as any)
         .eq('id', user.id);
       
       if (error) throw error;
