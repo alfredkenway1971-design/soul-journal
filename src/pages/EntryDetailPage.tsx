@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Play, Pause, Trash2, Volume2, ChevronDown, ChevronUp, Pencil, Check, X } from "lucide-react";
+import { ArrowLeft, Play, Pause, Trash2, Volume2, ChevronDown, ChevronUp, Pencil, Check, X, Sparkles } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
