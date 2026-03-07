@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, ArrowRight, Calendar, Palette, Type, Sparkles, Loader2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Calendar, Palette, Type, Sparkles, Loader2, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,9 +13,11 @@ import CoverTemplates, { type CoverTemplate } from "@/components/book-builder/Co
 import FontSelector, { type BookFont } from "@/components/book-builder/FontSelector";
 import PageStyleSelector, { type PageBackground, type EntryLayout } from "@/components/book-builder/PageStyleSelector";
 import BookPreview from "@/components/book-builder/BookPreview";
-import { generateAndDownloadPDF, type PhotoSize } from "@/lib/generateBookPDF";
+import { generateAndDownloadPDF, generatePreviewDataURL, type PhotoSize, type FontSize } from "@/lib/generateBookPDF";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ImageIcon } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 type Step = 1 | 2 | 3 | 4;
 
@@ -25,6 +27,12 @@ const stepInfo = [
   { num: 3, label: "Font & Layout", icon: Type },
   { num: 4, label: "Preview & Generate", icon: Sparkles },
 ];
+
+const fontSizeLabels: Record<FontSize, string> = {
+  small: "Small",
+  medium: "Medium",
+  large: "Large",
+};
 
 const BookBuilderPage = () => {
   const navigate = useNavigate();
@@ -54,6 +62,12 @@ const BookBuilderPage = () => {
   const [layout, setLayout] = useState<EntryLayout>("one-per-page");
   const [watermark, setWatermark] = useState(true);
   const [photoSize, setPhotoSize] = useState<PhotoSize>("medium");
+  const [fontSize, setFontSize] = useState<FontSize>("medium");
+
+  // Preview
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [showPreviewDialog, setShowPreviewDialog] = useState(false);
 
   const yearRange = (() => {
     if (startDate && endDate) {
@@ -91,6 +105,60 @@ const BookBuilderPage = () => {
   }, [user, startDate, endDate]);
 
   const [progressMsg, setProgressMsg] = useState("");
+
+  const handlePreview = async () => {
+    if (!user) return;
+    setPreviewLoading(true);
+    try {
+      // Fetch one sample entry
+      let query = supabase
+        .from("journal_entries")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(1);
+
+      if (startDate) query = query.gte("created_at", new Date(startDate).toISOString());
+      if (endDate) query = query.lte("created_at", new Date(endDate + "T23:59:59").toISOString());
+
+      const { data } = await query;
+      const sample = data?.[0];
+      if (!sample) {
+        toast({ title: "No entries", description: "No entries found to preview.", variant: "destructive" });
+        setPreviewLoading(false);
+        return;
+      }
+
+      // Fetch photos for this entry
+      const { data: mediaData } = await supabase
+        .from("entry_media")
+        .select("storage_path")
+        .eq("entry_id", sample.id)
+        .eq("media_type", "photo");
+
+      let photoUrls: string[] = [];
+      if (mediaData && mediaData.length > 0) {
+        for (const m of mediaData) {
+          const { data: urlData } = await supabase.storage
+            .from("journal-photos")
+            .createSignedUrl(m.storage_path, 3600);
+          if (urlData?.signedUrl) photoUrls.push(urlData.signedUrl);
+        }
+      }
+
+      const url = await generatePreviewDataURL(
+        { cover, font, background, layout, watermark, userName: displayName, yearRange, avatarUrl, showAvatar, photoSize, fontSize },
+        { ...sample, photoUrls }
+      );
+      setPreviewUrl(url);
+      setShowPreviewDialog(true);
+    } catch (err) {
+      console.error(err);
+      toast({ title: "Preview failed", description: "Could not generate preview.", variant: "destructive" });
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
 
   const handleGenerate = async () => {
     if (!user) return;
@@ -142,7 +210,7 @@ const BookBuilderPage = () => {
       }));
 
       await generateAndDownloadPDF(
-        { cover, font, background, layout, watermark, userName: displayName, yearRange, avatarUrl, showAvatar, photoSize },
+        { cover, font, background, layout, watermark, userName: displayName, yearRange, avatarUrl, showAvatar, photoSize, fontSize },
         entriesWithPhotos,
         setProgressMsg
       );
@@ -162,6 +230,12 @@ const BookBuilderPage = () => {
     2: true,
     3: true,
     4: true,
+  };
+
+  const fontSizeSliderValue = fontSize === "small" ? 0 : fontSize === "medium" ? 1 : 2;
+  const handleFontSizeSlider = (val: number[]) => {
+    const map: FontSize[] = ["small", "medium", "large"];
+    setFontSize(map[val[0]]);
   };
 
   return (
@@ -274,6 +348,27 @@ const BookBuilderPage = () => {
                   <FontSelector selected={font} onSelect={setFont} />
                 </div>
 
+                {/* Font Size Slider */}
+                <div>
+                  <p className="text-sm font-medium text-foreground mb-3 flex items-center gap-2">
+                    <Type className="w-4 h-4" />
+                    Font Size: <span className="text-primary">{fontSizeLabels[fontSize]}</span>
+                  </p>
+                  <Slider
+                    value={[fontSizeSliderValue]}
+                    onValueChange={handleFontSizeSlider}
+                    min={0}
+                    max={2}
+                    step={1}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                    <span>Small</span>
+                    <span>Medium</span>
+                    <span>Large</span>
+                  </div>
+                </div>
+
                 <PageStyleSelector
                   background={background}
                   onBackgroundChange={setBackground}
@@ -340,11 +435,35 @@ const BookBuilderPage = () => {
                     <span className="text-muted-foreground">Font</span>
                     <span className="font-medium text-foreground capitalize">{font}</span>
                   </div>
+                  <div className="flex justify-between py-2 border-b border-border">
+                    <span className="text-muted-foreground">Font Size</span>
+                    <span className="font-medium text-foreground capitalize">{fontSize}</span>
+                  </div>
                   <div className="flex justify-between py-2">
                     <span className="text-muted-foreground">Layout</span>
                     <span className="font-medium text-foreground">{layout === "one-per-page" ? "One Per Page" : "Continuous"}</span>
                   </div>
                 </div>
+
+                {/* Preview Button */}
+                <Button
+                  variant="outline"
+                  className="w-full h-12 rounded-xl gap-2"
+                  onClick={handlePreview}
+                  disabled={previewLoading || generating}
+                >
+                  {previewLoading ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Generating Preview...
+                    </>
+                  ) : (
+                    <>
+                      <Eye className="w-5 h-5" />
+                      Preview Entry Page
+                    </>
+                  )}
+                </Button>
 
                 <Button
                   className="w-full h-14 rounded-2xl gradient-primary text-lg gap-2"
@@ -382,6 +501,23 @@ const BookBuilderPage = () => {
           </motion.div>
         )}
       </main>
+
+      {/* Preview Dialog */}
+      <Dialog open={showPreviewDialog} onOpenChange={setShowPreviewDialog}>
+        <DialogContent className="max-w-md p-4">
+          <DialogHeader>
+            <DialogTitle>Entry Page Preview</DialogTitle>
+          </DialogHeader>
+          {previewUrl && (
+            <div className="rounded-xl overflow-hidden border border-border shadow-lg">
+              <img src={previewUrl} alt="Page preview" className="w-full h-auto" />
+            </div>
+          )}
+          <p className="text-xs text-muted-foreground text-center">
+            This shows how a single entry page will look in the final PDF.
+          </p>
+        </DialogContent>
+      </Dialog>
 
       <BottomNav />
     </div>

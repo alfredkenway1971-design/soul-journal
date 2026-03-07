@@ -6,6 +6,7 @@ import { type PageBackground, type EntryLayout } from "@/components/book-builder
 import { format } from "date-fns";
 
 export type PhotoSize = "small" | "medium" | "large";
+export type FontSize = "small" | "medium" | "large";
 
 interface BookConfig {
   cover: CoverTemplate;
@@ -18,6 +19,7 @@ interface BookConfig {
   avatarUrl: string | null;
   showAvatar: boolean;
   photoSize?: PhotoSize;
+  fontSize?: FontSize;
 }
 
 interface JournalEntry {
@@ -27,6 +29,7 @@ interface JournalEntry {
   mood: string | null;
   created_at: string;
   photoUrls?: string[];
+  soul_reflection?: string | null;
 }
 
 const coverGradients: Record<CoverTemplate, string> = {
@@ -45,7 +48,6 @@ const coverTextColors: Record<CoverTemplate, string> = {
   sunrise: "#ffffff",
 };
 
-// SVG-based backgrounds so html2canvas captures them as real DOM
 const getPageBackgroundHTML = (bg: PageBackground, w: number, h: number): string => {
   if (bg === "lined") {
     const spacing = 28;
@@ -75,6 +77,15 @@ const SCALE = 2;
 const PAGE_W_PX = Math.round(PAGE_W_MM * 3.78 * SCALE);
 const PAGE_H_PX = Math.round(PAGE_H_MM * 3.78 * SCALE);
 
+const getFontSizePx = (size: FontSize): { body: number; title: number; meta: number } => {
+  switch (size) {
+    case "small": return { body: 13, title: 18, meta: 11 };
+    case "large": return { body: 19, title: 26, meta: 15 };
+    case "medium":
+    default: return { body: 16, title: 22, meta: 13 };
+  }
+};
+
 const buildPageHTML = (innerContent: string, fontCSS: string, fontImportUrl: string): string => {
   return `<!DOCTYPE html><html><head><meta charset="utf-8">
 <link href="${fontImportUrl}" rel="stylesheet">
@@ -90,7 +101,6 @@ const waitForFonts = async (doc: Document, timeoutMs = 8000): Promise<void> => {
       doc.fonts.ready,
       new Promise((r) => setTimeout(r, timeoutMs)),
     ]);
-    // Extra settle time for rendering
     await new Promise((r) => setTimeout(r, 300));
   } catch {
     await new Promise((r) => setTimeout(r, 2000));
@@ -109,10 +119,9 @@ const renderHTMLToCanvas = async (html: string): Promise<HTMLCanvasElement> => {
   iframeDoc.write(html);
   iframeDoc.close();
 
-  // Wait for the iframe to load and fonts to be ready
   await new Promise<void>((resolve) => {
     iframe.onload = () => resolve();
-    setTimeout(resolve, 3000); // fallback
+    setTimeout(resolve, 3000);
   });
   await waitForFonts(iframeDoc);
 
@@ -133,6 +142,62 @@ const addCanvasToPDF = (pdf: jsPDF, canvas: HTMLCanvasElement, addNewPage: boole
   if (addNewPage) pdf.addPage([PAGE_W_MM, PAGE_H_MM]);
   const imgData = canvas.toDataURL("image/png");
   pdf.addImage(imgData, "PNG", 0, 0, PAGE_W_MM, PAGE_H_MM, undefined, "FAST");
+};
+
+// ── Image Gallery Engine ──
+const buildImageGalleryHTML = (photoUrls: string[], photoSize: PhotoSize, isRTL: boolean): string => {
+  if (!photoUrls || photoUrls.length === 0) return "";
+
+  const count = Math.min(photoUrls.length, 5);
+  const urls = photoUrls.slice(0, 5);
+  const dims = getPhotoDimensions(photoSize);
+  const dir = isRTL ? 'rtl' : 'ltr';
+
+  // Determine layout based on count
+  let gridStyle = "";
+  let imgStyle = `border-radius:15px;border:1pt solid #d1d5db;object-fit:cover;`;
+
+  if (count <= 2) {
+    // Single row, larger images
+    const imgW = count === 1 ? Math.min(dims.w * 2.2, PAGE_W_PX - 160) : dims.w * 1.4;
+    const imgH = count === 1 ? dims.h * 2 : dims.h * 1.4;
+    gridStyle = `display:flex;justify-content:center;gap:12px;direction:${dir};`;
+    imgStyle += `width:${imgW}px;height:${imgH}px;`;
+  } else {
+    // 2-column masonry grid for 3-5 images
+    gridStyle = `display:grid;grid-template-columns:1fr 1fr;gap:10px;justify-items:center;direction:${dir};`;
+    imgStyle += `width:100%;height:${dims.h * 1.2}px;`;
+  }
+
+  const imagesHTML = urls.map(url =>
+    `<img src="${url}" style="${imgStyle}" crossorigin="anonymous" />`
+  ).join("");
+
+  return `
+    <div style="margin:40px auto;max-width:${PAGE_W_PX - 120}px;text-align:center;">
+      <div style="${gridStyle}">
+        ${imagesHTML}
+      </div>
+    </div>`;
+};
+
+// ── Soul Reflection HTML ──
+const buildSoulReflectionHTML = (reflection: string, fontSize: number): string => {
+  if (!reflection) return "";
+  return `
+    <div style="margin-top:28px;padding:16px 20px;border-radius:14px;background:linear-gradient(135deg, rgba(139,92,246,0.08), rgba(236,72,153,0.06));border:1px solid rgba(139,92,246,0.15);">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <span style="font-size:14px;">✨</span>
+        <span style="font-size:${fontSize - 4}px;font-weight:600;color:#7c3aed;text-transform:uppercase;letter-spacing:0.08em;">Message from your Soul</span>
+      </div>
+      <p style="font-size:${fontSize - 1}px;line-height:1.7;color:#4b5563;font-style:italic;">"${reflection}"</p>
+    </div>`;
+};
+
+// Detect if text is RTL (Arabic, Hebrew, etc.)
+const isRTLText = (text: string): boolean => {
+  const rtlChars = /[\u0591-\u07FF\uFB1D-\uFDFD\uFE70-\uFEFC]/;
+  return rtlChars.test(text);
 };
 
 // ── Build cover page HTML ──
@@ -189,25 +254,28 @@ const buildEntryPageHTML = (
   const watermarkHTML = config.watermark
     ? `<div style="position:absolute;bottom:30px;right:36px;font-size:24px;opacity:0.06;font-family:Georgia,serif;z-index:2;">✦</div>`
     : "";
+  const fs = getFontSizePx(config.fontSize || "medium");
 
   let entriesHTML = "";
   entries.forEach((entry, idx) => {
     const date = format(new Date(entry.created_at), "EEEE, MMMM d, yyyy");
     const mood = entry.mood ? entry.mood.charAt(0).toUpperCase() + entry.mood.slice(1) : "";
-    const content = (entry.enhanced_text || entry.original_transcription || "No content").replace(/\n/g, "<br>");
-    const moodBadge = mood ? `<span style="display:inline-block;background:#f5f5f5;padding:2px 10px;border-radius:10px;font-size:12px;margin-left:10px;font-style:normal;">${mood}</span>` : "";
+    const content = (entry.enhanced_text || entry.original_transcription || "No content");
+    const rtl = isRTLText(content);
+    const dirAttr = rtl ? 'direction:rtl;text-align:right;' : '';
+    const displayContent = content.replace(/\n/g, "<br>");
+    const moodBadge = mood ? `<span style="display:inline-block;background:#f5f5f5;padding:2px 10px;border-radius:10px;font-size:${fs.meta - 1}px;margin-left:10px;font-style:normal;">${mood}</span>` : "";
 
-    const photoDims = getPhotoDimensions(config.photoSize || "medium");
-    const photoHTML = entry.photoUrls && entry.photoUrls.length > 0
-      ? `<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;">${entry.photoUrls.map(url => `<img src="${url}" style="width:${photoDims.w}px;height:${photoDims.h}px;object-fit:cover;border-radius:8px;border:1px solid #e5e7eb;" crossorigin="anonymous" />`).join("")}</div>`
-      : "";
+    const photoHTML = buildImageGalleryHTML(entry.photoUrls || [], config.photoSize || "medium", rtl);
+    const reflectionHTML = buildSoulReflectionHTML(entry.soul_reflection || "", fs.body);
 
     entriesHTML += `
-      <div style="margin-bottom:0;">
-        <div style="font-size:22px;font-weight:600;color:#0a0a0a;margin-bottom:8px;">${entry.title || "Untitled Entry"}</div>
-        <div style="font-size:13px;color:#9ca3af;margin-bottom:20px;font-style:italic;">${date}${moodBadge}</div>
-        <div style="font-size:16px;line-height:2;color:#374151;">${content}</div>
+      <div style="margin-bottom:0;${dirAttr}">
+        <div style="font-size:${fs.title}px;font-weight:600;color:#0a0a0a;margin-bottom:8px;">${entry.title || "Untitled Entry"}</div>
+        <div style="font-size:${fs.meta}px;color:#9ca3af;margin-bottom:20px;font-style:italic;">${date}${moodBadge}</div>
+        <div style="font-size:${fs.body}px;line-height:2;color:#374151;">${displayContent}</div>
         ${photoHTML}
+        ${reflectionHTML}
       </div>`;
     if (idx < entries.length - 1) {
       entriesHTML += `<div style="height:1px;background:#e5e7eb;margin:40px 0;"></div>`;
@@ -237,26 +305,29 @@ const buildSingleEntryHTML = (
   const watermarkHTML = config.watermark
     ? `<div style="position:absolute;bottom:30px;right:36px;font-size:24px;opacity:0.06;font-family:Georgia,serif;z-index:2;">✦</div>`
     : "";
+  const fs = getFontSizePx(config.fontSize || "medium");
 
   const date = format(new Date(entry.created_at), "EEEE, MMMM d, yyyy");
   const mood = entry.mood ? entry.mood.charAt(0).toUpperCase() + entry.mood.slice(1) : "";
-  const content = (entry.enhanced_text || entry.original_transcription || "No content").replace(/\n/g, "<br>");
-  const moodBadge = mood ? `<span style="display:inline-block;background:#f5f5f5;padding:2px 10px;border-radius:10px;font-size:12px;margin-left:10px;font-style:normal;">${mood}</span>` : "";
+  const content = (entry.enhanced_text || entry.original_transcription || "No content");
+  const rtl = isRTLText(content);
+  const dirAttr = rtl ? 'direction:rtl;text-align:right;' : '';
+  const displayContent = content.replace(/\n/g, "<br>");
+  const moodBadge = mood ? `<span style="display:inline-block;background:#f5f5f5;padding:2px 10px;border-radius:10px;font-size:${fs.meta - 1}px;margin-left:10px;font-style:normal;">${mood}</span>` : "";
 
-  const photoDims = getPhotoDimensions(config.photoSize || "medium");
-  const photoHTML = entry.photoUrls && entry.photoUrls.length > 0
-    ? `<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;">${entry.photoUrls.map(url => `<img src="${url}" style="width:${photoDims.w}px;height:${photoDims.h}px;object-fit:cover;border-radius:8px;border:1px solid #e5e7eb;" crossorigin="anonymous" />`).join("")}</div>`
-    : "";
+  const photoHTML = buildImageGalleryHTML(entry.photoUrls || [], config.photoSize || "medium", rtl);
+  const reflectionHTML = buildSoulReflectionHTML(entry.soul_reflection || "", fs.body);
 
   const inner = `
-    <div style="width:100%;height:100%;background-color:white;padding:60px 48px;position:relative;overflow:hidden;">
+    <div style="width:100%;height:100%;background-color:white;padding:60px 48px;position:relative;overflow:hidden;${dirAttr}">
       ${bgSVG}
       ${watermarkHTML}
       <div style="position:relative;z-index:1;">
-        <div style="font-size:22px;font-weight:600;color:#0a0a0a;margin-bottom:8px;">${entry.title || "Untitled Entry"}</div>
-        <div style="font-size:13px;color:#9ca3af;margin-bottom:20px;font-style:italic;">${date}${moodBadge}</div>
-        <div style="font-size:16px;line-height:2;color:#374151;">${content}</div>
+        <div style="font-size:${fs.title}px;font-weight:600;color:#0a0a0a;margin-bottom:8px;">${entry.title || "Untitled Entry"}</div>
+        <div style="font-size:${fs.meta}px;color:#9ca3af;margin-bottom:20px;font-style:italic;">${date}${moodBadge}</div>
+        <div style="font-size:${fs.body}px;line-height:2;color:#374151;">${displayContent}</div>
         ${photoHTML}
+        ${reflectionHTML}
       </div>
     </div>`;
 
@@ -288,6 +359,26 @@ const getPhotoDimensions = (size: PhotoSize): { w: number; h: number } => {
 
 const ENTRIES_PER_PAGE = 3;
 
+// ── Preview: render a single entry page to a data URL ──
+export const generatePreviewDataURL = async (
+  config: BookConfig,
+  sampleEntry: JournalEntry
+): Promise<string> => {
+  const fontConfig = getFontConfig(config.font);
+
+  // Preload font
+  const preloadLink = document.createElement("link");
+  preloadLink.href = fontConfig.importUrl;
+  preloadLink.rel = "stylesheet";
+  document.head.appendChild(preloadLink);
+  await document.fonts.ready;
+  await new Promise((r) => setTimeout(r, 300));
+
+  const html = buildSingleEntryHTML(sampleEntry, config, fontConfig.css, fontConfig.importUrl);
+  const canvas = await renderHTMLToCanvas(html);
+  return canvas.toDataURL("image/png");
+};
+
 export const generateAndDownloadPDF = async (
   config: BookConfig,
   entries: JournalEntry[],
@@ -296,7 +387,6 @@ export const generateAndDownloadPDF = async (
   const fontConfig = getFontConfig(config.font);
   const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: [PAGE_W_MM, PAGE_H_MM] });
 
-  // Preload the selected font on the main document so the browser caches it
   onProgress?.("Loading font...");
   const preloadLink = document.createElement("link");
   preloadLink.href = fontConfig.importUrl;
