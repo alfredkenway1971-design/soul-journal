@@ -25,6 +25,8 @@ import ExportPage from "@/pages/ExportPage";
 import BookBuilderPage from "@/pages/BookBuilderPage";
 import OnboardingPage from "@/pages/OnboardingPage";
 import AdminDashboard from "@/pages/AdminDashboard";
+import PricingPage from "@/pages/PricingPage";
+import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
