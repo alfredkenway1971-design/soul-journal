@@ -420,7 +420,7 @@ const RecordPage = () => {
                   onClick={() => setStep("mood")}
                 >
                   <Smile className="w-4 h-4" />
-                  Mood
+                  {t("record.mood")}
                 </Button>
               </div>
 
