@@ -411,8 +411,8 @@ const RecordPage = () => {
                   className={`rounded-full px-5 gap-2 ${textLimitReached ? "opacity-50" : ""}`}
                   onClick={handleWriteClick}
                 >
-                  {textLimitReached ? <Lock className="w-4 h-4" /> : <Type className="w-4 h-4" />}
-                  Write{textLimitReached ? " (Limit)" : ""}
+                   {textLimitReached ? <Lock className="w-4 h-4" /> : <Type className="w-4 h-4" />}
+                   {t("record.writeLimit")}{textLimitReached ? ` (${t("record.limitReached")})` : ""}
                 </Button>
                 <Button
                   variant="outline"
