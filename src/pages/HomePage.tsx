@@ -28,6 +28,7 @@ const HomePage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const api = useJournalAPI();
+  const { t } = useLanguage();
   
   
   const [entries, setEntries] = useState<Entry[]>([]);
@@ -42,9 +43,9 @@ const HomePage = () => {
   
   const currentHour = new Date().getHours();
   const getGreeting = () => {
-    if (currentHour < 12) return "Morning";
-    if (currentHour < 17) return "Afternoon";
-    return "Evening";
+    if (currentHour < 12) return t("home.morning");
+    if (currentHour < 17) return t("home.afternoon");
+    return t("home.evening");
   };
 
   useEffect(() => {
