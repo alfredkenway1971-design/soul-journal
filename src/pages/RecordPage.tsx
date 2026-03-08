@@ -649,42 +649,6 @@ const RecordPage = () => {
           </motion.div>
         )}
 
-        {/* Photo Capture Step */}
-        {step === "photos" && (
-          <motion.div
-            className="glass-premium p-6 space-y-6"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <div className="text-center">
-              <span className="text-4xl mb-4 block">📸</span>
-              <h2 className="text-xl font-semibold font-display mb-2">
-                Photo Dump
-              </h2>
-              <p className="text-muted-foreground text-sm">
-                Add photos to capture this moment
-              </p>
-            </div>
-
-            <PhotoCapture photos={photos} onPhotosChange={setPhotos} />
-
-            <div className="flex gap-3">
-              <Button
-                variant="outline"
-                className="flex-1"
-                onClick={() => setStep("main")}
-              >
-                Back
-              </Button>
-              <Button
-                className="flex-1 gradient-primary"
-                onClick={() => setStep("main")}
-              >
-                {photos.length > 0 ? `Add ${photos.length} Photos` : "Skip"}
-              </Button>
-            </div>
-          </motion.div>
-        )}
 
         {/* Complete */}
         {step === "complete" && (
