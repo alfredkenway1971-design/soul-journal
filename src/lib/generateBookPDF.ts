@@ -443,12 +443,21 @@ export const generateAndDownloadPDF = async (
   await document.fonts.ready;
   await new Promise((r) => setTimeout(r, 500));
 
+  onProgress?.("Pre-loading images...");
+  const processedEntries = await preloadEntryImages(entries);
+
+  // Also convert avatar to base64 if present
+  let processedConfig = { ...config };
+  if (config.showAvatar && config.avatarUrl) {
+    processedConfig.avatarUrl = await imageToBase64(config.avatarUrl);
+  }
+
   onProgress?.("Rendering cover...");
-  const coverHTML = buildCoverHTML(config, fontConfig.css, fontConfig.importUrl);
+  const coverHTML = buildCoverHTML(processedConfig, fontConfig.css, fontConfig.importUrl);
   const coverCanvas = await renderHTMLToCanvas(coverHTML);
   addCanvasToPDF(pdf, coverCanvas, false);
 
-  if (config.layout === "one-per-page") {
+  if (processedConfig.layout === "one-per-page") {
     for (let i = 0; i < entries.length; i++) {
       onProgress?.(`Rendering entry ${i + 1} of ${entries.length}...`);
       const html = buildSingleEntryHTML(entries[i], config, fontConfig.css, fontConfig.importUrl);
