@@ -14,6 +14,7 @@ const VoiceSettingsPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
+  const { isPremium } = useSubscription();
   
   const [hasVoiceClone, setHasVoiceClone] = useState(false);
   const [voiceCloneId, setVoiceCloneId] = useState<string | null>(null);
