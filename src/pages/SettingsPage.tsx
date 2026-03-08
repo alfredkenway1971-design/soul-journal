@@ -26,7 +26,7 @@ import { useToast } from "@/hooks/use-toast";
 
 const SettingsPage = () => {
   const navigate = useNavigate();
-  const { signOut } = useAuth();
+  const { signOut, isAdmin } = useAuth();
   const { toast } = useToast();
   const [notifications, setNotifications] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
