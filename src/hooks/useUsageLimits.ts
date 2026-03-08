@@ -6,10 +6,13 @@ import { useSubscription, FREE_LIMITS } from "@/contexts/SubscriptionContext";
 interface UsageLimits {
   textEntriesToday: number;
   audioEntriesThisWeek: number;
+  coachingCallsThisMonth: number;
   canCreateTextEntry: boolean;
   canCreateAudioEntry: boolean;
+  canUseCoaching: boolean;
   textLimitReached: boolean;
   audioLimitReached: boolean;
+  coachingLimitReached: boolean;
   loading: boolean;
   refetch: () => Promise<void>;
 }
@@ -19,6 +22,7 @@ export const useUsageLimits = (): UsageLimits => {
   const { isPremium } = useSubscription();
   const [textEntriesToday, setTextEntriesToday] = useState(0);
   const [audioEntriesThisWeek, setAudioEntriesThisWeek] = useState(0);
+  const [coachingCallsThisMonth, setCoachingCallsThisMonth] = useState(0);
   const [loading, setLoading] = useState(true);
 
   const fetchUsage = useCallback(async () => {
@@ -28,31 +32,40 @@ export const useUsageLimits = (): UsageLimits => {
     }
 
     try {
-      // Count today's text entries (entries without audio_url)
       const todayStart = new Date();
       todayStart.setHours(0, 0, 0, 0);
 
-      const { count: textCount } = await supabase
-        .from("journal_entries")
-        .select("*", { count: "exact", head: true })
-        .eq("user_id", user.id)
-        .is("audio_url", null)
-        .gte("created_at", todayStart.toISOString());
-
-      // Count this week's audio entries (entries with audio_url)
       const weekStart = new Date();
-      weekStart.setDate(weekStart.getDate() - weekStart.getDay()); // Sunday
+      weekStart.setDate(weekStart.getDate() - weekStart.getDay());
       weekStart.setHours(0, 0, 0, 0);
 
-      const { count: audioCount } = await supabase
-        .from("journal_entries")
-        .select("*", { count: "exact", head: true })
-        .eq("user_id", user.id)
-        .not("audio_url", "is", null)
-        .gte("created_at", weekStart.toISOString());
+      const monthStart = new Date();
+      monthStart.setDate(1);
+      monthStart.setHours(0, 0, 0, 0);
 
-      setTextEntriesToday(textCount ?? 0);
-      setAudioEntriesThisWeek(audioCount ?? 0);
+      const [textRes, audioRes, coachingRes] = await Promise.all([
+        supabase
+          .from("journal_entries")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", user.id)
+          .is("audio_url", null)
+          .gte("created_at", todayStart.toISOString()),
+        supabase
+          .from("journal_entries")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", user.id)
+          .not("audio_url", "is", null)
+          .gte("created_at", weekStart.toISOString()),
+        supabase
+          .from("coaching_insights")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", user.id)
+          .gte("created_at", monthStart.toISOString()),
+      ]);
+
+      setTextEntriesToday(textRes.count ?? 0);
+      setAudioEntriesThisWeek(audioRes.count ?? 0);
+      setCoachingCallsThisMonth(coachingRes.count ?? 0);
     } catch (error) {
       console.error("Error fetching usage limits:", error);
     } finally {
@@ -66,14 +79,18 @@ export const useUsageLimits = (): UsageLimits => {
 
   const textLimitReached = !isPremium && textEntriesToday >= FREE_LIMITS.textEntriesPerDay;
   const audioLimitReached = !isPremium && audioEntriesThisWeek >= FREE_LIMITS.audioEntriesPerWeek;
+  const coachingLimitReached = !isPremium && coachingCallsThisMonth >= FREE_LIMITS.aiCoachingCallsPerMonth;
 
   return {
     textEntriesToday,
     audioEntriesThisWeek,
+    coachingCallsThisMonth,
     canCreateTextEntry: isPremium || !textLimitReached,
     canCreateAudioEntry: isPremium || !audioLimitReached,
+    canUseCoaching: isPremium || !coachingLimitReached,
     textLimitReached,
     audioLimitReached,
+    coachingLimitReached,
     loading,
     refetch: fetchUsage,
   };
