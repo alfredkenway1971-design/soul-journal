@@ -4,6 +4,7 @@ import { TrendingUp, TrendingDown, Minus, Sparkles, Loader2 } from "lucide-react
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage, getLanguageName } from "@/contexts/LanguageContext";
 import type { Mood } from "@/components/MoodSelector";
 
 interface MoodEntry {
