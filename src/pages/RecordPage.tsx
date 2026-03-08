@@ -256,17 +256,6 @@ const RecordPage = () => {
         audioUrl: audioPath,
       });
       
-      // Upload photos if any
-      if (photos.length > 0 && entry?.id) {
-        for (const photo of photos) {
-          try {
-            const photoPath = await api.uploadPhoto(photo, user.id);
-            await api.saveEntryMedia(entry.id, 'photo', photoPath);
-          } catch (photoError) {
-            console.error('Photo upload error:', photoError);
-          }
-        }
-      }
 
       // Generate Soul Mirror reflection in the background
       if (entry?.id && enhancedText) {
