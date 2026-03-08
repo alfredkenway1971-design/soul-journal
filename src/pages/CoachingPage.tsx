@@ -60,6 +60,7 @@ const CoachingPage = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   const { coachingCallsThisMonth, coachingLimitReached, canUseCoaching, refetch: refetchLimits } = useUsageLimits();
+  const { language } = useLanguage();
   
   const [insights, setInsights] = useState<Insight[]>([]);
   const [goals, setGoals] = useState<Goal[]>([]);
