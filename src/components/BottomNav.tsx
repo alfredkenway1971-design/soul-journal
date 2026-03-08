@@ -1,18 +1,20 @@
 import { motion } from "framer-motion";
 import { Home, Calendar, FileText, User, Plus } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
-
-const navItems = [
-  { icon: Home, label: "Home", path: "/" },
-  { icon: Calendar, label: "Calendar", path: "/calendar" },
-  { icon: null, label: "Add", path: "/record", isCenter: true },
-  { icon: FileText, label: "Library", path: "/coaching" },
-  { icon: User, label: "Profile", path: "/settings/profile" },
-];
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const BottomNav = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { t } = useLanguage();
+
+  const navItems = [
+    { icon: Home, label: t("nav.home"), path: "/" },
+    { icon: Calendar, label: t("nav.calendar"), path: "/calendar" },
+    { icon: null, label: t("nav.add"), path: "/record", isCenter: true },
+    { icon: FileText, label: t("nav.library"), path: "/coaching" },
+    { icon: User, label: t("nav.profile"), path: "/settings/profile" },
+  ];
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-t border-border/50">
