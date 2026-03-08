@@ -14,7 +14,7 @@ serve(async (req) => {
   }
 
   try {
-    const { text, tone = 'natural', customPrompt } = await req.json();
+    const { text, tone = 'natural', customPrompt, language = 'English' } = await req.json();
 
     if (!text) {
       throw new Error('No text provided');
