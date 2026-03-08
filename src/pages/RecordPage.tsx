@@ -482,7 +482,7 @@ const RecordPage = () => {
                 onClick={() => setStep("enhance")}
                 disabled={!transcription.trim()}
               >
-                Continue
+                {t("record.continue")}
               </Button>
             </div>
           </motion.div>
