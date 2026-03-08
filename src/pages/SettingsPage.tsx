@@ -75,6 +75,7 @@ const SettingsPage = () => {
       title: "AI Coach",
       items: [
         { icon: Brain, label: "Coaching Dashboard", action: "navigate", route: "/coaching" },
+        ...(isAdmin ? [{ icon: Target, label: "Admin Dashboard", action: "navigate" as const, route: "/admin" }] : []),
       ],
     },
     {
