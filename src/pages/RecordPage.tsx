@@ -13,8 +13,9 @@ import BottomNav from "@/components/BottomNav";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useJournalAPI } from "@/hooks/useJournalAPI";
+import { useUsageLimits } from "@/hooks/useUsageLimits";
 import { supabase } from "@/integrations/supabase/client";
-import { Mic } from "lucide-react";
+import { Mic, Lock } from "lucide-react";
 
 type RecordingStep = "main" | "write" | "mood" | "enhance" | "language" | "complete";
 
