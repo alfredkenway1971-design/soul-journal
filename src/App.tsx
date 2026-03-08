@@ -1,10 +1,11 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import AuthPage from "@/pages/AuthPage";
 import HomePage from "@/pages/HomePage";
 import RecordPage from "@/pages/RecordPage";
@@ -22,14 +23,32 @@ import FontsSettingsPage from "@/pages/FontsSettingsPage";
 import RemindersSettingsPage from "@/pages/RemindersSettingsPage";
 import ExportPage from "@/pages/ExportPage";
 import BookBuilderPage from "@/pages/BookBuilderPage";
+import OnboardingPage from "@/pages/OnboardingPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
+  const location = useLocation();
+  const [onboardingChecked, setOnboardingChecked] = useState(false);
+  const [needsOnboarding, setNeedsOnboarding] = useState(false);
+
+  useEffect(() => {
+    const checkOnboarding = async () => {
+      if (!user) return;
+      const { data } = await supabase
+        .from("profiles")
+        .select("onboarding_completed")
+        .eq("id", user.id)
+        .single();
+      setNeedsOnboarding(!(data as any)?.onboarding_completed);
+      setOnboardingChecked(true);
+    };
+    if (user) checkOnboarding();
+  }, [user]);
   
-  if (loading) {
+  if (loading || (user && !onboardingChecked)) {
     return (
       <div className="min-h-screen gradient-warm flex items-center justify-center">
         <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
@@ -39,6 +58,12 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   
   if (!user) {
     return <Navigate to="/auth" replace />;
+  }
+
+  // Redirect to onboarding if not completed (but allow /onboarding and /settings/voice)
+  const allowedPaths = ["/onboarding", "/settings/voice"];
+  if (needsOnboarding && !allowedPaths.includes(location.pathname)) {
+    return <Navigate to="/onboarding" replace />;
   }
   
   return <>{children}</>;
