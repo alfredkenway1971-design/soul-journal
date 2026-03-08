@@ -22,7 +22,7 @@ export const LANGUAGES: { code: AppLanguage; name: string; flag: string; native:
   { code: "de", name: "German", flag: "🇩🇪", native: "Deutsch" },
 ];
 
-// Translation dictionaries
+// Translation dictionaries for all supported languages
 const translations: Record<AppLanguage, Record<string, string>> = {
   en: {
     // Nav
