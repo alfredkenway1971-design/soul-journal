@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { getLanguageName, type AppLanguage } from "@/contexts/LanguageContext";
 
 export const useJournalAPI = () => {
   const transcribeAudio = async (audioBlob: Blob): Promise<string> => {
