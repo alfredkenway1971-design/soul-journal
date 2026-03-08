@@ -357,18 +357,36 @@ const RecordPage = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
             >
+              {/* Usage Limits Banner */}
+              {(textLimitReached || audioLimitReached) && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-destructive/10 border border-destructive/20 rounded-2xl p-4 flex items-center gap-3"
+                >
+                  <Lock className="w-5 h-5 text-destructive shrink-0" />
+                  <div className="text-sm">
+                    {textLimitReached && <p className="text-destructive font-medium">Text entries: {textEntriesToday}/2 today</p>}
+                    {audioLimitReached && <p className="text-destructive font-medium">Audio entries: {audioEntriesThisWeek}/1 this week</p>}
+                    <button onClick={() => navigate("/pricing")} className="text-primary underline text-xs mt-1">Upgrade for unlimited</button>
+                  </div>
+                </motion.div>
+              )}
+
               {/* Voice Record Button */}
               <div className="flex flex-col items-center py-8">
                 <motion.button
                   className={`voice-record-btn w-40 h-40 rounded-full flex items-center justify-center ${
                     isRecording ? "recording" : ""
-                  }`}
+                  } ${audioLimitReached && !isRecording ? "opacity-50" : ""}`}
                   onClick={handleRecordClick}
                   whileTap={{ scale: 0.95 }}
                   disabled={isProcessing}
                 >
                   {isProcessing ? (
                     <div className="w-10 h-10 border-4 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : audioLimitReached ? (
+                    <Lock className="w-12 h-12 text-white" />
                   ) : (
                     <Mic className="w-12 h-12 text-white" />
                   )}
@@ -378,6 +396,8 @@ const RecordPage = () => {
                     ? `Recording ${formatDuration(recordingDuration)}... Tap to stop` 
                     : isProcessing 
                     ? "Processing..." 
+                    : audioLimitReached
+                    ? "Audio limit reached"
                     : "Tap to Record Assessment"}
                 </p>
               </div>
@@ -386,11 +406,11 @@ const RecordPage = () => {
               <div className="flex justify-center gap-3">
                 <Button
                   variant="outline"
-                  className="rounded-full px-5 gap-2"
-                  onClick={() => setStep("write")}
+                  className={`rounded-full px-5 gap-2 ${textLimitReached ? "opacity-50" : ""}`}
+                  onClick={handleWriteClick}
                 >
-                  <Type className="w-4 h-4" />
-                  Write
+                  {textLimitReached ? <Lock className="w-4 h-4" /> : <Type className="w-4 h-4" />}
+                  Write{textLimitReached ? " (Limit)" : ""}
                 </Button>
                 <Button
                   variant="outline"
