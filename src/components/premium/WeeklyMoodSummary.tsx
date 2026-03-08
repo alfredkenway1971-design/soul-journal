@@ -168,6 +168,7 @@ const WeeklyMoodSummary = () => {
             text: entrySummary,
             tone: 'analysis',
             customPrompt: 'Analyze these journal entries from the past week and provide a brief, empathetic 2-sentence insight about the person\'s emotional patterns and one actionable suggestion:',
+            language: getLanguageName(language),
           },
         });
 
