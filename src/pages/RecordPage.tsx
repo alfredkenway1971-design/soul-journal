@@ -8,7 +8,7 @@ import MoodSelector, { Mood } from "@/components/MoodSelector";
 import LanguageSelector, { Language } from "@/components/LanguageSelector";
 import CoachReflectionCard from "@/components/premium/CoachReflectionCard";
 import RecentEntryCard from "@/components/premium/RecentEntryCard";
-import PhotoCapture from "@/components/premium/PhotoCapture";
+
 import BottomNav from "@/components/BottomNav";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
