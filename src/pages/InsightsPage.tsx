@@ -276,8 +276,13 @@ const InsightsPage = () => {
             {/* Weekly Mood Summary */}
             <WeeklyMoodSummary />
 
+            {/* Premium Insights Gate */}
+            {!isPremium && (
+              <UpgradePrompt compact feature="Detailed Insights" />
+            )}
+
             {/* Mood Distribution Chart */}
-            {moodData.length > 0 && (
+            {isPremium && moodData.length > 0 && (
               <InsightsChart data={moodData} totalEntries={totalEntries} />
             )}
 
