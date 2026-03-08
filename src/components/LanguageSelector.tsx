@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Check } from "lucide-react";
 
-export type Language = "en" | "fr" | "es" | "ja" | "zh";
+export type Language = "en" | "fr" | "es" | "ja" | "zh" | "sw" | "de";
 
 interface LanguageSelectorProps {
   selected: Language;
@@ -14,6 +14,8 @@ const languages: { code: Language; name: string; flag: string; native: string }[
   { code: "es", name: "Spanish", flag: "🇪🇸", native: "Español" },
   { code: "ja", name: "Japanese", flag: "🇯🇵", native: "日本語" },
   { code: "zh", name: "Chinese", flag: "🇨🇳", native: "中文" },
+  { code: "sw", name: "Swahili", flag: "🇰🇪", native: "Kiswahili" },
+  { code: "de", name: "German", flag: "🇩🇪", native: "Deutsch" },
 ];
 
 const LanguageSelector = ({ selected, onSelect }: LanguageSelectorProps) => {
