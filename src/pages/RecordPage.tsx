@@ -434,12 +434,12 @@ const RecordPage = () => {
               {recentEntry && (
                 <section>
                   <div className="flex items-center justify-between mb-3">
-                    <p className="section-label">RECENT ENTRIES</p>
+                    <p className="section-label">{t("record.recentEntries")}</p>
                     <button 
                       className="text-sm font-medium text-foreground"
                       onClick={() => navigate("/calendar")}
                     >
-                      View All
+                      {t("record.viewAll")}
                     </button>
                   </div>
                   <RecentEntryCard
