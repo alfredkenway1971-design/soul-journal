@@ -463,45 +463,93 @@ const EntryDetailPage = () => {
         </motion.div>
 
         {/* Soul Mirror Reflection */}
-        {entry.soul_reflection && (
-          <motion.div
-            className="rounded-2xl p-6 relative overflow-hidden"
-            style={{
-              background: 'linear-gradient(135deg, hsl(var(--primary) / 0.08), hsl(var(--accent) / 0.12))',
-              backdropFilter: 'blur(20px)',
-              border: '1px solid hsl(var(--primary) / 0.2)',
-            }}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.25 }}
-          >
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                <Sparkles className="w-4 h-4 text-primary" />
-              </div>
-              <h3 className="text-sm font-semibold text-primary tracking-wide uppercase">
-                Message from your Soul
-              </h3>
-            </div>
-            <p className="font-journal text-foreground leading-relaxed italic text-base">
-              "{entry.soul_reflection}"
-            </p>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="mt-3 gap-1 text-xs text-primary"
-              onClick={() => {
-                if (entry.soul_reflection) {
-                  handleGenerateVoiceForText(entry.soul_reflection);
-                }
+        {entry.soul_reflection && (() => {
+          // Parse mode prefix: [NURTURE], [CHALLENGE], or [BLEND]
+          const modeMatch = entry.soul_reflection.match(/^\[(NURTURE|CHALLENGE|BLEND)\]/i);
+          const mode = modeMatch ? modeMatch[1].toLowerCase() : 'blend';
+          const reflectionText = modeMatch 
+            ? entry.soul_reflection.slice(modeMatch[0].length) 
+            : entry.soul_reflection;
+
+          const modeConfig = {
+            nurture: {
+              label: 'Nurture',
+              icon: Heart,
+              bg: 'bg-emerald-500/15',
+              text: 'text-emerald-600 dark:text-emerald-400',
+              border: 'border-emerald-500/30',
+              gradient: 'linear-gradient(135deg, hsl(var(--primary) / 0.06), hsl(160 60% 50% / 0.10))',
+              borderColor: 'hsl(160 60% 50% / 0.25)',
+            },
+            challenge: {
+              label: 'Challenge',
+              icon: Flame,
+              bg: 'bg-amber-500/15',
+              text: 'text-amber-600 dark:text-amber-400',
+              border: 'border-amber-500/30',
+              gradient: 'linear-gradient(135deg, hsl(var(--primary) / 0.06), hsl(35 90% 55% / 0.10))',
+              borderColor: 'hsl(35 90% 55% / 0.25)',
+            },
+            blend: {
+              label: 'Blend',
+              icon: Sparkles,
+              bg: 'bg-primary/10',
+              text: 'text-primary',
+              border: 'border-primary/30',
+              gradient: 'linear-gradient(135deg, hsl(var(--primary) / 0.08), hsl(var(--accent) / 0.12))',
+              borderColor: 'hsl(var(--primary) / 0.2)',
+            },
+          };
+
+          const config = modeConfig[mode as keyof typeof modeConfig] || modeConfig.blend;
+          const ModeIcon = config.icon;
+
+          return (
+            <motion.div
+              className="rounded-2xl p-6 relative overflow-hidden"
+              style={{
+                background: config.gradient,
+                backdropFilter: 'blur(20px)',
+                border: `1px solid ${config.borderColor}`,
               }}
-              disabled={isGeneratingVoice}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.25 }}
             >
-              <Volume2 className="w-3 h-3" />
-              Listen to reflection
-            </Button>
-          </motion.div>
-        )}
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                    <Sparkles className="w-4 h-4 text-primary" />
+                  </div>
+                  <h3 className="text-sm font-semibold text-primary tracking-wide uppercase">
+                    Message from your Soul
+                  </h3>
+                </div>
+                <div className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${config.bg} ${config.text} ${config.border} border`}>
+                  <ModeIcon className="w-3 h-3" />
+                  {config.label}
+                </div>
+              </div>
+              <p className="font-journal text-foreground leading-relaxed italic text-base">
+                "{reflectionText}"
+              </p>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="mt-3 gap-1 text-xs text-primary"
+                onClick={() => {
+                  if (reflectionText) {
+                    handleGenerateVoiceForText(reflectionText);
+                  }
+                }}
+                disabled={isGeneratingVoice}
+              >
+                <Volume2 className="w-3 h-3" />
+                Listen to reflection
+              </Button>
+            </motion.div>
+          );
+        })()}
 
         <motion.div
           className="glass-card rounded-2xl overflow-hidden"
