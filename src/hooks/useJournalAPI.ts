@@ -28,7 +28,7 @@ export const useJournalAPI = (appLanguage?: AppLanguage) => {
 
   const enhanceText = async (text: string, tone: string = 'natural'): Promise<string> => {
     const { data, error } = await supabase.functions.invoke('enhance-text', {
-      body: { text, tone },
+      body: { text, tone, language: langName },
     });
 
     if (error) throw new Error(error.message);
