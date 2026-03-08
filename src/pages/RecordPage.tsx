@@ -514,7 +514,7 @@ const RecordPage = () => {
           >
             <div className="glass-premium p-6">
               <h3 className="text-sm font-medium text-muted-foreground mb-3">
-                Original Transcription
+                {t("record.originalTranscription")}
               </h3>
               <p className="font-journal text-foreground leading-relaxed">
                 {transcription}
