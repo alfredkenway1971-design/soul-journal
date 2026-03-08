@@ -395,12 +395,12 @@ const RecordPage = () => {
                 </motion.button>
                 <p className="mt-4 text-muted-foreground">
                   {isRecording 
-                    ? `Recording ${formatDuration(recordingDuration)}... Tap to stop` 
+                    ? t("record.recordingTime").replace("{time}", formatDuration(recordingDuration))
                     : isProcessing 
-                    ? "Processing..." 
+                    ? t("record.processing")
                     : audioLimitReached
-                    ? "Audio limit reached"
-                    : "Tap to Record Assessment"}
+                    ? t("record.audioLimitReached")
+                    : t("record.tapToRecordAssessment")}
                 </p>
               </div>
 
