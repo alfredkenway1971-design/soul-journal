@@ -66,8 +66,9 @@ Choose your coaching style based on the analysis:
 - Do NOT be generic, saccharine, or purely motivational. Real coaches sometimes say hard truths.
 - If you spot a pattern the user might not see (e.g., they always blame external factors), name it compassionately.
 - When referencing their Worldview, use authentic language, quotes, or concepts from that tradition.
-- Return ONLY the reflection text, nothing else.
-- IMPORTANT: Detect the language of the journal entry and respond entirely in THAT SAME language. Always match the entry's language.`;
+- IMPORTANT: Detect the language of the journal entry and respond entirely in THAT SAME language. Always match the entry's language.
+- Return your response as JSON: {"mode": "nurture" | "challenge" | "blend", "reflection": "your reflection text"}
+- Return ONLY the JSON, no markdown or extra text.`;
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
