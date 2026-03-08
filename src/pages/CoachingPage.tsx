@@ -210,13 +210,28 @@ const CoachingPage = () => {
               variant="outline"
               size="sm"
               onClick={generateInsights}
-              disabled={generating}
+              disabled={generating || coachingLimitReached}
               className="gap-2"
             >
               <RefreshCw className={`w-4 h-4 ${generating ? 'animate-spin' : ''}`} />
-              {generating ? "Analyzing..." : "Refresh"}
+              {generating ? "Analyzing..." : coachingLimitReached ? "Limit Reached" : "Refresh"}
             </Button>
           </div>
+          {coachingLimitReached && (
+            <div className="mt-3 bg-destructive/10 border border-destructive/20 rounded-xl px-4 py-2 flex items-center justify-between">
+              <p className="text-xs text-destructive font-medium">
+                {coachingCallsThisMonth}/{FREE_LIMITS.aiCoachingCallsPerMonth} coaching calls used this month
+              </p>
+              <button onClick={() => navigate("/pricing")} className="text-xs text-primary underline ml-2 shrink-0">
+                Upgrade
+              </button>
+            </div>
+          )}
+          {!coachingLimitReached && !loading && (
+            <p className="mt-2 text-xs text-muted-foreground">
+              {coachingCallsThisMonth}/{FREE_LIMITS.aiCoachingCallsPerMonth} coaching calls used this month
+            </p>
+          )}
         </div>
       </header>
 
