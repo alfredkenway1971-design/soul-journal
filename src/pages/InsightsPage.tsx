@@ -8,6 +8,8 @@ import WeeklyMoodSummary from "@/components/premium/WeeklyMoodSummary";
 import BottomNav from "@/components/BottomNav";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useSubscription } from "@/contexts/SubscriptionContext";
+import UpgradePrompt from "@/components/premium/UpgradePrompt";
 import type { Mood } from "@/components/MoodSelector";
 
 interface MoodCount {
@@ -37,6 +39,7 @@ const languageInfo: Record<string, { flag: string; name: string }> = {
 const InsightsPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { isPremium } = useSubscription();
   
   const [moodData, setMoodData] = useState<MoodCount[]>([]);
   const [totalEntries, setTotalEntries] = useState(0);
@@ -273,8 +276,13 @@ const InsightsPage = () => {
             {/* Weekly Mood Summary */}
             <WeeklyMoodSummary />
 
+            {/* Premium Insights Gate */}
+            {!isPremium && (
+              <UpgradePrompt compact feature="Detailed Insights" />
+            )}
+
             {/* Mood Distribution Chart */}
-            {moodData.length > 0 && (
+            {isPremium && moodData.length > 0 && (
               <InsightsChart data={moodData} totalEntries={totalEntries} />
             )}
 

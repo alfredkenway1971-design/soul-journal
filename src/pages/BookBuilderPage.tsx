@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useSubscription } from "@/contexts/SubscriptionContext";
+import UpgradePrompt from "@/components/premium/UpgradePrompt";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import BottomNav from "@/components/BottomNav";
@@ -38,6 +40,7 @@ const BookBuilderPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { isPremium } = useSubscription();
 
   const [step, setStep] = useState<Step>(1);
   const [generating, setGenerating] = useState(false);
@@ -237,6 +240,30 @@ const BookBuilderPage = () => {
     const map: FontSize[] = ["small", "medium", "large"];
     setFontSize(map[val[0]]);
   };
+
+  if (!isPremium) {
+    return (
+      <div className="min-h-screen gradient-warm pb-24">
+        <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border/50">
+          <div className="max-w-lg mx-auto px-4 py-4">
+            <div className="flex items-center gap-4">
+              <Button variant="ghost" size="icon" className="rounded-full" onClick={() => navigate(-1)}>
+                <ArrowLeft className="w-5 h-5" />
+              </Button>
+              <h1 className="text-lg font-semibold text-foreground">Soul Book Builder</h1>
+            </div>
+          </div>
+        </header>
+        <main className="max-w-lg mx-auto px-4 py-12">
+          <UpgradePrompt 
+            feature="Soul Book Builder" 
+            description="Export your journal entries as a beautifully designed PDF book. Upgrade to Premium to unlock this feature."
+          />
+        </main>
+        <BottomNav />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen gradient-warm pb-28">

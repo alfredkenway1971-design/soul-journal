@@ -7,11 +7,14 @@ import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useSubscription } from "@/contexts/SubscriptionContext";
+import UpgradePrompt from "@/components/premium/UpgradePrompt";
 
 const VoiceSettingsPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
+  const { isPremium } = useSubscription();
   
   const [hasVoiceClone, setHasVoiceClone] = useState(false);
   const [voiceCloneId, setVoiceCloneId] = useState<string | null>(null);
@@ -258,6 +261,29 @@ const VoiceSettingsPage = () => {
     return (
       <div className="min-h-screen gradient-warm flex items-center justify-center">
         <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!isPremium) {
+    return (
+      <div className="min-h-screen gradient-warm pb-24">
+        <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border/50">
+          <div className="max-w-lg mx-auto px-4 py-4">
+            <div className="flex items-center gap-4">
+              <Button variant="ghost" size="icon" className="rounded-full" onClick={() => navigate("/settings")}>
+                <ArrowLeft className="w-5 h-5" />
+              </Button>
+              <h1 className="text-lg font-semibold text-foreground">Voice Clone</h1>
+            </div>
+          </div>
+        </header>
+        <main className="max-w-lg mx-auto px-4 py-12">
+          <UpgradePrompt 
+            feature="Voice Cloning" 
+            description="Clone your voice and hear your journal entries read back to you. Upgrade to Premium to unlock this feature."
+          />
+        </main>
       </div>
     );
   }
