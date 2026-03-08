@@ -39,6 +39,7 @@ const languageInfo: Record<string, { flag: string; name: string }> = {
 const InsightsPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { isPremium } = useSubscription();
   
   const [moodData, setMoodData] = useState<MoodCount[]>([]);
   const [totalEntries, setTotalEntries] = useState(0);
