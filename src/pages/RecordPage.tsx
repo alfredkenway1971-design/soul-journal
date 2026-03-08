@@ -612,10 +612,10 @@ const RecordPage = () => {
             <div className="text-center">
               <span className="text-4xl mb-4 block">🌍</span>
               <h2 className="text-xl font-semibold font-display mb-2">
-                Voice Playback Language
+                {t("record.voicePlaybackLanguage")}
               </h2>
               <p className="text-muted-foreground text-sm">
-                Choose which language to hear your story in
+                {t("record.chooseLanguage")}
               </p>
             </div>
 
