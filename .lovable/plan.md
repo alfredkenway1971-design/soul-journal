@@ -1,45 +1,51 @@
 
 
-## Analysis & Plan
+## Plan: Expand Font Selection + Fix Page Background in PDF
 
-### Issue 1: Voice Clone "Create Clone" Button Not Responding
+### Problem Summary
+1. **Fonts**: Only 3 font options exist (Modern, Classic, Handwritten). User wants 12 specific handwritten/calligraphic fonts added.
+2. **Page backgrounds**: The `getPageBackgroundCSS` function generates CSS for lined/dotted patterns, but `html2canvas` doesn't reliably capture CSS `background-image` patterns (repeating-linear-gradient, radial-gradient). The backgrounds appear blank in the exported PDF.
 
-**Root Cause:** The "Create Clone" button on `VoiceSettingsPage.tsx` (line 454) has `disabled={isUploading || recordingTime < MIN_RECORDING_TIME}`. `MIN_RECORDING_TIME` is set to 30 seconds. If the user records less than 30 seconds, the button is rendered but disabled (unclickable) with no visible feedback explaining why. The button looks present but "doesn't respond."
+### Changes
 
-**Fix:**
-- Add a clear visual indicator when the recording is too short (e.g., a warning message below the button: "Record at least 30 seconds to create a clone")
-- Make the disabled state more visually obvious with opacity changes
-- Alternatively, when the user taps the disabled button, show a toast explaining the minimum requirement
-- Change the approach: wrap the button click in a handler that checks the condition and shows feedback instead of relying solely on `disabled`
+#### 1. Expand FontSelector with 12 new fonts
+**File: `src/components/book-builder/FontSelector.tsx`**
 
-### Issue 2: Feature Verification Summary
+- Change `BookFont` type to a union of all font IDs (e.g., `"modern" | "classic" | "handwritten" | "phitradesign" | "shadows-into-light" | ...`)
+- Add all 12 requested fonts to the fonts array. Most are available on Google Fonts:
+  - Shadows Into Light, Euphoria Script, Arizonia, Dancing Script (already exists) — **Google Fonts**
+  - For fonts NOT on Google Fonts (Phitradesign, Agata, Alanis, Honey Script Light, Scriptina, Anke Calligraphic, Gravity, Quilline Script Thin, Farewell), we'll use the closest Google Fonts alternatives since custom font hosting isn't available:
+    - Phitradesign → **Caveat** (similar hand-drawn style)
+    - Agata → **Sacramento** (flowing calligraphic)
+    - Alanis → **Kalam** (natural handwriting)
+    - Honey Script Light → **Alex Brush** (elegant script)
+    - Scriptina → **Great Vibes** (formal calligraphy)
+    - Anke Calligraphic → **Tangerine** (calligraphic)
+    - Gravity → **Patrick Hand** (casual handwritten)
+    - Quilline Script Thin → **Petit Formal Script** (thin script)
+    - Farewell → **Satisfy** (flowing farewell-style)
+- Group fonts into categories (Modern, Classic, Handwritten/Script) with a scrollable list
+- Each font shows a live preview line rendered in its own typeface
 
-Here is the status of all requested features:
+#### 2. Fix page backgrounds in PDF export
+**File: `src/lib/generateBookPDF.ts`**
 
-| Feature | Status | Notes |
-|---------|--------|-------|
-| Photo size selector (small/medium/large) in PDF export | Done | `BookBuilderPage.tsx` + `generateBookPDF.ts` |
-| Font size selector in PDF export | Done | Small/Medium/Large with preview |
-| PDF preview before printing | Done | `generatePreviewDataURL` + preview dialog |
-| Image Gallery Engine (centered, grid, border-radius, buffers, RTL) | Done | `buildImageGalleryHTML` in `generateBookPDF.ts` |
-| Soul Mirror reflection included in PDF | Done | `buildSoulReflectionHTML` in `generateBookPDF.ts` |
-| ElevenLabs voice cloning | Done | `create-voice-clone` edge function uses ElevenLabs |
-| ElevenLabs TTS playback | Done | `generate-voice` edge function uses ElevenLabs |
-| Soul Mirror AI reflection generation | Done | `generate-soul-reflection` edge function + auto-trigger after save |
-| Soul Profile setup (Goals, Fears, Strengths, Worldview) | Done | `GoalsSettingsPage.tsx` |
-| Glassmorphic "Message from your Soul" bubble | Done | `EntryDetailPage.tsx` with voice playback button |
-| Soul Mirror voice playback via cloned voice | Done | "Listen to reflection" button calls `generateVoice` |
-| 12 expanded fonts for Book Builder | **Not verified** | Need to check `FontSelector.tsx` |
+The root cause: `html2canvas` poorly captures CSS `background-image` with gradients. Fix by rendering lined/dotted patterns as **inline SVG elements** instead of CSS background properties.
 
-**All major features are implemented.** The only actionable fix needed is the voice clone button UX.
+- Replace `getPageBackgroundCSS()` with `getPageBackgroundHTML()` that returns an absolutely-positioned SVG overlay:
+  - **Lined**: SVG with horizontal `<line>` elements every 28px
+  - **Dotted**: SVG with `<circle>` elements in a grid pattern
+- Apply this SVG as an absolutely-positioned layer behind entry content in `buildSingleEntryHTML` and `buildEntryPageHTML`
+- This ensures `html2canvas` captures the visual pattern as real DOM elements rather than CSS properties
 
-### Implementation Plan
+#### 3. Update BookBuilderPage
+**File: `src/pages/BookBuilderPage.tsx`**
+- Update the `BookFont` type import to match the expanded type
+- No other changes needed since it already passes `font` to the generator
 
-**File: `src/pages/VoiceSettingsPage.tsx`**
-
-1. Replace the `disabled` prop approach with an `onClick` handler that checks `recordingTime < MIN_RECORDING_TIME` and shows a toast with a clear message if too short
-2. Add a visible warning text below the button when recording is under 30 seconds showing remaining time needed
-3. Keep the button visually enabled (not grayed out) but handle the validation in the click handler so the user gets feedback
-
-**Estimated scope:** Single file change, ~15 lines modified.
+### Technical Details
+- All new fonts loaded via Google Fonts CDN `<link>` tags injected into the PDF iframe
+- The font import URLs are bundled per-font in the config so only the selected font is loaded
+- SVG patterns for lined/dotted are rendered as DOM nodes so html2canvas captures them faithfully
+- The existing 3 original fonts (Modern, Classic, Handwritten) remain as-is
 

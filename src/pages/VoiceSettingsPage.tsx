@@ -450,8 +450,18 @@ const VoiceSettingsPage = () => {
                   </Button>
                   <Button
                     className="flex-1 h-14 rounded-2xl gap-2 gradient-amber"
-                    onClick={handleUpload}
-                    disabled={isUploading || recordingTime < MIN_RECORDING_TIME}
+                    onClick={() => {
+                      if (recordingTime < MIN_RECORDING_TIME) {
+                        toast({
+                          title: "Recording Too Short",
+                          description: `Please record at least ${MIN_RECORDING_TIME} seconds. You recorded ${recordingTime}s.`,
+                          variant: "destructive",
+                        });
+                        return;
+                      }
+                      handleUpload();
+                    }}
+                    disabled={isUploading}
                   >
                     {isUploading ? (
                       <>
@@ -469,6 +479,11 @@ const VoiceSettingsPage = () => {
                       </>
                     )}
                   </Button>
+                  {recordingTime > 0 && recordingTime < MIN_RECORDING_TIME && (
+                    <p className="text-xs text-destructive text-center mt-2 w-full">
+                      Need {MIN_RECORDING_TIME - recordingTime}s more (minimum 30s)
+                    </p>
+                  )}
                 </>
               )}
             </div>
