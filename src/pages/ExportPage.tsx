@@ -4,6 +4,7 @@ import { ArrowLeft, FileText, Download, Loader2, CheckCircle, BookOpen } from "l
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useSubscription } from "@/contexts/SubscriptionContext";
@@ -14,6 +15,7 @@ import BottomNav from "@/components/BottomNav";
 const ExportPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const { toast } = useToast();
   const { isPremium } = useSubscription();
   const [exporting, setExporting] = useState<"pdf" | "markdown" | null>(null);
@@ -41,8 +43,8 @@ const ExportPage = () => {
       
       if (entries.length === 0) {
         toast({
-          title: "No entries to export",
-          description: "Create some journal entries first!",
+          title: t("export.noEntries"),
+          description: t("export.createFirst"),
           variant: "destructive",
         });
         setExporting(null);
@@ -62,7 +64,6 @@ const ExportPage = () => {
         markdown += `---\n\n`;
       });
 
-      // Create and download file
       const blob = new Blob([markdown], { type: 'text/markdown' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -75,14 +76,14 @@ const ExportPage = () => {
 
       setSuccess("markdown");
       toast({
-        title: "Export successful! 📝",
-        description: `${entries.length} entries exported to Markdown.`,
+        title: t("export.successMarkdown"),
+        description: `${entries.length} ${t("export.entriesExported")}`,
       });
     } catch (error) {
       console.error('Export error:', error);
       toast({
-        title: "Export failed",
-        description: "Something went wrong. Please try again.",
+        title: t("export.failed"),
+        description: t("export.failedDesc"),
         variant: "destructive",
       });
     } finally {
@@ -99,15 +100,14 @@ const ExportPage = () => {
       
       if (entries.length === 0) {
         toast({
-          title: "No entries to export",
-          description: "Create some journal entries first!",
+          title: t("export.noEntries"),
+          description: t("export.createFirst"),
           variant: "destructive",
         });
         setExporting(null);
         return;
       }
 
-      // Create HTML content for PDF
       let htmlContent = `
         <!DOCTYPE html>
         <html>
@@ -116,56 +116,15 @@ const ExportPage = () => {
           <title>Journal Export</title>
           <style>
             @import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;1,400&display=swap');
-            body { 
-              font-family: 'Crimson Pro', Georgia, serif; 
-              line-height: 1.8; 
-              max-width: 700px; 
-              margin: 0 auto; 
-              padding: 40px 20px;
-              color: #1a1a1a;
-            }
-            h1 { 
-              font-size: 32px; 
-              font-weight: 600;
-              margin-bottom: 8px;
-              color: #0a0a0a;
-            }
-            .subtitle {
-              color: #666;
-              font-size: 14px;
-              margin-bottom: 40px;
-            }
-            .entry { 
-              margin-bottom: 40px; 
-              padding-bottom: 30px;
-              border-bottom: 1px solid #e5e5e5;
-              page-break-inside: avoid;
-            }
+            body { font-family: 'Crimson Pro', Georgia, serif; line-height: 1.8; max-width: 700px; margin: 0 auto; padding: 40px 20px; color: #1a1a1a; }
+            h1 { font-size: 32px; font-weight: 600; margin-bottom: 8px; color: #0a0a0a; }
+            .subtitle { color: #666; font-size: 14px; margin-bottom: 40px; }
+            .entry { margin-bottom: 40px; padding-bottom: 30px; border-bottom: 1px solid #e5e5e5; page-break-inside: avoid; }
             .entry:last-child { border-bottom: none; }
-            .entry-title { 
-              font-size: 22px; 
-              font-weight: 600;
-              margin-bottom: 8px;
-              color: #0a0a0a;
-            }
-            .entry-meta { 
-              color: #888; 
-              font-size: 13px; 
-              margin-bottom: 16px;
-              font-style: italic;
-            }
-            .mood-badge {
-              display: inline-block;
-              background: #f5f5f5;
-              padding: 2px 10px;
-              border-radius: 12px;
-              font-size: 12px;
-              margin-left: 10px;
-            }
-            .entry-content { 
-              font-size: 17px;
-              color: #333;
-            }
+            .entry-title { font-size: 22px; font-weight: 600; margin-bottom: 8px; color: #0a0a0a; }
+            .entry-meta { color: #888; font-size: 13px; margin-bottom: 16px; font-style: italic; }
+            .mood-badge { display: inline-block; background: #f5f5f5; padding: 2px 10px; border-radius: 12px; font-size: 12px; margin-left: 10px; }
+            .entry-content { font-size: 17px; color: #333; }
           </style>
         </head>
         <body>
@@ -192,7 +151,6 @@ const ExportPage = () => {
 
       htmlContent += `</body></html>`;
 
-      // Open print dialog for PDF
       const printWindow = window.open('', '_blank');
       if (printWindow) {
         printWindow.document.write(htmlContent);
@@ -204,14 +162,14 @@ const ExportPage = () => {
 
       setSuccess("pdf");
       toast({
-        title: "PDF ready! 📄",
-        description: `${entries.length} entries prepared. Use print dialog to save as PDF.`,
+        title: t("export.successPDF"),
+        description: `${entries.length} ${t("export.pdfDescription")}`,
       });
     } catch (error) {
       console.error('Export error:', error);
       toast({
-        title: "Export failed",
-        description: "Something went wrong. Please try again.",
+        title: t("export.failed"),
+        description: t("export.failedDesc"),
         variant: "destructive",
       });
     } finally {
@@ -228,14 +186,14 @@ const ExportPage = () => {
               <Button variant="ghost" size="icon" className="rounded-full" onClick={() => navigate("/settings")}>
                 <ArrowLeft className="w-5 h-5" />
               </Button>
-              <h1 className="text-lg font-semibold text-foreground">Export Journal</h1>
+              <h1 className="text-lg font-semibold text-foreground">{t("export.title")}</h1>
             </div>
           </div>
         </header>
         <main className="max-w-lg mx-auto px-4 py-12">
           <UpgradePrompt 
-            feature="Journal Export" 
-            description="Export your journal as PDF or Markdown and build beautiful soul books. Upgrade to Premium to unlock."
+            feature={t("export.journalExport")} 
+            description={t("export.journalExportDesc")}
           />
         </main>
         <BottomNav />
@@ -245,27 +203,20 @@ const ExportPage = () => {
 
   return (
     <div className="min-h-screen gradient-warm pb-24">
-      {/* Header */}
       <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border/50">
         <div className="max-w-lg mx-auto px-4 py-4">
           <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="rounded-full"
-              onClick={() => navigate("/settings")}
-            >
+            <Button variant="ghost" size="icon" className="rounded-full" onClick={() => navigate("/settings")}>
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div>
-              <h1 className="text-lg font-semibold text-foreground">Export Journal</h1>
-              <p className="text-sm text-muted-foreground">Download all your entries</p>
+              <h1 className="text-lg font-semibold text-foreground">{t("export.title")}</h1>
+              <p className="text-sm text-muted-foreground">{t("export.download")}</p>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Content */}
       <main className="max-w-lg mx-auto px-4 py-6 space-y-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -275,15 +226,11 @@ const ExportPage = () => {
           <div className="w-20 h-20 rounded-3xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
             <Download className="w-10 h-10 text-primary" />
           </div>
-          <h2 className="text-xl font-semibold text-foreground mb-2">Export Your Entries</h2>
-          <p className="text-muted-foreground">
-            Download all your journal entries as a file to keep a backup or share with others.
-          </p>
+          <h2 className="text-xl font-semibold text-foreground mb-2">{t("export.exportYourEntries")}</h2>
+          <p className="text-muted-foreground">{t("export.exportDescription")}</p>
         </motion.div>
 
-        {/* Export Options */}
         <div className="space-y-4">
-          {/* Soul Book Builder */}
           <motion.button
             className="w-full glass-premium p-5 flex items-center gap-4"
             initial={{ opacity: 0, y: 20 }}
@@ -296,14 +243,11 @@ const ExportPage = () => {
               <BookOpen className="w-7 h-7 text-primary" />
             </div>
             <div className="flex-1 text-left">
-              <h3 className="font-semibold text-foreground">Soul Book Builder (PDF)</h3>
-              <p className="text-sm text-muted-foreground">
-                Customizable cover, fonts & layout for printing
-              </p>
+              <h3 className="font-semibold text-foreground">{t("export.soulBook")}</h3>
+              <p className="text-sm text-muted-foreground">{t("export.soulBookDesc")}</p>
             </div>
           </motion.button>
 
-          {/* Quick Markdown */}
           <motion.button
             className="w-full glass-premium p-5 flex items-center gap-4"
             initial={{ opacity: 0, y: 20 }}
@@ -323,14 +267,11 @@ const ExportPage = () => {
               )}
             </div>
             <div className="flex-1 text-left">
-              <h3 className="font-semibold text-foreground">Quick JSON / Markdown</h3>
-              <p className="text-sm text-muted-foreground">
-                Plain text backup of all entries
-              </p>
+              <h3 className="font-semibold text-foreground">{t("export.quickMarkdown")}</h3>
+              <p className="text-sm text-muted-foreground">{t("export.markdownDesc")}</p>
             </div>
           </motion.button>
 
-          {/* Simple PDF */}
           <motion.button
             className="w-full glass-premium p-5 flex items-center gap-4"
             initial={{ opacity: 0, y: 20 }}
@@ -350,24 +291,19 @@ const ExportPage = () => {
               )}
             </div>
             <div className="flex-1 text-left">
-              <h3 className="font-semibold text-foreground">Quick PDF</h3>
-              <p className="text-sm text-muted-foreground">
-                Simple formatted export, no customization
-              </p>
+              <h3 className="font-semibold text-foreground">{t("export.quickPDF")}</h3>
+              <p className="text-sm text-muted-foreground">{t("export.quickPDFDesc")}</p>
             </div>
           </motion.button>
         </div>
 
-        {/* Info */}
         <motion.div
           className="bg-muted/50 rounded-2xl p-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
         >
-          <p className="text-sm text-muted-foreground text-center">
-            Your exported file will include all journal entries with their dates, moods, and content.
-          </p>
+          <p className="text-sm text-muted-foreground text-center">{t("export.exportInfo")}</p>
         </motion.div>
       </main>
 

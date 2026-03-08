@@ -5,6 +5,7 @@ import { ArrowRight, ArrowLeft, Sparkles, Target, Mic, BookOpen, Heart, Shield, 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -44,13 +45,13 @@ const slideVariants = {
 const OnboardingPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const { toast } = useToast();
 
   const [step, setStep] = useState<Step>(0);
   const [direction, setDirection] = useState(1);
   const [saving, setSaving] = useState(false);
 
-  // Soul Profile state
   const [selectedGoals, setSelectedGoals] = useState<string[]>([]);
   const [selectedStrengths, setSelectedStrengths] = useState<string[]>([]);
   const [selectedFears, setSelectedFears] = useState<string[]>([]);
@@ -94,10 +95,10 @@ const OnboardingPage = () => {
 
       if (error) throw error;
 
-      toast({ title: "Welcome aboard! 🎉", description: "Your Soul Profile is ready." });
+      toast({ title: t("onboarding.welcomeToast"), description: t("onboarding.profileReady") });
       navigate("/", { replace: true });
     } catch (err) {
-      toast({ title: "Error", description: "Failed to save profile. Please try again.", variant: "destructive" });
+      toast({ title: t("common.error"), description: t("common.error"), variant: "destructive" });
     } finally {
       setSaving(false);
     }
@@ -130,16 +131,16 @@ const OnboardingPage = () => {
         <BookOpen className="w-10 h-10 text-primary" />
       </motion.div>
       <h1 className="text-3xl font-bold font-serif text-foreground mb-3">
-        Welcome to <span className="italic">Voice Journal</span>
+        {t("onboarding.welcome")} <span className="italic">{t("onboarding.appName")}</span>
       </h1>
       <p className="text-muted-foreground text-base leading-relaxed max-w-xs mb-8">
-        Your private space for self-reflection. Speak your thoughts, let AI refine them, and discover insights from your Soul Mirror.
+        {t("onboarding.welcomeDesc")}
       </p>
       <div className="space-y-4 w-full max-w-xs">
         {[
-          { icon: Mic, label: "Record voice entries effortlessly" },
-          { icon: Sparkles, label: "AI-powered reflections & coaching" },
-          { icon: BookOpen, label: "Export your journey as a book" },
+          { icon: Mic, label: t("onboarding.feature1") },
+          { icon: Sparkles, label: t("onboarding.feature2") },
+          { icon: BookOpen, label: t("onboarding.feature3") },
         ].map(({ icon: Icon, label }) => (
           <div key={label} className="flex items-center gap-3 text-left">
             <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center shrink-0">
@@ -157,9 +158,9 @@ const OnboardingPage = () => {
         <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
           <Target className="w-5 h-5 text-primary" />
         </div>
-        <h2 className="text-xl font-bold font-serif text-foreground">Your Goals</h2>
+        <h2 className="text-xl font-bold font-serif text-foreground">{t("onboarding.yourGoals")}</h2>
       </div>
-      <p className="text-muted-foreground text-sm mb-5">What are you working toward? Pick a few.</p>
+      <p className="text-muted-foreground text-sm mb-5">{t("onboarding.goalsDesc")}</p>
       <div className="flex flex-wrap gap-2 mb-8">
         {PRESET_GOALS.map((g) => (
           <Badge
@@ -180,9 +181,9 @@ const OnboardingPage = () => {
         <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
           <Globe className="w-5 h-5 text-primary" />
         </div>
-        <h2 className="text-xl font-bold font-serif text-foreground">Worldview</h2>
+        <h2 className="text-xl font-bold font-serif text-foreground">{t("onboarding.worldview")}</h2>
       </div>
-      <p className="text-muted-foreground text-sm mb-4">Helps personalize your Soul Mirror reflections.</p>
+      <p className="text-muted-foreground text-sm mb-4">{t("onboarding.worldviewDesc")}</p>
       <div className="flex flex-wrap gap-2">
         {WORLDVIEW_OPTIONS.map((w) => (
           <Badge
@@ -206,9 +207,9 @@ const OnboardingPage = () => {
         <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
           <Shield className="w-5 h-5 text-primary" />
         </div>
-        <h2 className="text-xl font-bold font-serif text-foreground">Your Strengths</h2>
+        <h2 className="text-xl font-bold font-serif text-foreground">{t("onboarding.yourStrengths")}</h2>
       </div>
-      <p className="text-muted-foreground text-sm mb-4">What do you bring to the table?</p>
+      <p className="text-muted-foreground text-sm mb-4">{t("onboarding.strengthsDesc")}</p>
       <div className="flex flex-wrap gap-2 mb-8">
         {PRESET_STRENGTHS.map((s) => (
           <Badge
@@ -229,9 +230,9 @@ const OnboardingPage = () => {
         <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center">
           <Heart className="w-5 h-5 text-destructive" />
         </div>
-        <h2 className="text-xl font-bold font-serif text-foreground">Your Fears</h2>
+        <h2 className="text-xl font-bold font-serif text-foreground">{t("onboarding.yourFears")}</h2>
       </div>
-      <p className="text-muted-foreground text-sm mb-4">Being honest helps your reflections go deeper.</p>
+      <p className="text-muted-foreground text-sm mb-4">{t("onboarding.fearsDesc")}</p>
       <div className="flex flex-wrap gap-2">
         {PRESET_FEARS.map((f) => (
           <Badge
@@ -258,9 +259,9 @@ const OnboardingPage = () => {
       >
         <Mic className="w-10 h-10 text-primary" />
       </motion.div>
-      <h2 className="text-2xl font-bold font-serif text-foreground mb-3">Clone Your Voice</h2>
+      <h2 className="text-2xl font-bold font-serif text-foreground mb-3">{t("onboarding.cloneVoice")}</h2>
       <p className="text-muted-foreground text-base leading-relaxed max-w-xs mb-6">
-        Record 30 seconds of speech and your Soul Mirror will read reflections back in <em>your own voice</em>.
+        {t("onboarding.cloneVoiceDesc")}
       </p>
       <Button
         variant="outline"
@@ -268,9 +269,9 @@ const OnboardingPage = () => {
         onClick={() => navigate("/settings/voice")}
       >
         <Mic className="w-4 h-4 mr-2" />
-        Set Up Voice Clone
+        {t("onboarding.setupVoiceClone")}
       </Button>
-      <p className="text-xs text-muted-foreground mt-3">You can always do this later in Settings.</p>
+      <p className="text-xs text-muted-foreground mt-3">{t("onboarding.doLater")}</p>
     </div>,
 
     // Step 4 — Ready
@@ -282,16 +283,16 @@ const OnboardingPage = () => {
       >
         <Sparkles className="w-10 h-10 text-white" />
       </motion.div>
-      <h2 className="text-2xl font-bold font-serif text-foreground mb-3">You're All Set!</h2>
+      <h2 className="text-2xl font-bold font-serif text-foreground mb-3">{t("onboarding.allSet")}</h2>
       <p className="text-muted-foreground text-base leading-relaxed max-w-xs mb-8">
-        Start by recording your first journal entry. Speak freely — AI will handle the rest.
+        {t("onboarding.allSetDesc")}
       </p>
       <Button
         className="rounded-full px-8 py-6 text-base gradient-primary text-white"
         onClick={handleComplete}
         disabled={saving}
       >
-        {saving ? "Saving..." : "Start Journaling"}
+        {saving ? t("onboarding.saving") : t("onboarding.startJournaling")}
         <ArrowRight className="w-5 h-5 ml-2" />
       </Button>
     </div>,
@@ -299,7 +300,6 @@ const OnboardingPage = () => {
 
   return (
     <div className="min-h-screen gradient-warm flex flex-col">
-      {/* Progress bar */}
       <div className="flex gap-1.5 px-6 pt-6">
         {[0, 1, 2, 3, 4].map((i) => (
           <div
@@ -311,7 +311,6 @@ const OnboardingPage = () => {
         ))}
       </div>
 
-      {/* Skip */}
       <div className="flex justify-end px-6 pt-3">
         {step < 4 && (
           <button
@@ -319,12 +318,11 @@ const OnboardingPage = () => {
             onClick={handleSkip}
             disabled={saving}
           >
-            Skip for now
+            {t("onboarding.skipForNow")}
           </button>
         )}
       </div>
 
-      {/* Content */}
       <div className="flex-1 overflow-y-auto pb-32">
         <AnimatePresence custom={direction} mode="wait">
           <motion.div
@@ -341,18 +339,17 @@ const OnboardingPage = () => {
         </AnimatePresence>
       </div>
 
-      {/* Navigation */}
       <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-background via-background to-transparent">
         <div className="flex gap-3 max-w-md mx-auto">
           {step > 0 && step < 4 && (
             <Button variant="outline" className="rounded-full flex-1" onClick={back}>
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Back
+              {t("onboarding.back")}
             </Button>
           )}
           {step < 4 && (
             <Button className="rounded-full flex-1 gradient-primary text-white" onClick={next}>
-              {step === 0 ? "Get Started" : "Continue"}
+              {step === 0 ? t("onboarding.getStarted") : t("onboarding.continue")}
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           )}
