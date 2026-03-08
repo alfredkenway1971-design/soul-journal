@@ -67,53 +67,53 @@ const SettingsPage = () => {
 
   const settingsSections = [
     {
-      title: "Account",
+      title: t("settings.account"),
       items: [
-        { icon: User, label: "Profile", action: "navigate", route: "/settings/profile" },
-        { icon: Crown, label: "Subscription", action: "navigate", route: "/pricing" },
-        { icon: Lock, label: "Security & PIN", action: "navigate", route: "/settings/security" },
-        { icon: Mic, label: "Voice Clone", action: "navigate", route: "/settings/voice" },
-        { icon: Target, label: "Goals & Interests", action: "navigate", route: "/settings/goals" },
+        { icon: User, label: t("settings.profile"), action: "navigate", route: "/settings/profile" },
+        { icon: Crown, label: t("settings.manageSubscription"), action: "navigate", route: "/pricing" },
+        { icon: Lock, label: t("settings.security"), action: "navigate", route: "/settings/security" },
+        { icon: Mic, label: t("settings.voice"), action: "navigate", route: "/settings/voice" },
+        { icon: Target, label: t("settings.goals"), action: "navigate", route: "/settings/goals" },
       ],
     },
     {
-      title: "AI Coach",
+      title: t("settings.coaching"),
       items: [
-        { icon: Brain, label: "Coaching Dashboard", action: "navigate", route: "/coaching" },
-        ...(isAdmin ? [{ icon: Target, label: "Admin Dashboard", action: "navigate" as const, route: "/admin" }] : []),
+        { icon: Brain, label: t("settings.coaching"), action: "navigate", route: "/coaching" },
+        ...(isAdmin ? [{ icon: Target, label: t("settings.admin"), action: "navigate" as const, route: "/admin" }] : []),
       ],
     },
     {
-      title: "Appearance",
+      title: t("settings.appearance"),
       items: [
         { 
           icon: darkMode ? Moon : Sun, 
-          label: "Dark Mode", 
+          label: t("settings.darkMode"), 
           action: "toggle",
           value: darkMode,
           onChange: handleDarkModeToggle
         },
-        { icon: Palette, label: "Themes & Backgrounds", action: "navigate", route: "/settings/themes" },
-        { icon: Type, label: "Fonts", action: "navigate", route: "/settings/fonts" },
+        { icon: Palette, label: t("settings.themes"), action: "navigate", route: "/settings/themes" },
+        { icon: Type, label: t("settings.fonts"), action: "navigate", route: "/settings/fonts" },
       ],
     },
     {
-      title: "Notifications",
+      title: t("settings.reminders"),
       items: [
-        { icon: Bell, label: "Daily Reminders", action: "navigate", route: "/settings/reminders" },
+        { icon: Bell, label: t("settings.reminders"), action: "navigate", route: "/settings/reminders" },
       ],
     },
     {
-      title: "Data",
+      title: t("settings.export"),
       items: [
-        { icon: Download, label: "Export Journal", action: "navigate", route: "/settings/export" },
+        { icon: Download, label: t("settings.export"), action: "navigate", route: "/settings/export" },
       ],
     },
     {
-      title: "Support",
+      title: "",
       items: [
         { icon: HelpCircle, label: "Help & FAQ", action: "navigate", route: "" },
-        { icon: LogOut, label: "Sign Out", action: "signout", route: "" },
+        { icon: LogOut, label: t("settings.signOut"), action: "signout", route: "" },
       ],
     },
   ];
