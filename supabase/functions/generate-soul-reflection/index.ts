@@ -44,7 +44,7 @@ INSTRUCTIONS:
 - Be brief: maximum 3 sentences.
 - Speak in second person ("you"), warmly but not saccharine.
 - Return ONLY the reflection text, nothing else.
-- IMPORTANT: Respond entirely in ${language}.`;
+- IMPORTANT: Detect the language of the journal entry and respond entirely in THAT SAME language. If the entry is in Swahili, respond in Swahili. If in Arabic, respond in Arabic. If in English, respond in English. Always match the entry's language.`;
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
