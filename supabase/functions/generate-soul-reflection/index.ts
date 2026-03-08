@@ -92,10 +92,23 @@ Choose your coaching style based on the analysis:
     }
 
     const result = await response.json();
-    const reflection = result.choices?.[0]?.message?.content?.trim();
+    const rawContent = result.choices?.[0]?.message?.content?.trim();
 
-    if (!reflection) {
+    if (!rawContent) {
       throw new Error('No reflection generated');
+    }
+
+    // Parse JSON response to extract mode and reflection
+    let reflection: string;
+    let mode: string = 'blend';
+    try {
+      const cleaned = rawContent.replace(/```json\n?|\n?```/g, '').trim();
+      const parsed = JSON.parse(cleaned);
+      reflection = parsed.reflection || rawContent;
+      mode = parsed.mode || 'blend';
+    } catch {
+      // Fallback: treat entire response as reflection
+      reflection = rawContent;
     }
 
     console.log('Soul reflection generated successfully');
