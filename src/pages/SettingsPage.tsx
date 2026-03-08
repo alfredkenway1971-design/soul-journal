@@ -31,6 +31,7 @@ const SettingsPage = () => {
   const navigate = useNavigate();
   const { signOut, isAdmin } = useAuth();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [notifications, setNotifications] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
 
