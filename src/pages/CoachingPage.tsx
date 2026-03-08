@@ -17,6 +17,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUsageLimits } from "@/hooks/useUsageLimits";
+import { FREE_LIMITS } from "@/contexts/SubscriptionContext";
 import { supabase } from "@/integrations/supabase/client";
 import BottomNav from "@/components/BottomNav";
 
@@ -56,6 +58,7 @@ const CoachingPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
+  const { coachingCallsThisMonth, coachingLimitReached, canUseCoaching, refetch: refetchLimits } = useUsageLimits();
   
   const [insights, setInsights] = useState<Insight[]>([]);
   const [goals, setGoals] = useState<Goal[]>([]);
@@ -102,6 +105,16 @@ const CoachingPage = () => {
   const generateInsights = async () => {
     if (!user) return;
     
+    if (!canUseCoaching) {
+      toast({
+        title: "Coaching Limit Reached",
+        description: `Free plan allows ${FREE_LIMITS.aiCoachingCallsPerMonth} AI coaching calls per month. Upgrade for unlimited.`,
+        variant: "destructive",
+      });
+      navigate("/pricing");
+      return;
+    }
+    
     setGenerating(true);
     
     try {
@@ -116,6 +129,7 @@ const CoachingPage = () => {
         description: `${data.insightsCount || 0} new insights based on your journal entries.`,
       });
       
+      await refetchLimits();
       fetchData();
     } catch (error) {
       console.error('Error generating insights:', error);
@@ -196,13 +210,28 @@ const CoachingPage = () => {
               variant="outline"
               size="sm"
               onClick={generateInsights}
-              disabled={generating}
+              disabled={generating || coachingLimitReached}
               className="gap-2"
             >
               <RefreshCw className={`w-4 h-4 ${generating ? 'animate-spin' : ''}`} />
-              {generating ? "Analyzing..." : "Refresh"}
+              {generating ? "Analyzing..." : coachingLimitReached ? "Limit Reached" : "Refresh"}
             </Button>
           </div>
+          {coachingLimitReached && (
+            <div className="mt-3 bg-destructive/10 border border-destructive/20 rounded-xl px-4 py-2 flex items-center justify-between">
+              <p className="text-xs text-destructive font-medium">
+                {coachingCallsThisMonth}/{FREE_LIMITS.aiCoachingCallsPerMonth} coaching calls used this month
+              </p>
+              <button onClick={() => navigate("/pricing")} className="text-xs text-primary underline ml-2 shrink-0">
+                Upgrade
+              </button>
+            </div>
+          )}
+          {!coachingLimitReached && !loading && (
+            <p className="mt-2 text-xs text-muted-foreground">
+              {coachingCallsThisMonth}/{FREE_LIMITS.aiCoachingCallsPerMonth} coaching calls used this month
+            </p>
+          )}
         </div>
       </header>
 
