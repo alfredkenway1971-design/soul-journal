@@ -370,7 +370,7 @@ const RecordPage = () => {
                   <div className="text-sm">
                     {textLimitReached && <p className="text-destructive font-medium">{t("record.textEntriesCount").replace("{count}", String(textEntriesToday))}</p>}
                     {audioLimitReached && <p className="text-destructive font-medium">{t("record.audioEntriesCount").replace("{count}", String(audioEntriesThisWeek))}</p>}
-                    <button onClick={() => navigate("/pricing")} className="text-primary underline text-xs mt-1">Upgrade for unlimited</button>
+                    <button onClick={() => navigate("/pricing")} className="text-primary underline text-xs mt-1">{t("record.upgradeUnlimited")}</button>
                   </div>
                 </motion.div>
               )}
