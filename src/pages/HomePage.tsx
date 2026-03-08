@@ -121,22 +121,25 @@ const HomePage = () => {
                 <span className="font-display italic">{firstName}</span>
               </h1>
             </motion.div>
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="relative"
-            >
-              <Avatar 
-                className="w-12 h-12 border-2 border-primary/30 cursor-pointer"
-                onClick={() => navigate("/settings/profile")}
+            <div className="flex items-center gap-1">
+              <AppLanguageSwitcher />
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="relative"
               >
-                <AvatarImage src={avatarUrl || undefined} />
-                <AvatarFallback className="bg-primary/20 text-primary font-medium">
-                  {firstName.charAt(0)}
-                </AvatarFallback>
-              </Avatar>
-              <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-400 rounded-full border-2 border-background" />
-            </motion.div>
+                <Avatar 
+                  className="w-12 h-12 border-2 border-primary/30 cursor-pointer"
+                  onClick={() => navigate("/settings/profile")}
+                >
+                  <AvatarImage src={avatarUrl || undefined} />
+                  <AvatarFallback className="bg-primary/20 text-primary font-medium">
+                    {firstName.charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-400 rounded-full border-2 border-background" />
+              </motion.div>
+            </div>
           </div>
         </div>
       </header>
