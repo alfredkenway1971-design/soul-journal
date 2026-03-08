@@ -595,7 +595,7 @@ const RecordPage = () => {
                   className="w-full mt-4 gap-2 h-12 rounded-xl gradient-primary"
                   onClick={() => setStep("language")}
                 >
-                  Continue
+                  {t("record.continue")}
                 </Button>
               </motion.div>
             )}
