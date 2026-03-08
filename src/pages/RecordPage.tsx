@@ -154,6 +154,15 @@ const RecordPage = () => {
     if (isRecording) {
       stopRecording();
     } else {
+      if (!canCreateAudioEntry) {
+        toast({
+          title: "Audio Limit Reached",
+          description: `Free plan allows ${1} audio entry per week. Upgrade for unlimited.`,
+          variant: "destructive",
+        });
+        navigate("/pricing");
+        return;
+      }
       // Reset recording duration and start timer
       setRecordingDuration(0);
       recordingTimerRef.current = setInterval(() => {
@@ -161,6 +170,19 @@ const RecordPage = () => {
       }, 1000);
       startRecording();
     }
+  };
+
+  const handleWriteClick = () => {
+    if (!canCreateTextEntry) {
+      toast({
+        title: "Text Entry Limit Reached",
+        description: `Free plan allows ${2} text entries per day. Upgrade for unlimited.`,
+        variant: "destructive",
+      });
+      navigate("/pricing");
+      return;
+    }
+    setStep("write");
   };
 
   const formatDuration = (seconds: number) => {
