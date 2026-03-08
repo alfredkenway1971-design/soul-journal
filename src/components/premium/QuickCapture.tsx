@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Mic, Camera, PenLine } from "lucide-react";
+import { Mic, PenLine } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const QuickCapture = () => {

@@ -16,7 +16,7 @@ import { useJournalAPI } from "@/hooks/useJournalAPI";
 import { supabase } from "@/integrations/supabase/client";
 import { Mic } from "lucide-react";
 
-type RecordingStep = "main" | "write" | "mood" | "enhance" | "language" | "photos" | "complete";
+type RecordingStep = "main" | "write" | "mood" | "enhance" | "language" | "complete";
 
 const RecordPage = () => {
   const navigate = useNavigate();
