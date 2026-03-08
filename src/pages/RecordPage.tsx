@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Type, Camera, Smile, Sparkles, Wand2, Play, Volume2, Image } from "lucide-react";
+import { X, Type, Smile, Sparkles, Wand2, Play, Volume2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -8,7 +8,7 @@ import MoodSelector, { Mood } from "@/components/MoodSelector";
 import LanguageSelector, { Language } from "@/components/LanguageSelector";
 import CoachReflectionCard from "@/components/premium/CoachReflectionCard";
 import RecentEntryCard from "@/components/premium/RecentEntryCard";
-import PhotoCapture from "@/components/premium/PhotoCapture";
+
 import BottomNav from "@/components/BottomNav";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -16,7 +16,7 @@ import { useJournalAPI } from "@/hooks/useJournalAPI";
 import { supabase } from "@/integrations/supabase/client";
 import { Mic } from "lucide-react";
 
-type RecordingStep = "main" | "write" | "mood" | "enhance" | "language" | "photos" | "complete";
+type RecordingStep = "main" | "write" | "mood" | "enhance" | "language" | "complete";
 
 const RecordPage = () => {
   const navigate = useNavigate();
@@ -38,7 +38,7 @@ const RecordPage = () => {
   const [recentEntry, setRecentEntry] = useState<{ id: string; title: string; preview: string; date: Date; mood: Mood } | null>(null);
   const [generatedAudioUrl, setGeneratedAudioUrl] = useState<string | null>(null);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
-  const [photos, setPhotos] = useState<File[]>([]);
+  
   const [recordingDuration, setRecordingDuration] = useState(0);
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -256,17 +256,6 @@ const RecordPage = () => {
         audioUrl: audioPath,
       });
       
-      // Upload photos if any
-      if (photos.length > 0 && entry?.id) {
-        for (const photo of photos) {
-          try {
-            const photoPath = await api.uploadPhoto(photo, user.id);
-            await api.saveEntryMedia(entry.id, 'photo', photoPath);
-          } catch (photoError) {
-            console.error('Photo upload error:', photoError);
-          }
-        }
-      }
 
       // Generate Soul Mirror reflection in the background
       if (entry?.id && enhancedText) {
@@ -378,14 +367,6 @@ const RecordPage = () => {
                 >
                   <Type className="w-4 h-4" />
                   Write
-                </Button>
-                <Button
-                  variant="outline"
-                  className="rounded-full px-5 gap-2"
-                  onClick={() => setStep("photos")}
-                >
-                  <Camera className="w-4 h-4" />
-                  Photo
                 </Button>
                 <Button
                   variant="outline"
@@ -638,64 +619,17 @@ const RecordPage = () => {
               </Button>
             )}
 
-            {/* Photo Capture Section */}
-            <div className="space-y-3 pt-4 border-t border-border">
-              <div className="flex items-center gap-2">
-                <Camera className="w-5 h-5 text-primary" />
-                <h3 className="font-medium">Add Photos (Optional)</h3>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Capture moments with up to 5 photos
-              </p>
-              <PhotoCapture photos={photos} onPhotosChange={setPhotos} />
-            </div>
 
             <Button
               className="w-full gap-2 h-14 rounded-2xl gradient-primary"
               onClick={handleSave}
               disabled={isProcessing}
             >
-              {isProcessing ? "Saving..." : photos.length > 0 ? `Save Entry with ${photos.length} Photo${photos.length > 1 ? 's' : ''}` : "Save Entry"}
+              {isProcessing ? "Saving..." : "Save Entry"}
             </Button>
           </motion.div>
         )}
 
-        {/* Photo Capture Step */}
-        {step === "photos" && (
-          <motion.div
-            className="glass-premium p-6 space-y-6"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <div className="text-center">
-              <span className="text-4xl mb-4 block">📸</span>
-              <h2 className="text-xl font-semibold font-display mb-2">
-                Photo Dump
-              </h2>
-              <p className="text-muted-foreground text-sm">
-                Add photos to capture this moment
-              </p>
-            </div>
-
-            <PhotoCapture photos={photos} onPhotosChange={setPhotos} />
-
-            <div className="flex gap-3">
-              <Button
-                variant="outline"
-                className="flex-1"
-                onClick={() => setStep("main")}
-              >
-                Back
-              </Button>
-              <Button
-                className="flex-1 gradient-primary"
-                onClick={() => setStep("main")}
-              >
-                {photos.length > 0 ? `Add ${photos.length} Photos` : "Skip"}
-              </Button>
-            </div>
-          </motion.div>
-        )}
 
         {/* Complete */}
         {step === "complete" && (
