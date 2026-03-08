@@ -45,24 +45,21 @@ const AdminDashboard = () => {
 
   const fetchUsers = async () => {
     setLoading(true);
-    const { data: { session } } = await supabase.auth.getSession();
-    const res = await supabase.functions.invoke("admin-users", {
-      method: "GET",
-      headers: { Authorization: `Bearer ${session?.access_token}` },
-      body: undefined,
-    });
-    
-    // Handle the response - functions.invoke uses query params differently
-    // We need to use fetch directly for GET with query params
-    const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-users?action=list-users`;
-    const fetchRes = await fetch(url, {
-      headers: {
-        Authorization: `Bearer ${session?.access_token}`,
-        apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-      },
-    });
-    const data = await fetchRes.json();
-    if (data.users) setUsers(data.users);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-users?action=list-users`;
+      const fetchRes = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        },
+      });
+      const data = await fetchRes.json();
+      if (data.users) setUsers(data.users);
+    } catch (e) {
+      console.error("Failed to fetch users:", e);
+    }
     setLoading(false);
   };
 
