@@ -265,6 +265,29 @@ const VoiceSettingsPage = () => {
     );
   }
 
+  if (!isPremium) {
+    return (
+      <div className="min-h-screen gradient-warm pb-24">
+        <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border/50">
+          <div className="max-w-lg mx-auto px-4 py-4">
+            <div className="flex items-center gap-4">
+              <Button variant="ghost" size="icon" className="rounded-full" onClick={() => navigate("/settings")}>
+                <ArrowLeft className="w-5 h-5" />
+              </Button>
+              <h1 className="text-lg font-semibold text-foreground">Voice Clone</h1>
+            </div>
+          </div>
+        </header>
+        <main className="max-w-lg mx-auto px-4 py-12">
+          <UpgradePrompt 
+            feature="Voice Cloning" 
+            description="Clone your voice and hear your journal entries read back to you. Upgrade to Premium to unlock this feature."
+          />
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen gradient-warm pb-24">
       {/* Hidden audio element */}

@@ -40,6 +40,7 @@ const BookBuilderPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { isPremium } = useSubscription();
 
   const [step, setStep] = useState<Step>(1);
   const [generating, setGenerating] = useState(false);

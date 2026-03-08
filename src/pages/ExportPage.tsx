@@ -15,6 +15,7 @@ const ExportPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { isPremium } = useSubscription();
   const [exporting, setExporting] = useState<"pdf" | "markdown" | null>(null);
   const [success, setSuccess] = useState<"pdf" | "markdown" | null>(null);
 
