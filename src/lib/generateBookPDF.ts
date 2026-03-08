@@ -155,11 +155,29 @@ const renderHTMLToCanvas = async (html: string): Promise<HTMLCanvasElement> => {
   });
   await waitForFonts(iframeDoc);
 
+  // Wait for all images inside the iframe to fully load
+  const iframeImages = Array.from(iframeDoc.querySelectorAll("img"));
+  if (iframeImages.length > 0) {
+    await Promise.all(
+      iframeImages.map(
+        (img) =>
+          new Promise<void>((resolve) => {
+            if (img.complete && img.naturalWidth > 0) return resolve();
+            img.onload = () => resolve();
+            img.onerror = () => resolve();
+          })
+      )
+    );
+    // Extra settling time for images
+    await new Promise((r) => setTimeout(r, 300));
+  }
+
   const canvas = await html2canvas(iframeDoc.body, {
     width: PAGE_W_PX,
     height: PAGE_H_PX,
     scale: 1,
     useCORS: true,
+    allowTaint: true,
     logging: false,
     backgroundColor: null,
   });
