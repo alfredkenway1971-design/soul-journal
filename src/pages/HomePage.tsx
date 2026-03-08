@@ -3,9 +3,11 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useJournalAPI } from "@/hooks/useJournalAPI";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 import { supabase } from "@/integrations/supabase/client";
 import BottomNav from "@/components/BottomNav";
+import AppLanguageSwitcher from "@/components/AppLanguageSwitcher";
 import AIInsightCard from "@/components/premium/AIInsightCard";
 import QuickCapture from "@/components/premium/QuickCapture";
 import RecentEntryCard from "@/components/premium/RecentEntryCard";
@@ -25,7 +27,8 @@ interface Entry {
 const HomePage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const api = useJournalAPI();
+  const { t, language } = useLanguage();
+  const api = useJournalAPI(language);
   
   
   const [entries, setEntries] = useState<Entry[]>([]);
@@ -40,9 +43,9 @@ const HomePage = () => {
   
   const currentHour = new Date().getHours();
   const getGreeting = () => {
-    if (currentHour < 12) return "Morning";
-    if (currentHour < 17) return "Afternoon";
-    return "Evening";
+    if (currentHour < 12) return t("home.morning");
+    if (currentHour < 17) return t("home.afternoon");
+    return t("home.evening");
   };
 
   useEffect(() => {
@@ -118,22 +121,25 @@ const HomePage = () => {
                 <span className="font-display italic">{firstName}</span>
               </h1>
             </motion.div>
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="relative"
-            >
-              <Avatar 
-                className="w-12 h-12 border-2 border-primary/30 cursor-pointer"
-                onClick={() => navigate("/settings/profile")}
+            <div className="flex items-center gap-1">
+              <AppLanguageSwitcher />
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="relative"
               >
-                <AvatarImage src={avatarUrl || undefined} />
-                <AvatarFallback className="bg-primary/20 text-primary font-medium">
-                  {firstName.charAt(0)}
-                </AvatarFallback>
-              </Avatar>
-              <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-400 rounded-full border-2 border-background" />
-            </motion.div>
+                <Avatar 
+                  className="w-12 h-12 border-2 border-primary/30 cursor-pointer"
+                  onClick={() => navigate("/settings/profile")}
+                >
+                  <AvatarImage src={avatarUrl || undefined} />
+                  <AvatarFallback className="bg-primary/20 text-primary font-medium">
+                    {firstName.charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-400 rounded-full border-2 border-background" />
+              </motion.div>
+            </div>
           </div>
         </div>
       </header>
@@ -153,19 +159,19 @@ const HomePage = () => {
 
         {/* Quick Capture */}
         <section>
-          <h2 className="font-semibold text-foreground mb-3">Quick Capture</h2>
+          <h2 className="font-semibold text-foreground mb-3">{t("home.quickCapture")}</h2>
           <QuickCapture />
         </section>
 
         {/* Recent Entries */}
         <section>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="section-label">Recent Entries</h2>
+            <h2 className="section-label">{t("home.recentEntries")}</h2>
             <button 
               className="text-sm font-medium text-foreground hover:text-primary transition-colors"
               onClick={() => navigate("/calendar")}
             >
-              View All
+              {t("home.viewAll")}
             </button>
           </div>
 
@@ -200,12 +206,12 @@ const HomePage = () => {
               animate={{ opacity: 1 }}
             >
               <span className="text-4xl mb-4 block">📝</span>
-              <p className="text-muted-foreground mb-4">No entries yet</p>
+              <p className="text-muted-foreground mb-4">{t("home.noEntries")}</p>
               <button 
                 className="gradient-primary text-white px-6 py-2.5 rounded-full font-medium"
                 onClick={() => navigate("/record")}
               >
-                Create Your First Entry
+                {t("home.createFirst")}
               </button>
             </motion.div>
           )}

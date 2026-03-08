@@ -1,6 +1,8 @@
 import { supabase } from "@/integrations/supabase/client";
+import { getLanguageName, type AppLanguage } from "@/contexts/LanguageContext";
 
-export const useJournalAPI = () => {
+export const useJournalAPI = (appLanguage?: AppLanguage) => {
+  const langName = getLanguageName(appLanguage || "en");
   const transcribeAudio = async (audioBlob: Blob): Promise<string> => {
     // Convert blob to base64
     const reader = new FileReader();
@@ -26,7 +28,7 @@ export const useJournalAPI = () => {
 
   const enhanceText = async (text: string, tone: string = 'natural'): Promise<string> => {
     const { data, error } = await supabase.functions.invoke('enhance-text', {
-      body: { text, tone },
+      body: { text, tone, language: langName },
     });
 
     if (error) throw new Error(error.message);
@@ -106,6 +108,7 @@ export const useJournalAPI = () => {
         fears: (profile as any)?.fears || [],
         strengths: (profile as any)?.strengths || [],
         worldview: (profile as any)?.worldview || null,
+        language: langName,
       },
     });
 

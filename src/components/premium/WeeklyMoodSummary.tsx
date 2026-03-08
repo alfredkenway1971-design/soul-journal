@@ -4,6 +4,7 @@ import { TrendingUp, TrendingDown, Minus, Sparkles, Loader2 } from "lucide-react
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage, getLanguageName } from "@/contexts/LanguageContext";
 import type { Mood } from "@/components/MoodSelector";
 
 interface MoodEntry {
@@ -46,6 +47,7 @@ const moodLabels: Record<Mood, string> = {
 
 const WeeklyMoodSummary = () => {
   const { user } = useAuth();
+  const { language } = useLanguage();
   const [summary, setSummary] = useState<WeeklySummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
@@ -167,6 +169,7 @@ const WeeklyMoodSummary = () => {
             text: entrySummary,
             tone: 'analysis',
             customPrompt: 'Analyze these journal entries from the past week and provide a brief, empathetic 2-sentence insight about the person\'s emotional patterns and one actionable suggestion:',
+            language: getLanguageName(language),
           },
         });
 

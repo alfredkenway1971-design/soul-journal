@@ -14,7 +14,7 @@ serve(async (req) => {
   }
 
   try {
-    const { text, tone = 'natural', customPrompt } = await req.json();
+    const { text, tone = 'natural', customPrompt, language = 'English' } = await req.json();
 
     if (!text) {
       throw new Error('No text provided');
@@ -38,7 +38,8 @@ serve(async (req) => {
 5. Add appropriate paragraph breaks for readability
 6. Keep the entry personal and authentic
 
-Do not add content that wasn't in the original. Just polish and enhance what's there.`;
+Do not add content that wasn't in the original. Just polish and enhance what's there.
+IMPORTANT: The enhanced output must be in ${language}. Maintain the same language throughout.`;
       userMessage = `Please enhance this journal entry:\n\n${text}`;
     }
 

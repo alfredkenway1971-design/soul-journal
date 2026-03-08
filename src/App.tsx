@@ -26,6 +26,7 @@ import BookBuilderPage from "@/pages/BookBuilderPage";
 import OnboardingPage from "@/pages/OnboardingPage";
 import AdminDashboard from "@/pages/AdminDashboard";
 import PricingPage from "@/pages/PricingPage";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 import NotFound from "./pages/NotFound";
 
@@ -309,6 +310,7 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
+        <LanguageProvider>
         <SubscriptionProvider>
         <TooltipProvider>
           <Toaster />
@@ -318,6 +320,7 @@ const App = () => {
           </BrowserRouter>
         </TooltipProvider>
         </SubscriptionProvider>
+        </LanguageProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

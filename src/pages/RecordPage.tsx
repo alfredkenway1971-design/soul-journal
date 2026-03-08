@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { X, Type, Smile, Sparkles, Wand2, Play, Volume2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -23,7 +24,8 @@ const RecordPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
-  const api = useJournalAPI();
+  const { language } = useLanguage();
+  const api = useJournalAPI(language);
   const { canCreateTextEntry, canCreateAudioEntry, textLimitReached, audioLimitReached, textEntriesToday, audioEntriesThisWeek } = useUsageLimits();
   
   const [step, setStep] = useState<RecordingStep>("main");

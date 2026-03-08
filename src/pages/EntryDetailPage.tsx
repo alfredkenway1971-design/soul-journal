@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useJournalAPI } from "@/hooks/useJournalAPI";
 import { supabase } from "@/integrations/supabase/client";
 import BottomNav from "@/components/BottomNav";
@@ -53,7 +54,8 @@ const EntryDetailPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
-  const api = useJournalAPI();
+  const { language } = useLanguage();
+  const api = useJournalAPI(language);
   
   const [entry, setEntry] = useState<EntryData | null>(null);
   const [media, setMedia] = useState<MediaData[]>([]);
