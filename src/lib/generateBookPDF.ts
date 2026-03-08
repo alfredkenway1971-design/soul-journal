@@ -107,6 +107,36 @@ const waitForFonts = async (doc: Document, timeoutMs = 8000): Promise<void> => {
   }
 };
 
+// Convert an image URL to a base64 data URL to avoid cross-origin issues in html2canvas
+const imageToBase64 = async (url: string): Promise<string> => {
+  try {
+    const response = await fetch(url, { mode: "cors" });
+    const blob = await response.blob();
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  } catch (e) {
+    console.warn("Failed to convert image to base64:", url, e);
+    return url; // fallback to original URL
+  }
+};
+
+// Pre-process all entries to convert photo URLs to base64
+const preloadEntryImages = async (entries: JournalEntry[]): Promise<JournalEntry[]> => {
+  return Promise.all(
+    entries.map(async (entry) => {
+      if (!entry.photoUrls || entry.photoUrls.length === 0) return entry;
+      const base64Urls = await Promise.all(
+        entry.photoUrls.map((url) => imageToBase64(url))
+      );
+      return { ...entry, photoUrls: base64Urls };
+    })
+  );
+};
+
 const renderHTMLToCanvas = async (html: string): Promise<HTMLCanvasElement> => {
   const iframe = document.createElement("iframe");
   iframe.style.cssText = `position:fixed;left:-9999px;top:0;width:${PAGE_W_PX}px;height:${PAGE_H_PX}px;border:none;opacity:0;`;
@@ -125,11 +155,29 @@ const renderHTMLToCanvas = async (html: string): Promise<HTMLCanvasElement> => {
   });
   await waitForFonts(iframeDoc);
 
+  // Wait for all images inside the iframe to fully load
+  const iframeImages = Array.from(iframeDoc.querySelectorAll("img"));
+  if (iframeImages.length > 0) {
+    await Promise.all(
+      iframeImages.map(
+        (img) =>
+          new Promise<void>((resolve) => {
+            if (img.complete && img.naturalWidth > 0) return resolve();
+            img.onload = () => resolve();
+            img.onerror = () => resolve();
+          })
+      )
+    );
+    // Extra settling time for images
+    await new Promise((r) => setTimeout(r, 300));
+  }
+
   const canvas = await html2canvas(iframeDoc.body, {
     width: PAGE_W_PX,
     height: PAGE_H_PX,
     scale: 1,
     useCORS: true,
+    allowTaint: true,
     logging: false,
     backgroundColor: null,
   });
@@ -374,7 +422,10 @@ export const generatePreviewDataURL = async (
   await document.fonts.ready;
   await new Promise((r) => setTimeout(r, 300));
 
-  const html = buildSingleEntryHTML(sampleEntry, config, fontConfig.css, fontConfig.importUrl);
+  // Pre-load images to base64
+  const [processedEntry] = await preloadEntryImages([sampleEntry]);
+
+  const html = buildSingleEntryHTML(processedEntry, config, fontConfig.css, fontConfig.importUrl);
   const canvas = await renderHTMLToCanvas(html);
   return canvas.toDataURL("image/png");
 };
@@ -395,26 +446,35 @@ export const generateAndDownloadPDF = async (
   await document.fonts.ready;
   await new Promise((r) => setTimeout(r, 500));
 
+  onProgress?.("Pre-loading images...");
+  const processedEntries = await preloadEntryImages(entries);
+
+  // Also convert avatar to base64 if present
+  let processedConfig = { ...config };
+  if (config.showAvatar && config.avatarUrl) {
+    processedConfig.avatarUrl = await imageToBase64(config.avatarUrl);
+  }
+
   onProgress?.("Rendering cover...");
-  const coverHTML = buildCoverHTML(config, fontConfig.css, fontConfig.importUrl);
+  const coverHTML = buildCoverHTML(processedConfig, fontConfig.css, fontConfig.importUrl);
   const coverCanvas = await renderHTMLToCanvas(coverHTML);
   addCanvasToPDF(pdf, coverCanvas, false);
 
-  if (config.layout === "one-per-page") {
-    for (let i = 0; i < entries.length; i++) {
-      onProgress?.(`Rendering entry ${i + 1} of ${entries.length}...`);
-      const html = buildSingleEntryHTML(entries[i], config, fontConfig.css, fontConfig.importUrl);
+  if (processedConfig.layout === "one-per-page") {
+    for (let i = 0; i < processedEntries.length; i++) {
+      onProgress?.(`Rendering entry ${i + 1} of ${processedEntries.length}...`);
+      const html = buildSingleEntryHTML(processedEntries[i], processedConfig, fontConfig.css, fontConfig.importUrl);
       const canvas = await renderHTMLToCanvas(html);
       addCanvasToPDF(pdf, canvas, true);
     }
   } else {
     const chunks: JournalEntry[][] = [];
-    for (let i = 0; i < entries.length; i += ENTRIES_PER_PAGE) {
-      chunks.push(entries.slice(i, i + ENTRIES_PER_PAGE));
+    for (let i = 0; i < processedEntries.length; i += ENTRIES_PER_PAGE) {
+      chunks.push(processedEntries.slice(i, i + ENTRIES_PER_PAGE));
     }
     for (let i = 0; i < chunks.length; i++) {
       onProgress?.(`Rendering page ${i + 1} of ${chunks.length}...`);
-      const html = buildEntryPageHTML(chunks[i], config, fontConfig.css, fontConfig.importUrl);
+      const html = buildEntryPageHTML(chunks[i], processedConfig, fontConfig.css, fontConfig.importUrl);
       const canvas = await renderHTMLToCanvas(html);
       addCanvasToPDF(pdf, canvas, true);
     }
