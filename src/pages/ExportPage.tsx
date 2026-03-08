@@ -219,6 +219,30 @@ const ExportPage = () => {
     }
   };
 
+  if (!isPremium) {
+    return (
+      <div className="min-h-screen gradient-warm pb-24">
+        <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border/50">
+          <div className="max-w-lg mx-auto px-4 py-4">
+            <div className="flex items-center gap-4">
+              <Button variant="ghost" size="icon" className="rounded-full" onClick={() => navigate("/settings")}>
+                <ArrowLeft className="w-5 h-5" />
+              </Button>
+              <h1 className="text-lg font-semibold text-foreground">Export Journal</h1>
+            </div>
+          </div>
+        </header>
+        <main className="max-w-lg mx-auto px-4 py-12">
+          <UpgradePrompt 
+            feature="Journal Export" 
+            description="Export your journal as PDF or Markdown and build beautiful soul books. Upgrade to Premium to unlock."
+          />
+        </main>
+        <BottomNav />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen gradient-warm pb-24">
       {/* Header */}
