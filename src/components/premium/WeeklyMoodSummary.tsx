@@ -47,6 +47,7 @@ const moodLabels: Record<Mood, string> = {
 
 const WeeklyMoodSummary = () => {
   const { user } = useAuth();
+  const { language } = useLanguage();
   const [summary, setSummary] = useState<WeeklySummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
