@@ -120,7 +120,6 @@ const CoachingPage = () => {
     setGenerating(true);
     
     try {
-      const { language } = useLanguage();
       const { data, error } = await supabase.functions.invoke('generate-coaching-insights', {
         body: { userId: user.id, language: getLanguageName(language) }
       });
