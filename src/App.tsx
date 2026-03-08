@@ -25,6 +25,8 @@ import ExportPage from "@/pages/ExportPage";
 import BookBuilderPage from "@/pages/BookBuilderPage";
 import OnboardingPage from "@/pages/OnboardingPage";
 import AdminDashboard from "@/pages/AdminDashboard";
+import PricingPage from "@/pages/PricingPage";
+import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -243,6 +245,14 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/pricing"
+        element={
+          <ProtectedRoute>
+            <PricingPage />
+          </ProtectedRoute>
+        }
+      />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
@@ -299,6 +309,7 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
+        <SubscriptionProvider>
         <TooltipProvider>
           <Toaster />
           <Sonner />
@@ -306,6 +317,7 @@ const App = () => {
             <AppRoutes />
           </BrowserRouter>
         </TooltipProvider>
+        </SubscriptionProvider>
       </AuthProvider>
     </QueryClientProvider>
   );
