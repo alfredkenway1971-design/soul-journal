@@ -331,9 +331,9 @@ const RecordPage = () => {
         <div className="max-w-lg mx-auto">
           <div className="flex items-center justify-between">
             <div>
-              <p className="section-label mb-1">NEW ENTRY</p>
+              <p className="section-label mb-1">{t("record.newEntry")}</p>
               <h1 className="text-2xl text-foreground">
-                <span className="font-normal">How are you, </span>
+                <span className="font-normal">{t("record.howAreYou")}</span>
                 <span className="font-display italic">{displayName}</span>
                 <span className="font-normal">?</span>
               </h1>
