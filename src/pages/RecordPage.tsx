@@ -371,14 +371,6 @@ const RecordPage = () => {
                 <Button
                   variant="outline"
                   className="rounded-full px-5 gap-2"
-                  onClick={() => setStep("photos")}
-                >
-                  <Camera className="w-4 h-4" />
-                  Photo
-                </Button>
-                <Button
-                  variant="outline"
-                  className="rounded-full px-5 gap-2"
                   onClick={() => setStep("mood")}
                 >
                   <Smile className="w-4 h-4" />
