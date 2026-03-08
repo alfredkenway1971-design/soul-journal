@@ -26,7 +26,7 @@ import { useToast } from "@/hooks/use-toast";
 
 const SettingsPage = () => {
   const navigate = useNavigate();
-  const { signOut } = useAuth();
+  const { signOut, isAdmin } = useAuth();
   const { toast } = useToast();
   const [notifications, setNotifications] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
@@ -75,6 +75,7 @@ const SettingsPage = () => {
       title: "AI Coach",
       items: [
         { icon: Brain, label: "Coaching Dashboard", action: "navigate", route: "/coaching" },
+        ...(isAdmin ? [{ icon: Target, label: "Admin Dashboard", action: "navigate" as const, route: "/admin" }] : []),
       ],
     },
     {

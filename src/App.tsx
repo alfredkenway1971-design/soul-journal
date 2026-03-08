@@ -24,6 +24,7 @@ import RemindersSettingsPage from "@/pages/RemindersSettingsPage";
 import ExportPage from "@/pages/ExportPage";
 import BookBuilderPage from "@/pages/BookBuilderPage";
 import OnboardingPage from "@/pages/OnboardingPage";
+import AdminDashboard from "@/pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -231,6 +232,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <EntryDetailPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin"
+        element={
+          <ProtectedRoute>
+            <AdminDashboard />
           </ProtectedRoute>
         }
       />
