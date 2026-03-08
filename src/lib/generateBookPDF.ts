@@ -107,6 +107,36 @@ const waitForFonts = async (doc: Document, timeoutMs = 8000): Promise<void> => {
   }
 };
 
+// Convert an image URL to a base64 data URL to avoid cross-origin issues in html2canvas
+const imageToBase64 = async (url: string): Promise<string> => {
+  try {
+    const response = await fetch(url, { mode: "cors" });
+    const blob = await response.blob();
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  } catch (e) {
+    console.warn("Failed to convert image to base64:", url, e);
+    return url; // fallback to original URL
+  }
+};
+
+// Pre-process all entries to convert photo URLs to base64
+const preloadEntryImages = async (entries: JournalEntry[]): Promise<JournalEntry[]> => {
+  return Promise.all(
+    entries.map(async (entry) => {
+      if (!entry.photoUrls || entry.photoUrls.length === 0) return entry;
+      const base64Urls = await Promise.all(
+        entry.photoUrls.map((url) => imageToBase64(url))
+      );
+      return { ...entry, photoUrls: base64Urls };
+    })
+  );
+};
+
 const renderHTMLToCanvas = async (html: string): Promise<HTMLCanvasElement> => {
   const iframe = document.createElement("iframe");
   iframe.style.cssText = `position:fixed;left:-9999px;top:0;width:${PAGE_W_PX}px;height:${PAGE_H_PX}px;border:none;opacity:0;`;
