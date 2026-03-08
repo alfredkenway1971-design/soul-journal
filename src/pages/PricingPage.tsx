@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useSubscription, SUBSCRIPTION_TIERS, FREE_LIMITS } from "@/contexts/SubscriptionContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import BottomNav from "@/components/BottomNav";
@@ -12,6 +13,7 @@ import BottomNav from "@/components/BottomNav";
 const PricingPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const { isPremium, planType, subscriptionEnd, isManualGrant, checkSubscription } = useSubscription();
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
 
@@ -26,7 +28,7 @@ const PricingPage = () => {
         window.open(data.url, "_blank");
       }
     } catch (e: any) {
-      toast({ title: "Error", description: e.message || "Failed to start checkout", variant: "destructive" });
+      toast({ title: t("common.error"), description: e.message || "Failed to start checkout", variant: "destructive" });
     }
     setLoadingPlan(null);
   };
@@ -39,16 +41,16 @@ const PricingPage = () => {
         window.open(data.url, "_blank");
       }
     } catch (e: any) {
-      toast({ title: "Error", description: e.message || "Failed to open portal", variant: "destructive" });
+      toast({ title: t("common.error"), description: e.message || "Failed to open portal", variant: "destructive" });
     }
   };
 
   const freeFeatures = [
-    `${FREE_LIMITS.textEntriesPerDay} text entries per day`,
-    `${FREE_LIMITS.audioEntriesPerWeek} audio entry per week`,
-    `${FREE_LIMITS.aiCoachingCallsPerMonth} AI coaching calls/month`,
-    "Basic mood tracking",
-    "Simple streak counter",
+    `${FREE_LIMITS.textEntriesPerDay} ${t("record.textLimit")}/${t("record.today")}`,
+    `${FREE_LIMITS.audioEntriesPerWeek} ${t("record.audioLimit")}/${t("record.thisWeek")}`,
+    `${FREE_LIMITS.aiCoachingCallsPerMonth} ${t("coaching.usageCounter")}`,
+    t("record.selectMood"),
+    t("insights.bestStreak"),
   ];
 
   const premiumFeatures = [
@@ -71,15 +73,14 @@ const PricingPage = () => {
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div>
-              <h1 className="text-lg font-semibold text-foreground">Choose Your Plan</h1>
-              <p className="text-sm text-muted-foreground">Unlock the full Echo Diary experience</p>
+              <h1 className="text-lg font-semibold text-foreground">{t("pricing.title")}</h1>
+              <p className="text-sm text-muted-foreground">{t("pricing.subtitle")}</p>
             </div>
           </div>
         </div>
       </header>
 
       <main className="max-w-lg mx-auto px-4 py-6 space-y-6">
-        {/* Current status */}
         {isPremium && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
@@ -88,19 +89,19 @@ const PricingPage = () => {
           >
             <div className="flex items-center gap-3 mb-2">
               <Crown className="w-5 h-5 text-primary" />
-              <span className="font-semibold text-foreground">Premium Active</span>
+              <span className="font-semibold text-foreground">{t("pricing.premiumActive")}</span>
               <Badge className="bg-primary/20 text-primary border-primary/30 ml-auto">
-                {isManualGrant ? "Granted" : planType === "yearly" ? "Yearly" : "Monthly"}
+                {isManualGrant ? t("pricing.granted") : planType === "yearly" ? t("pricing.yearly") : t("pricing.monthly")}
               </Badge>
             </div>
             {subscriptionEnd && (
               <p className="text-sm text-muted-foreground">
-                Renews {new Date(subscriptionEnd).toLocaleDateString()}
+                {t("pricing.renewsOn")} {new Date(subscriptionEnd).toLocaleDateString()}
               </p>
             )}
             {!isManualGrant && (
               <Button variant="outline" size="sm" className="mt-3" onClick={handleManageSubscription}>
-                Manage Subscription
+                {t("pricing.manageSubscription")}
               </Button>
             )}
           </motion.div>
@@ -115,10 +116,10 @@ const PricingPage = () => {
         >
           <div className="flex items-center gap-2 mb-1">
             <Shield className="w-5 h-5 text-muted-foreground" />
-            <h3 className="font-semibold text-foreground text-lg">Free</h3>
-            {!isPremium && <Badge variant="outline" className="ml-auto">Current Plan</Badge>}
+            <h3 className="font-semibold text-foreground text-lg">{t("pricing.free")}</h3>
+            {!isPremium && <Badge variant="outline" className="ml-auto">{t("pricing.currentPlan")}</Badge>}
           </div>
-          <p className="text-3xl font-bold text-foreground mb-4">$0<span className="text-sm font-normal text-muted-foreground">/forever</span></p>
+          <p className="text-3xl font-bold text-foreground mb-4">$0<span className="text-sm font-normal text-muted-foreground">{t("pricing.forever")}</span></p>
           <ul className="space-y-2">
             {freeFeatures.map((f) => (
               <li key={f} className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -137,11 +138,11 @@ const PricingPage = () => {
         >
           <div className="flex items-center gap-2 mb-1">
             <Zap className="w-5 h-5 text-primary" />
-            <h3 className="font-semibold text-foreground text-lg">Premium Monthly</h3>
-            {isPremium && planType === "monthly" && <Badge className="bg-primary/20 text-primary border-primary/30 ml-auto">Your Plan</Badge>}
+            <h3 className="font-semibold text-foreground text-lg">{t("pricing.premiumMonthly")}</h3>
+            {isPremium && planType === "monthly" && <Badge className="bg-primary/20 text-primary border-primary/30 ml-auto">{t("pricing.yourPlan")}</Badge>}
           </div>
           <p className="text-3xl font-bold text-foreground mb-4">
-            ${SUBSCRIPTION_TIERS.monthly.price}<span className="text-sm font-normal text-muted-foreground">/month</span>
+            ${SUBSCRIPTION_TIERS.monthly.price}<span className="text-sm font-normal text-muted-foreground">{t("pricing.perMonth")}</span>
           </p>
           <ul className="space-y-2 mb-5">
             {premiumFeatures.map((f) => (
@@ -156,7 +157,7 @@ const PricingPage = () => {
               onClick={() => handleCheckout(SUBSCRIPTION_TIERS.monthly.price_id, "monthly")}
               disabled={loadingPlan === "monthly"}
             >
-              {loadingPlan === "monthly" ? "Loading..." : "Subscribe Monthly"}
+              {loadingPlan === "monthly" ? t("pricing.loading") : t("pricing.subscribeMonthly")}
             </Button>
           )}
         </motion.div>
@@ -169,18 +170,18 @@ const PricingPage = () => {
           className={`glass-card rounded-2xl p-6 relative overflow-hidden ${isPremium && planType === "yearly" ? "border-2 border-primary/50" : "border-2 border-primary/30"}`}
         >
           <div className="absolute top-0 right-0 bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-bl-xl">
-            SAVE 30%
+            {t("pricing.save30")}
           </div>
           <div className="flex items-center gap-2 mb-1">
             <Sparkles className="w-5 h-5 text-primary" />
-            <h3 className="font-semibold text-foreground text-lg">Premium Yearly</h3>
-            {isPremium && planType === "yearly" && <Badge className="bg-primary/20 text-primary border-primary/30 ml-auto">Your Plan</Badge>}
+            <h3 className="font-semibold text-foreground text-lg">{t("pricing.premiumYearly")}</h3>
+            {isPremium && planType === "yearly" && <Badge className="bg-primary/20 text-primary border-primary/30 ml-auto">{t("pricing.yourPlan")}</Badge>}
           </div>
           <p className="text-3xl font-bold text-foreground">
-            ${SUBSCRIPTION_TIERS.yearly.price}<span className="text-sm font-normal text-muted-foreground">/year</span>
+            ${SUBSCRIPTION_TIERS.yearly.price}<span className="text-sm font-normal text-muted-foreground">{t("pricing.perYear")}</span>
           </p>
           <p className="text-sm text-primary font-medium mb-4">
-            Just ${SUBSCRIPTION_TIERS.yearly.effectiveMonthly}/month — save ${((SUBSCRIPTION_TIERS.monthly.price * 12) - SUBSCRIPTION_TIERS.yearly.price).toFixed(2)}/year
+            {t("pricing.justPerMonth")} ${SUBSCRIPTION_TIERS.yearly.effectiveMonthly}/{t("pricing.perMonth")} — {t("pricing.savePerYear")} ${((SUBSCRIPTION_TIERS.monthly.price * 12) - SUBSCRIPTION_TIERS.yearly.price).toFixed(2)}/{t("pricing.perYear")}
           </p>
           <ul className="space-y-2 mb-5">
             {premiumFeatures.map((f) => (
@@ -195,15 +196,14 @@ const PricingPage = () => {
               onClick={() => handleCheckout(SUBSCRIPTION_TIERS.yearly.price_id, "yearly")}
               disabled={loadingPlan === "yearly"}
             >
-              {loadingPlan === "yearly" ? "Loading..." : "Subscribe Yearly — Best Value"}
+              {loadingPlan === "yearly" ? t("pricing.loading") : t("pricing.subscribeYearly")}
             </Button>
           )}
         </motion.div>
 
-        {/* Refresh button */}
         <div className="text-center">
           <Button variant="ghost" size="sm" onClick={checkSubscription} className="text-muted-foreground">
-            Refresh subscription status
+            {t("pricing.refreshStatus")}
           </Button>
         </div>
       </main>

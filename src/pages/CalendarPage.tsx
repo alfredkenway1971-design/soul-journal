@@ -5,8 +5,9 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import BottomNav from "@/components/BottomNav";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, isFuture } from "date-fns";
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isToday, isFuture } from "date-fns";
 import type { Mood } from "@/components/MoodSelector";
 
 // Enhanced sentiment color mapping with intensity
@@ -22,12 +23,6 @@ const getMoodColor = (mood: Mood, entryCount: number = 1) => {
   return colorMap[mood] || "bg-muted";
 };
 
-const sentimentLabels = [
-  { key: "happy", label: "HAPPY", color: "bg-amber-400" },
-  { key: "fine", label: "FINE", color: "bg-sky-400" },
-  { key: "sad", label: "SAD", color: "bg-rose-300" },
-];
-
 interface CalendarEntry {
   mood: Mood;
   entryId: string;
@@ -42,6 +37,7 @@ interface CalendarEntry {
 const CalendarPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [calendarData, setCalendarData] = useState<Record<string, CalendarEntry>>({});
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
@@ -57,7 +53,6 @@ const CalendarPage = () => {
         const monthStart = startOfMonth(currentDate);
         const monthEnd = endOfMonth(currentDate);
         
-        // Fetch entries
         const { data: entries, error } = await supabase
           .from('journal_entries')
           .select('id, mood, created_at, title, enhanced_text, original_transcription')
@@ -68,7 +63,6 @@ const CalendarPage = () => {
         
         if (error) throw error;
 
-        // Fetch media counts
         const entryIds = entries?.map(e => e.id) || [];
         let mediaCounts: Record<string, number> = {};
         
@@ -83,7 +77,6 @@ const CalendarPage = () => {
           });
         }
         
-        // Group entries by date
         const dataMap: Record<string, CalendarEntry> = {};
         entries?.forEach(entry => {
           const dateKey = format(new Date(entry.created_at), 'yyyy-MM-dd');
@@ -92,7 +85,7 @@ const CalendarPage = () => {
             dataMap[dateKey] = {
               mood: (entry.mood as Mood) || "fine",
               entryId: entry.id,
-              title: entry.title || "Journal Entry",
+              title: entry.title || t("record.title"),
               preview: entry.enhanced_text || entry.original_transcription || "",
               entryCount: 0,
               photoCount: 0,
@@ -104,14 +97,13 @@ const CalendarPage = () => {
           dataMap[dateKey].photoCount += mediaCounts[entry.id] || 0;
           dataMap[dateKey].entries.push({
             id: entry.id,
-            title: entry.title || "Untitled",
+            title: entry.title || t("record.title"),
             mood: (entry.mood as Mood) || "fine",
           });
           
-          // Set dominant mood (most recent for now, could be changed to most common)
           if (dataMap[dateKey].entries.length === 1) {
             dataMap[dateKey].mood = (entry.mood as Mood) || "fine";
-            dataMap[dateKey].title = entry.title || "Journal Entry";
+            dataMap[dateKey].title = entry.title || t("record.title");
             dataMap[dateKey].preview = entry.enhanced_text || entry.original_transcription || "";
           }
         });
@@ -132,7 +124,6 @@ const CalendarPage = () => {
     const monthEnd = endOfMonth(currentDate);
     const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
     
-    // Add padding for week start (Monday)
     const firstDayOfWeek = monthStart.getDay();
     const paddingDays = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1;
     const paddedDays: (Date | null)[] = Array(paddingDays).fill(null);
@@ -157,13 +148,18 @@ const CalendarPage = () => {
   
   const selectedEntry = selectedDate ? calendarData[getDateKey(selectedDate)] : null;
 
-  // Calculate mood summary for the month
   const moodSummary = Object.values(calendarData).reduce((acc, entry) => {
     acc[entry.mood] = (acc[entry.mood] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
 
   const totalEntries = Object.values(calendarData).reduce((sum, e) => sum + e.entryCount, 0);
+
+  const sentimentLabels = [
+    { key: "happy", label: t("calendar.happy"), color: "bg-amber-400" },
+    { key: "fine", label: t("calendar.fine"), color: "bg-sky-400" },
+    { key: "sad", label: t("calendar.sad"), color: "bg-rose-300" },
+  ];
 
   return (
     <div className="min-h-screen gradient-warm pb-28">
@@ -172,7 +168,7 @@ const CalendarPage = () => {
         <div className="max-w-lg mx-auto">
           <div className="flex items-center justify-between">
             <div>
-              <p className="section-label mb-1">VISUAL HISTORY</p>
+              <p className="section-label mb-1">{t("calendar.visualHistory")}</p>
               <button className="flex items-center gap-2 text-2xl font-display">
                 {monthName}
                 <ChevronDown className="w-5 h-5 text-muted-foreground" />
@@ -209,8 +205,8 @@ const CalendarPage = () => {
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground">This month</p>
-              <p className="text-2xl font-semibold text-foreground">{totalEntries} entries</p>
+              <p className="text-sm text-muted-foreground">{t("calendar.thisMonth")}</p>
+              <p className="text-2xl font-semibold text-foreground">{totalEntries} {t("calendar.entries")}</p>
             </div>
             <div className="flex gap-1">
               {Object.entries(moodSummary).slice(0, 4).map(([mood, count]) => (
@@ -232,7 +228,6 @@ const CalendarPage = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
         >
-          {/* Week Days Header */}
           <div className="grid grid-cols-7 gap-1 mb-3">
             {weekDays.map((day, i) => (
               <div
@@ -244,7 +239,6 @@ const CalendarPage = () => {
             ))}
           </div>
 
-          {/* Calendar Grid */}
           {loading ? (
             <div className="flex items-center justify-center h-64">
               <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
@@ -278,13 +272,11 @@ const CalendarPage = () => {
                     onClick={() => setSelectedDate(day)}
                   >
                     {day.getDate()}
-                    {/* Entry count indicator */}
                     {entry && entry.entryCount > 1 && (
                       <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-charcoal text-white text-[10px] rounded-full flex items-center justify-center">
                         {entry.entryCount}
                       </span>
                     )}
-                    {/* Today indicator */}
                     {isTodayDate && !isSelected && !entry && (
                       <span className="absolute bottom-0.5 w-1.5 h-1.5 bg-primary rounded-full" />
                     )}
@@ -319,7 +311,6 @@ const CalendarPage = () => {
             <div className="glass-premium p-5">
               {selectedEntry ? (
                 <>
-                  {/* Header */}
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${getMoodColor(selectedEntry.mood)}`}>
@@ -340,18 +331,16 @@ const CalendarPage = () => {
                     </Button>
                   </div>
 
-                  {/* Quote */}
                   <div className="bg-muted/50 rounded-xl p-4 mb-4">
                     <p className="font-journal italic text-foreground leading-relaxed">
                       "{selectedEntry.preview?.substring(0, 150)}..."
                     </p>
                   </div>
 
-                  {/* Multiple entries list */}
                   {selectedEntry.entries.length > 1 && (
                     <div className="space-y-2 mb-4">
-                      <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">All entries</p>
-                      {selectedEntry.entries.map((e, i) => (
+                      <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">{t("calendar.allEntries")}</p>
+                      {selectedEntry.entries.map((e) => (
                         <button
                           key={e.id}
                           className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-muted/50 transition-colors text-left"
@@ -372,10 +361,9 @@ const CalendarPage = () => {
                     </div>
                   )}
 
-                  {/* Footer */}
                   <div className="flex items-center justify-between pt-4 border-t border-border/50">
                     <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                      <span>{selectedEntry.entryCount} {selectedEntry.entryCount === 1 ? 'Entry' : 'Entries'}</span>
+                      <span>{selectedEntry.entryCount} {selectedEntry.entryCount === 1 ? t("calendar.entry") : t("calendar.entries")}</span>
                       {selectedEntry.photoCount > 0 && (
                         <span className="flex items-center gap-1">
                           <Image className="w-4 h-4" />
@@ -387,7 +375,7 @@ const CalendarPage = () => {
                       className="flex items-center gap-1 text-sm font-medium text-foreground hover:text-primary transition-colors"
                       onClick={() => navigate(`/entry/${selectedEntry.entryId}`)}
                     >
-                      View Entry
+                      {t("calendar.viewEntry")}
                       <ArrowRight className="w-4 h-4" />
                     </button>
                   </div>
@@ -395,13 +383,13 @@ const CalendarPage = () => {
               ) : (
                 <div className="text-center py-8">
                   <span className="text-4xl mb-3 block">📝</span>
-                  <p className="text-muted-foreground mb-4">No entries for this day</p>
+                  <p className="text-muted-foreground mb-4">{t("calendar.noEntriesDay")}</p>
                   {!isFuture(selectedDate) && (
                     <Button
                       className="gradient-primary rounded-full px-6"
                       onClick={() => navigate("/record")}
                     >
-                      Create Entry
+                      {t("calendar.createEntry")}
                     </Button>
                   )}
                 </div>
