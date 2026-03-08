@@ -1,51 +1,74 @@
 
 
-## Plan: Expand Font Selection + Fix Page Background in PDF
+# Super Admin Dashboard & Subscription System
 
-### Problem Summary
-1. **Fonts**: Only 3 font options exist (Modern, Classic, Handwritten). User wants 12 specific handwritten/calligraphic fonts added.
-2. **Page backgrounds**: The `getPageBackgroundCSS` function generates CSS for lined/dotted patterns, but `html2canvas` doesn't reliably capture CSS `background-image` patterns (repeating-linear-gradient, radial-gradient). The backgrounds appear blank in the exported PDF.
+## Overview
+Add a super admin role system where only `amer.niyonzima@gmail.com` can access an admin dashboard showing all users, business metrics, and manage user access. Integrate Stripe for monthly/annual subscription payments.
 
-### Changes
+## Database Changes
 
-#### 1. Expand FontSelector with 12 new fonts
-**File: `src/components/book-builder/FontSelector.tsx`**
+### 1. User Roles Table (security definer pattern)
+```sql
+CREATE TYPE public.app_role AS ENUM ('admin', 'user');
 
-- Change `BookFont` type to a union of all font IDs (e.g., `"modern" | "classic" | "handwritten" | "phitradesign" | "shadows-into-light" | ...`)
-- Add all 12 requested fonts to the fonts array. Most are available on Google Fonts:
-  - Shadows Into Light, Euphoria Script, Arizonia, Dancing Script (already exists) — **Google Fonts**
-  - For fonts NOT on Google Fonts (Phitradesign, Agata, Alanis, Honey Script Light, Scriptina, Anke Calligraphic, Gravity, Quilline Script Thin, Farewell), we'll use the closest Google Fonts alternatives since custom font hosting isn't available:
-    - Phitradesign → **Caveat** (similar hand-drawn style)
-    - Agata → **Sacramento** (flowing calligraphic)
-    - Alanis → **Kalam** (natural handwriting)
-    - Honey Script Light → **Alex Brush** (elegant script)
-    - Scriptina → **Great Vibes** (formal calligraphy)
-    - Anke Calligraphic → **Tangerine** (calligraphic)
-    - Gravity → **Patrick Hand** (casual handwritten)
-    - Quilline Script Thin → **Petit Formal Script** (thin script)
-    - Farewell → **Satisfy** (flowing farewell-style)
-- Group fonts into categories (Modern, Classic, Handwritten/Script) with a scrollable list
-- Each font shows a live preview line rendered in its own typeface
+CREATE TABLE public.user_roles (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  role app_role NOT NULL,
+  UNIQUE (user_id, role)
+);
 
-#### 2. Fix page backgrounds in PDF export
-**File: `src/lib/generateBookPDF.ts`**
+-- Security definer function to check roles
+CREATE FUNCTION public.has_role(_user_id uuid, _role app_role) ...
 
-The root cause: `html2canvas` poorly captures CSS `background-image` with gradients. Fix by rendering lined/dotted patterns as **inline SVG elements** instead of CSS background properties.
+-- RLS: only admins can read all, users can read own
+```
 
-- Replace `getPageBackgroundCSS()` with `getPageBackgroundHTML()` that returns an absolutely-positioned SVG overlay:
-  - **Lined**: SVG with horizontal `<line>` elements every 28px
-  - **Dotted**: SVG with `<circle>` elements in a grid pattern
-- Apply this SVG as an absolutely-positioned layer behind entry content in `buildSingleEntryHTML` and `buildEntryPageHTML`
-- This ensures `html2canvas` captures the visual pattern as real DOM elements rather than CSS properties
+### 2. Subscriptions Table
+```sql
+CREATE TABLE public.subscriptions (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  stripe_customer_id text,
+  stripe_subscription_id text,
+  plan_type text DEFAULT 'free', -- 'free', 'monthly', 'annual'
+  status text DEFAULT 'inactive', -- 'active', 'inactive', 'cancelled', 'trial'
+  current_period_start timestamptz,
+  current_period_end timestamptz,
+  is_manual_grant boolean DEFAULT false,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+```
 
-#### 3. Update BookBuilderPage
-**File: `src/pages/BookBuilderPage.tsx`**
-- Update the `BookFont` type import to match the expanded type
-- No other changes needed since it already passes `font` to the generator
+### 3. Seed Admin Role
+Insert admin role for `amer.niyonzima@gmail.com` user (id: `378226e8-bea1-486b-8ae3-8be63deec389` from auth logs).
 
-### Technical Details
-- All new fonts loaded via Google Fonts CDN `<link>` tags injected into the PDF iframe
-- The font import URLs are bundled per-font in the config so only the selected font is loaded
-- SVG patterns for lined/dotted are rendered as DOM nodes so html2canvas captures them faithfully
-- The existing 3 original fonts (Modern, Classic, Handwritten) remain as-is
+## Frontend Changes
+
+### Admin Dashboard Page (`/admin`)
+- **Users tab**: Table of all users (email, display name, signup date, subscription status, last active)
+- **Revenue tab**: Charts showing MRR, total subscribers, monthly vs annual split, churn
+- **Manual Grant**: Button to grant/revoke free access to specific users by email
+
+### Settings Page Update
+- Conditionally show "Admin Dashboard" link only when the logged-in user has the `admin` role (checked via `has_role` function)
+
+### Auth Context Update
+- Add `isAdmin` boolean to AuthContext by querying `user_roles` table on login
+
+### Routing
+- Add `/admin` protected route that checks admin role before rendering
+- Redirect non-admins to home if they try to access `/admin`
+
+## Stripe Integration
+- Enable Stripe via the Stripe tool
+- Create subscription products/prices (monthly + annual) — pricing TBD per user request
+- Add paywall logic: check `subscriptions` table for active status before allowing full app access
+
+## Security
+- Admin check uses server-side `has_role` security definer function (no client-side hacks)
+- RLS on `user_roles`: users can read own role, admins can read all
+- RLS on `subscriptions`: users can read own, admins can read all
+- Admin-only edge function for listing all users/profiles
 
