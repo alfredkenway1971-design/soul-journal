@@ -422,7 +422,10 @@ export const generatePreviewDataURL = async (
   await document.fonts.ready;
   await new Promise((r) => setTimeout(r, 300));
 
-  const html = buildSingleEntryHTML(sampleEntry, config, fontConfig.css, fontConfig.importUrl);
+  // Pre-load images to base64
+  const [processedEntry] = await preloadEntryImages([sampleEntry]);
+
+  const html = buildSingleEntryHTML(processedEntry, config, fontConfig.css, fontConfig.importUrl);
   const canvas = await renderHTMLToCanvas(html);
   return canvas.toDataURL("image/png");
 };
