@@ -159,19 +159,19 @@ const HomePage = () => {
 
         {/* Quick Capture */}
         <section>
-          <h2 className="font-semibold text-foreground mb-3">Quick Capture</h2>
+          <h2 className="font-semibold text-foreground mb-3">{t("home.quickCapture")}</h2>
           <QuickCapture />
         </section>
 
         {/* Recent Entries */}
         <section>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="section-label">Recent Entries</h2>
+            <h2 className="section-label">{t("home.recentEntries")}</h2>
             <button 
               className="text-sm font-medium text-foreground hover:text-primary transition-colors"
               onClick={() => navigate("/calendar")}
             >
-              View All
+              {t("home.viewAll")}
             </button>
           </div>
 
