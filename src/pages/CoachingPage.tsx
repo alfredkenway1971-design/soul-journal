@@ -19,6 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUsageLimits } from "@/hooks/useUsageLimits";
 import { FREE_LIMITS } from "@/contexts/SubscriptionContext";
+import { useLanguage, getLanguageName } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import BottomNav from "@/components/BottomNav";
 
