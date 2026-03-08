@@ -466,7 +466,7 @@ const RecordPage = () => {
             <Textarea
               value={transcription}
               onChange={(e) => setTranscription(e.target.value)}
-              placeholder="What's on your mind today?"
+              placeholder={t("record.whatsOnMind")}
               className="min-h-[200px] font-journal text-lg border-0 bg-transparent resize-none focus-visible:ring-0"
             />
             <div className="flex gap-3">
