@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useJournalAPI } from "@/hooks/useJournalAPI";
 import { supabase } from "@/integrations/supabase/client";
 import BottomNav from "@/components/BottomNav";
