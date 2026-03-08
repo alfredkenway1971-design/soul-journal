@@ -671,7 +671,7 @@ const RecordPage = () => {
               onClick={handleSave}
               disabled={isProcessing}
             >
-              {isProcessing ? "Saving..." : "Save Entry"}
+              {isProcessing ? t("record.saving") : t("record.saveEntry")}
             </Button>
           </motion.div>
         )}
