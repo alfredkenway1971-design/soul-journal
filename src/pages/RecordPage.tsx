@@ -530,12 +530,12 @@ const RecordPage = () => {
                 {isProcessing ? (
                   <>
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Enhancing...
+                    {t("record.enhancing")}
                   </>
                 ) : (
                   <>
                     <Sparkles className="w-5 h-5" />
-                    Enhance with AI
+                    {t("record.enhanceWithAI")}
                   </>
                 )}
               </Button>
