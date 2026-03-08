@@ -11,7 +11,7 @@ serve(async (req) => {
   }
 
   try {
-    const { entryText, goals, fears, strengths, worldview } = await req.json();
+    const { entryText, goals, fears, strengths, worldview, language = 'English' } = await req.json();
 
     if (!entryText) {
       throw new Error('No entry text provided');
