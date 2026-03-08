@@ -115,7 +115,9 @@ export const useJournalAPI = (appLanguage?: AppLanguage) => {
     if (error) throw new Error(error.message);
     if (data.error) throw new Error(data.error);
 
-    return data.reflection;
+    // Store mode as prefix: [MODE]reflection text
+    const mode = data.mode || 'blend';
+    return `[${mode.toUpperCase()}]${data.reflection}`;
   };
 
   const uploadAudio = async (audioBlob: Blob, userId: string): Promise<string> => {
