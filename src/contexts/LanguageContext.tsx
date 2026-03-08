@@ -18,6 +18,7 @@ export const LANGUAGES: { code: AppLanguage; name: string; flag: string; native:
   { code: "ar", name: "Arabic", flag: "🇸🇦", native: "العربية" },
   { code: "zh", name: "Chinese", flag: "🇨🇳", native: "中文" },
   { code: "ja", name: "Japanese", flag: "🇯🇵", native: "日本語" },
+  { code: "sw", name: "Swahili", flag: "🇰🇪", native: "Kiswahili" },
 ];
 
 // Translation dictionaries
