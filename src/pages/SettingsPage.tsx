@@ -67,6 +67,7 @@ const SettingsPage = () => {
       title: "Account",
       items: [
         { icon: User, label: "Profile", action: "navigate", route: "/settings/profile" },
+        { icon: Crown, label: "Subscription", action: "navigate", route: "/pricing" },
         { icon: Lock, label: "Security & PIN", action: "navigate", route: "/settings/security" },
         { icon: Mic, label: "Voice Clone", action: "navigate", route: "/settings/voice" },
         { icon: Target, label: "Goals & Interests", action: "navigate", route: "/settings/goals" },
