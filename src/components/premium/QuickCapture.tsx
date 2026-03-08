@@ -22,24 +22,8 @@ const QuickCapture = () => {
         <p className="font-medium text-foreground">Voice Note</p>
       </motion.button>
 
-      {/* Right column - stacked */}
+      {/* New Entry */}
       <div className="flex flex-col gap-3">
-        {/* Photo Dump */}
-        <motion.button
-          className="vitality-card p-4 flex items-center gap-3 text-left"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.05 }}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-        >
-          <div className="w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-            <Camera className="w-4 h-4 text-purple-500" />
-          </div>
-          <p className="font-medium text-foreground text-sm">Photo Dump</p>
-        </motion.button>
-
-        {/* New Entry */}
         <motion.button
           className="gradient-primary p-4 flex items-center gap-3 text-left rounded-[1.25rem]"
           initial={{ opacity: 0, y: 20 }}
