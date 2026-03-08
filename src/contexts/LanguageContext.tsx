@@ -1013,6 +1013,7 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.welcomeToast": "欢迎！🎉",
     "onboarding.profileReady": "您的个人资料已就绪。",
   },
+  ja: {
     "nav.home": "ホーム",
     "nav.calendar": "カレンダー",
     "nav.add": "追加",
