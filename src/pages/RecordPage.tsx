@@ -368,8 +368,8 @@ const RecordPage = () => {
                 >
                   <Lock className="w-5 h-5 text-destructive shrink-0" />
                   <div className="text-sm">
-                    {textLimitReached && <p className="text-destructive font-medium">Text entries: {textEntriesToday}/2 today</p>}
-                    {audioLimitReached && <p className="text-destructive font-medium">Audio entries: {audioEntriesThisWeek}/1 this week</p>}
+                    {textLimitReached && <p className="text-destructive font-medium">{t("record.textEntriesCount").replace("{count}", String(textEntriesToday))}</p>}
+                    {audioLimitReached && <p className="text-destructive font-medium">{t("record.audioEntriesCount").replace("{count}", String(audioEntriesThisWeek))}</p>}
                     <button onClick={() => navigate("/pricing")} className="text-primary underline text-xs mt-1">Upgrade for unlimited</button>
                   </div>
                 </motion.div>
