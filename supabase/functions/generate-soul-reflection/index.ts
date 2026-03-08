@@ -66,8 +66,9 @@ Choose your coaching style based on the analysis:
 - Do NOT be generic, saccharine, or purely motivational. Real coaches sometimes say hard truths.
 - If you spot a pattern the user might not see (e.g., they always blame external factors), name it compassionately.
 - When referencing their Worldview, use authentic language, quotes, or concepts from that tradition.
-- Return ONLY the reflection text, nothing else.
-- IMPORTANT: Detect the language of the journal entry and respond entirely in THAT SAME language. Always match the entry's language.`;
+- IMPORTANT: Detect the language of the journal entry and respond entirely in THAT SAME language. Always match the entry's language.
+- Return your response as JSON: {"mode": "nurture" | "challenge" | "blend", "reflection": "your reflection text"}
+- Return ONLY the JSON, no markdown or extra text.`;
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -91,16 +92,29 @@ Choose your coaching style based on the analysis:
     }
 
     const result = await response.json();
-    const reflection = result.choices?.[0]?.message?.content?.trim();
+    const rawContent = result.choices?.[0]?.message?.content?.trim();
 
-    if (!reflection) {
+    if (!rawContent) {
       throw new Error('No reflection generated');
     }
 
-    console.log('Soul reflection generated successfully');
+    // Parse JSON response to extract mode and reflection
+    let reflection: string;
+    let mode: string = 'blend';
+    try {
+      const cleaned = rawContent.replace(/```json\n?|\n?```/g, '').trim();
+      const parsed = JSON.parse(cleaned);
+      reflection = parsed.reflection || rawContent;
+      mode = parsed.mode || 'blend';
+    } catch {
+      // Fallback: treat entire response as reflection
+      reflection = rawContent;
+    }
+
+    console.log(`Soul reflection generated (${mode} mode)`);
 
     return new Response(
-      JSON.stringify({ reflection }),
+      JSON.stringify({ reflection, mode }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
