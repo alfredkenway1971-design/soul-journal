@@ -426,7 +426,7 @@ const RecordPage = () => {
 
               {/* AI Coach Reflection */}
               <section>
-                <p className="section-label mb-3">AI COACH REFLECTION</p>
+                <p className="section-label mb-3">{t("record.aiCoachReflection")}</p>
                 <CoachReflectionCard />
               </section>
 
