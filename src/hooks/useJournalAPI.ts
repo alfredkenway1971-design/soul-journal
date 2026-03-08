@@ -1,7 +1,8 @@
 import { supabase } from "@/integrations/supabase/client";
 import { getLanguageName, type AppLanguage } from "@/contexts/LanguageContext";
 
-export const useJournalAPI = () => {
+export const useJournalAPI = (appLanguage?: AppLanguage) => {
+  const langName = getLanguageName(appLanguage || "en");
   const transcribeAudio = async (audioBlob: Blob): Promise<string> => {
     // Convert blob to base64
     const reader = new FileReader();
