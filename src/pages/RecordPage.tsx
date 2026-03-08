@@ -557,7 +557,7 @@ const RecordPage = () => {
                     type="text"
                     value={entryTitle}
                     onChange={(e) => setEntryTitle(e.target.value)}
-                    placeholder="Add a title (optional)"
+                    placeholder={t("record.addTitle")}
                     className="flex-1 px-3 py-2 bg-muted/50 border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                   <Button
