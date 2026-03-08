@@ -111,10 +111,10 @@ Choose your coaching style based on the analysis:
       reflection = rawContent;
     }
 
-    console.log('Soul reflection generated successfully');
+    console.log(`Soul reflection generated (${mode} mode)`);
 
     return new Response(
-      JSON.stringify({ reflection }),
+      JSON.stringify({ reflection, mode }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
