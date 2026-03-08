@@ -26,6 +26,7 @@ import BookBuilderPage from "@/pages/BookBuilderPage";
 import OnboardingPage from "@/pages/OnboardingPage";
 import AdminDashboard from "@/pages/AdminDashboard";
 import PricingPage from "@/pages/PricingPage";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 import NotFound from "./pages/NotFound";
 
