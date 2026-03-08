@@ -27,8 +27,8 @@ interface Entry {
 const HomePage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const api = useJournalAPI();
-  const { t } = useLanguage();
+  const api = useJournalAPI(language);
+  const { t, language } = useLanguage();
   
   
   const [entries, setEntries] = useState<Entry[]>([]);

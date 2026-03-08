@@ -24,7 +24,8 @@ const RecordPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
-  const api = useJournalAPI();
+  const { language } = useLanguage();
+  const api = useJournalAPI(language);
   const { canCreateTextEntry, canCreateAudioEntry, textLimitReached, audioLimitReached, textEntriesToday, audioEntriesThisWeek } = useUsageLimits();
   
   const [step, setStep] = useState<RecordingStep>("main");
