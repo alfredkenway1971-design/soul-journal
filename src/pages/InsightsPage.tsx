@@ -8,6 +8,8 @@ import WeeklyMoodSummary from "@/components/premium/WeeklyMoodSummary";
 import BottomNav from "@/components/BottomNav";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useSubscription } from "@/contexts/SubscriptionContext";
+import UpgradePrompt from "@/components/premium/UpgradePrompt";
 import type { Mood } from "@/components/MoodSelector";
 
 interface MoodCount {
