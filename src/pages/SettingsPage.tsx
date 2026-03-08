@@ -22,8 +22,10 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import BottomNav from "@/components/BottomNav";
+import AppLanguageSwitcher from "@/components/AppLanguageSwitcher";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const SettingsPage = () => {
   const navigate = useNavigate();
