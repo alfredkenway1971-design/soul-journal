@@ -17,7 +17,7 @@ export const useJournalAPI = (appLanguage?: AppLanguage) => {
     const base64Audio = await base64Promise;
 
     const { data, error } = await supabase.functions.invoke('transcribe-audio', {
-      body: { audio: base64Audio },
+      body: { audio: base64Audio, language: appLanguage || 'en' },
     });
 
     if (error) throw new Error(error.message);
