@@ -3,9 +3,11 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useJournalAPI } from "@/hooks/useJournalAPI";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 import { supabase } from "@/integrations/supabase/client";
 import BottomNav from "@/components/BottomNav";
+import AppLanguageSwitcher from "@/components/AppLanguageSwitcher";
 import AIInsightCard from "@/components/premium/AIInsightCard";
 import QuickCapture from "@/components/premium/QuickCapture";
 import RecentEntryCard from "@/components/premium/RecentEntryCard";
