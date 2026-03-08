@@ -252,11 +252,11 @@ const OnboardingPage = () => {
     // Step 3 — Voice Clone teaser
     <div key="voice" className="flex flex-col items-center text-center px-6 pt-16">
       <motion.div
-        className="w-24 h-24 rounded-full bg-gradient-to-br from-orange-100 to-orange-200 dark:from-orange-900/30 dark:to-orange-800/30 flex items-center justify-center mb-8"
+        className="w-24 h-24 rounded-full bg-gradient-to-br from-primary/20 to-accent/30 flex items-center justify-center mb-8"
         animate={{ scale: [1, 1.06, 1] }}
         transition={{ repeat: Infinity, duration: 2.5 }}
       >
-        <Mic className="w-10 h-10 text-orange-500" />
+        <Mic className="w-10 h-10 text-primary" />
       </motion.div>
       <h2 className="text-2xl font-bold font-serif text-foreground mb-3">Clone Your Voice</h2>
       <p className="text-muted-foreground text-base leading-relaxed max-w-xs mb-6">
