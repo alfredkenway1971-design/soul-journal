@@ -685,8 +685,8 @@ const RecordPage = () => {
             animate={{ opacity: 1, scale: 1 }}
           >
             <span className="text-6xl mb-4 block">✨</span>
-            <h2 className="text-2xl font-display font-semibold mb-2">Entry Saved!</h2>
-            <p className="text-muted-foreground">Your journal entry has been saved.</p>
+            <h2 className="text-2xl font-display font-semibold mb-2">{t("record.entrySaved")}</h2>
+            <p className="text-muted-foreground">{t("record.entrySavedDesc")}</p>
           </motion.div>
         )}
       </main>
