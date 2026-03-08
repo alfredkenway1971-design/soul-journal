@@ -634,12 +634,12 @@ const RecordPage = () => {
                 {isProcessing ? (
                   <>
                     <div className="w-5 h-5 border-2 border-foreground border-t-transparent rounded-full animate-spin" />
-                    Generating Voice...
+                    {t("record.generatingVoice")}
                   </>
                 ) : (
                   <>
                     <Volume2 className="w-5 h-5" />
-                    Preview Voice (Optional)
+                    {t("record.previewVoice")}
                   </>
                 )}
               </Button>
