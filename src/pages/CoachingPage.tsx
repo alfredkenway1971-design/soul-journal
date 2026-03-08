@@ -105,6 +105,16 @@ const CoachingPage = () => {
   const generateInsights = async () => {
     if (!user) return;
     
+    if (!canUseCoaching) {
+      toast({
+        title: "Coaching Limit Reached",
+        description: `Free plan allows ${FREE_LIMITS.aiCoachingCallsPerMonth} AI coaching calls per month. Upgrade for unlimited.`,
+        variant: "destructive",
+      });
+      navigate("/pricing");
+      return;
+    }
+    
     setGenerating(true);
     
     try {
@@ -119,6 +129,7 @@ const CoachingPage = () => {
         description: `${data.insightsCount || 0} new insights based on your journal entries.`,
       });
       
+      await refetchLimits();
       fetchData();
     } catch (error) {
       console.error('Error generating insights:', error);
