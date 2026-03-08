@@ -475,7 +475,7 @@ const RecordPage = () => {
                 className="flex-1"
                 onClick={() => setStep("main")}
               >
-                Cancel
+                {t("common.cancel")}
               </Button>
               <Button
                 className="flex-1 gradient-primary"
