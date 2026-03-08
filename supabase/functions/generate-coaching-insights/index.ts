@@ -26,7 +26,7 @@ serve(async (req) => {
   }
 
   try {
-    const { userId } = await req.json();
+    const { userId, language = 'English' } = await req.json();
     
     if (!userId) {
       return new Response(
