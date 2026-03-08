@@ -197,6 +197,7 @@ export type Database = {
           goals: Json | null
           id: string
           interests: string[] | null
+          onboarding_completed: boolean
           pin_hash: string | null
           strengths: string[] | null
           updated_at: string
@@ -211,6 +212,7 @@ export type Database = {
           goals?: Json | null
           id: string
           interests?: string[] | null
+          onboarding_completed?: boolean
           pin_hash?: string | null
           strengths?: string[] | null
           updated_at?: string
@@ -225,6 +227,7 @@ export type Database = {
           goals?: Json | null
           id?: string
           interests?: string[] | null
+          onboarding_completed?: boolean
           pin_hash?: string | null
           strengths?: string[] | null
           updated_at?: string
