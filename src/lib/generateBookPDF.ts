@@ -458,20 +458,20 @@ export const generateAndDownloadPDF = async (
   addCanvasToPDF(pdf, coverCanvas, false);
 
   if (processedConfig.layout === "one-per-page") {
-    for (let i = 0; i < entries.length; i++) {
-      onProgress?.(`Rendering entry ${i + 1} of ${entries.length}...`);
-      const html = buildSingleEntryHTML(entries[i], config, fontConfig.css, fontConfig.importUrl);
+    for (let i = 0; i < processedEntries.length; i++) {
+      onProgress?.(`Rendering entry ${i + 1} of ${processedEntries.length}...`);
+      const html = buildSingleEntryHTML(processedEntries[i], processedConfig, fontConfig.css, fontConfig.importUrl);
       const canvas = await renderHTMLToCanvas(html);
       addCanvasToPDF(pdf, canvas, true);
     }
   } else {
     const chunks: JournalEntry[][] = [];
-    for (let i = 0; i < entries.length; i += ENTRIES_PER_PAGE) {
-      chunks.push(entries.slice(i, i + ENTRIES_PER_PAGE));
+    for (let i = 0; i < processedEntries.length; i += ENTRIES_PER_PAGE) {
+      chunks.push(processedEntries.slice(i, i + ENTRIES_PER_PAGE));
     }
     for (let i = 0; i < chunks.length; i++) {
       onProgress?.(`Rendering page ${i + 1} of ${chunks.length}...`);
-      const html = buildEntryPageHTML(chunks[i], config, fontConfig.css, fontConfig.importUrl);
+      const html = buildEntryPageHTML(chunks[i], processedConfig, fontConfig.css, fontConfig.importUrl);
       const canvas = await renderHTMLToCanvas(html);
       addCanvasToPDF(pdf, canvas, true);
     }
