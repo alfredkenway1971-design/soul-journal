@@ -24,7 +24,7 @@ const RecordPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   const api = useJournalAPI(language);
   const { canCreateTextEntry, canCreateAudioEntry, textLimitReached, audioLimitReached, textEntriesToday, audioEntriesThisWeek } = useUsageLimits();
   
@@ -331,9 +331,9 @@ const RecordPage = () => {
         <div className="max-w-lg mx-auto">
           <div className="flex items-center justify-between">
             <div>
-              <p className="section-label mb-1">NEW ENTRY</p>
+              <p className="section-label mb-1">{t("record.newEntry")}</p>
               <h1 className="text-2xl text-foreground">
-                <span className="font-normal">How are you, </span>
+                <span className="font-normal">{t("record.howAreYou")}</span>
                 <span className="font-display italic">{displayName}</span>
                 <span className="font-normal">?</span>
               </h1>
@@ -368,9 +368,9 @@ const RecordPage = () => {
                 >
                   <Lock className="w-5 h-5 text-destructive shrink-0" />
                   <div className="text-sm">
-                    {textLimitReached && <p className="text-destructive font-medium">Text entries: {textEntriesToday}/2 today</p>}
-                    {audioLimitReached && <p className="text-destructive font-medium">Audio entries: {audioEntriesThisWeek}/1 this week</p>}
-                    <button onClick={() => navigate("/pricing")} className="text-primary underline text-xs mt-1">Upgrade for unlimited</button>
+                    {textLimitReached && <p className="text-destructive font-medium">{t("record.textEntriesCount").replace("{count}", String(textEntriesToday))}</p>}
+                    {audioLimitReached && <p className="text-destructive font-medium">{t("record.audioEntriesCount").replace("{count}", String(audioEntriesThisWeek))}</p>}
+                    <button onClick={() => navigate("/pricing")} className="text-primary underline text-xs mt-1">{t("record.upgradeUnlimited")}</button>
                   </div>
                 </motion.div>
               )}
@@ -395,12 +395,12 @@ const RecordPage = () => {
                 </motion.button>
                 <p className="mt-4 text-muted-foreground">
                   {isRecording 
-                    ? `Recording ${formatDuration(recordingDuration)}... Tap to stop` 
+                    ? t("record.recordingTime").replace("{time}", formatDuration(recordingDuration))
                     : isProcessing 
-                    ? "Processing..." 
+                    ? t("record.processing")
                     : audioLimitReached
-                    ? "Audio limit reached"
-                    : "Tap to Record Assessment"}
+                    ? t("record.audioLimitReached")
+                    : t("record.tapToRecordAssessment")}
                 </p>
               </div>
 
@@ -411,8 +411,8 @@ const RecordPage = () => {
                   className={`rounded-full px-5 gap-2 ${textLimitReached ? "opacity-50" : ""}`}
                   onClick={handleWriteClick}
                 >
-                  {textLimitReached ? <Lock className="w-4 h-4" /> : <Type className="w-4 h-4" />}
-                  Write{textLimitReached ? " (Limit)" : ""}
+                   {textLimitReached ? <Lock className="w-4 h-4" /> : <Type className="w-4 h-4" />}
+                   {t("record.writeLimit")}{textLimitReached ? ` (${t("record.limitReached")})` : ""}
                 </Button>
                 <Button
                   variant="outline"
@@ -420,13 +420,13 @@ const RecordPage = () => {
                   onClick={() => setStep("mood")}
                 >
                   <Smile className="w-4 h-4" />
-                  Mood
+                  {t("record.mood")}
                 </Button>
               </div>
 
               {/* AI Coach Reflection */}
               <section>
-                <p className="section-label mb-3">AI COACH REFLECTION</p>
+                <p className="section-label mb-3">{t("record.aiCoachReflection")}</p>
                 <CoachReflectionCard />
               </section>
 
@@ -434,12 +434,12 @@ const RecordPage = () => {
               {recentEntry && (
                 <section>
                   <div className="flex items-center justify-between mb-3">
-                    <p className="section-label">RECENT ENTRIES</p>
+                    <p className="section-label">{t("record.recentEntries")}</p>
                     <button 
                       className="text-sm font-medium text-foreground"
                       onClick={() => navigate("/calendar")}
                     >
-                      View All
+                      {t("record.viewAll")}
                     </button>
                   </div>
                   <RecentEntryCard
@@ -466,7 +466,7 @@ const RecordPage = () => {
             <Textarea
               value={transcription}
               onChange={(e) => setTranscription(e.target.value)}
-              placeholder="What's on your mind today?"
+              placeholder={t("record.whatsOnMind")}
               className="min-h-[200px] font-journal text-lg border-0 bg-transparent resize-none focus-visible:ring-0"
             />
             <div className="flex gap-3">
@@ -475,14 +475,14 @@ const RecordPage = () => {
                 className="flex-1"
                 onClick={() => setStep("main")}
               >
-                Cancel
+                {t("common.cancel")}
               </Button>
               <Button
                 className="flex-1 gradient-primary"
                 onClick={() => setStep("enhance")}
                 disabled={!transcription.trim()}
               >
-                Continue
+                {t("record.continue")}
               </Button>
             </div>
           </motion.div>
@@ -514,7 +514,7 @@ const RecordPage = () => {
           >
             <div className="glass-premium p-6">
               <h3 className="text-sm font-medium text-muted-foreground mb-3">
-                Original Transcription
+                {t("record.originalTranscription")}
               </h3>
               <p className="font-journal text-foreground leading-relaxed">
                 {transcription}
@@ -530,12 +530,12 @@ const RecordPage = () => {
                 {isProcessing ? (
                   <>
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Enhancing...
+                    {t("record.enhancing")}
                   </>
                 ) : (
                   <>
                     <Sparkles className="w-5 h-5" />
-                    Enhance with AI
+                    {t("record.enhanceWithAI")}
                   </>
                 )}
               </Button>
@@ -549,7 +549,7 @@ const RecordPage = () => {
               >
                 <div className="flex items-center gap-2 mb-3">
                   <Sparkles className="w-4 h-4 text-primary" />
-                  <h3 className="text-sm font-medium text-primary">AI Enhanced</h3>
+                  <h3 className="text-sm font-medium text-primary">{t("record.aiEnhanced")}</h3>
                 </div>
                 
                 <div className="flex gap-2 mb-4">
@@ -557,7 +557,7 @@ const RecordPage = () => {
                     type="text"
                     value={entryTitle}
                     onChange={(e) => setEntryTitle(e.target.value)}
-                    placeholder="Add a title (optional)"
+                    placeholder={t("record.addTitle")}
                     className="flex-1 px-3 py-2 bg-muted/50 border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                   <Button
@@ -595,7 +595,7 @@ const RecordPage = () => {
                   className="w-full mt-4 gap-2 h-12 rounded-xl gradient-primary"
                   onClick={() => setStep("language")}
                 >
-                  Continue
+                  {t("record.continue")}
                 </Button>
               </motion.div>
             )}
@@ -612,10 +612,10 @@ const RecordPage = () => {
             <div className="text-center">
               <span className="text-4xl mb-4 block">🌍</span>
               <h2 className="text-xl font-semibold font-display mb-2">
-                Voice Playback Language
+                {t("record.voicePlaybackLanguage")}
               </h2>
               <p className="text-muted-foreground text-sm">
-                Choose which language to hear your story in
+                {t("record.chooseLanguage")}
               </p>
             </div>
 
@@ -634,12 +634,12 @@ const RecordPage = () => {
                 {isProcessing ? (
                   <>
                     <div className="w-5 h-5 border-2 border-foreground border-t-transparent rounded-full animate-spin" />
-                    Generating Voice...
+                    {t("record.generatingVoice")}
                   </>
                 ) : (
                   <>
                     <Volume2 className="w-5 h-5" />
-                    Preview Voice (Optional)
+                    {t("record.previewVoice")}
                   </>
                 )}
               </Button>
@@ -661,7 +661,7 @@ const RecordPage = () => {
                 }}
               >
                 <Play className="w-5 h-5" />
-                {isPlayingAudio ? "Pause" : "Play Preview"}
+                {isPlayingAudio ? t("record.pause") : t("record.playPreview")}
               </Button>
             )}
 
@@ -671,7 +671,7 @@ const RecordPage = () => {
               onClick={handleSave}
               disabled={isProcessing}
             >
-              {isProcessing ? "Saving..." : "Save Entry"}
+              {isProcessing ? t("record.saving") : t("record.saveEntry")}
             </Button>
           </motion.div>
         )}
@@ -685,8 +685,8 @@ const RecordPage = () => {
             animate={{ opacity: 1, scale: 1 }}
           >
             <span className="text-6xl mb-4 block">✨</span>
-            <h2 className="text-2xl font-display font-semibold mb-2">Entry Saved!</h2>
-            <p className="text-muted-foreground">Your journal entry has been saved.</p>
+            <h2 className="text-2xl font-display font-semibold mb-2">{t("record.entrySaved")}</h2>
+            <p className="text-muted-foreground">{t("record.entrySavedDesc")}</p>
           </motion.div>
         )}
       </main>
