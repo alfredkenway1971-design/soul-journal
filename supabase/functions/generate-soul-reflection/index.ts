@@ -43,7 +43,8 @@ INSTRUCTIONS:
 - Do NOT give generic advice. Be specific to THIS person and THIS entry.
 - Be brief: maximum 3 sentences.
 - Speak in second person ("you"), warmly but not saccharine.
-- Return ONLY the reflection text, nothing else.`;
+- Return ONLY the reflection text, nothing else.
+- IMPORTANT: Respond entirely in ${language}.`;
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',

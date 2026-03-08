@@ -116,7 +116,9 @@ serve(async (req) => {
 5. Suggest specific challenges to help achieve goals
 
 Be warm, supportive, and specific. Reference actual content from entries when possible.
-Keep insights concise (1-2 sentences each) but meaningful.`;
+Keep insights concise (1-2 sentences each) but meaningful.
+
+IMPORTANT: Respond entirely in ${language}. All titles and content must be in ${language}.`;
 
     const userPrompt = `Analyze these recent journal entries for ${displayName}:
 
