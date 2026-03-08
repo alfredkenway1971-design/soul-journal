@@ -1207,6 +1207,7 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.welcomeToast": "ようこそ！🎉",
     "onboarding.profileReady": "プロフィールの準備ができました。",
   },
+  sw: {
     "nav.home": "Nyumbani",
     "nav.calendar": "Kalenda",
     "nav.add": "Ongeza",
