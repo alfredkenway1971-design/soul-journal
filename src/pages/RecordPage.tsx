@@ -661,7 +661,7 @@ const RecordPage = () => {
                 }}
               >
                 <Play className="w-5 h-5" />
-                {isPlayingAudio ? "Pause" : "Play Preview"}
+                {isPlayingAudio ? t("record.pause") : t("record.playPreview")}
               </Button>
             )}
 
