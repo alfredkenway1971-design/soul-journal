@@ -108,6 +108,7 @@ export const useJournalAPI = (appLanguage?: AppLanguage) => {
         fears: (profile as any)?.fears || [],
         strengths: (profile as any)?.strengths || [],
         worldview: (profile as any)?.worldview || null,
+        language: langName,
       },
     });
 
