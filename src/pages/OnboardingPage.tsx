@@ -383,13 +383,13 @@ const OnboardingPage = () => {
 
       <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-background via-background to-transparent">
         <div className="flex gap-3 max-w-md mx-auto">
-          {step > 0 && step < 4 && (
+          {step > 0 && step < 5 && (
             <Button variant="outline" className="rounded-full flex-1" onClick={back}>
               <ArrowLeft className="w-4 h-4 mr-2" />
               {t("onboarding.back")}
             </Button>
           )}
-          {step < 4 && (
+          {step < 5 && (
             <Button className="rounded-full flex-1 gradient-primary text-white" onClick={next}>
               {step === 0 ? t("onboarding.getStarted") : t("onboarding.continue")}
               <ArrowRight className="w-4 h-4 ml-2" />
