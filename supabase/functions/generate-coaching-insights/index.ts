@@ -103,6 +103,17 @@ serve(async (req) => {
       ? `User's interests: ${interests.join(', ')}`
       : '';
 
+    // Soul profile context
+    const soulProfileContext = [
+      strengths.length > 0 ? `Core strengths: ${strengths.join(', ')}` : '',
+      fears.length > 0 ? `Deep fears: ${fears.join(', ')}` : '',
+      growthAreas.length > 0 ? `Growth areas: ${growthAreas.join(', ')}` : '',
+      personalityType ? `Personality: ${personalityType}` : '',
+      coachingFocus.length > 0 ? `Coaching focus: ${coachingFocus.join(', ')}` : '',
+      worldview ? `Worldview/belief system: ${worldview}` : '',
+      soulProfile?.summary ? `Profile summary: ${soulProfile.summary}` : '',
+    ].filter(Boolean).join('\n');
+
     const entriesContext = entries.map((e: JournalEntry) => 
       `[${new Date(e.created_at).toLocaleDateString()}] Mood: ${e.mood || 'unknown'}\n${e.enhanced_text || ''}`
     ).join('\n\n---\n\n');
