@@ -199,6 +199,7 @@ export type Database = {
           interests: string[] | null
           onboarding_completed: boolean
           pin_hash: string | null
+          soul_profile_summary: Json | null
           strengths: string[] | null
           updated_at: string
           voice_clone_id: string | null
@@ -214,6 +215,7 @@ export type Database = {
           interests?: string[] | null
           onboarding_completed?: boolean
           pin_hash?: string | null
+          soul_profile_summary?: Json | null
           strengths?: string[] | null
           updated_at?: string
           voice_clone_id?: string | null
@@ -229,6 +231,7 @@ export type Database = {
           interests?: string[] | null
           onboarding_completed?: boolean
           pin_hash?: string | null
+          soul_profile_summary?: Json | null
           strengths?: string[] | null
           updated_at?: string
           voice_clone_id?: string | null
