@@ -97,7 +97,7 @@ export const useJournalAPI = (appLanguage?: AppLanguage) => {
 
     const { data: profile } = await supabase
       .from('profiles')
-      .select('goals, fears, strengths, worldview')
+      .select('goals, fears, strengths, worldview, soul_profile_summary')
       .eq('id', user.id)
       .single();
 
@@ -108,6 +108,7 @@ export const useJournalAPI = (appLanguage?: AppLanguage) => {
         fears: (profile as any)?.fears || [],
         strengths: (profile as any)?.strengths || [],
         worldview: (profile as any)?.worldview || null,
+        soulProfileSummary: (profile as any)?.soul_profile_summary || null,
         language: langName,
       },
     });
