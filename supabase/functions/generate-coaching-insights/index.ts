@@ -59,6 +59,13 @@ serve(async (req) => {
     const goals: Goal[] = (profile?.goals as Goal[]) || [];
     const interests: string[] = profile?.interests || [];
     const displayName = profile?.display_name || 'User';
+    const soulProfile = profile?.soul_profile_summary as Record<string, any> | null;
+    const strengths: string[] = profile?.strengths || soulProfile?.strengths || [];
+    const fears: string[] = profile?.fears || soulProfile?.fears || [];
+    const worldview: string = profile?.worldview || '';
+    const growthAreas: string[] = soulProfile?.growth_areas || [];
+    const personalityType: string = soulProfile?.personality_type || '';
+    const coachingFocus: string[] = soulProfile?.coaching_focus || [];
 
     // Fetch recent journal entries (last 7 days)
     const sevenDaysAgo = new Date();
