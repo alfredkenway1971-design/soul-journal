@@ -343,7 +343,7 @@ const OnboardingPage = () => {
   return (
     <div className="min-h-screen gradient-warm flex flex-col">
       <div className="flex gap-1.5 px-6 pt-6">
-        {[0, 1, 2, 3, 4].map((i) => (
+        {[0, 1, 2, 3, 4, 5].map((i) => (
           <div
             key={i}
             className={`h-1 rounded-full flex-1 transition-all duration-300 ${
@@ -354,7 +354,7 @@ const OnboardingPage = () => {
       </div>
 
       <div className="flex justify-end px-6 pt-3">
-        {step < 4 && (
+        {step < 5 && (
           <button
             className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             onClick={handleSkip}
