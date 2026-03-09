@@ -694,6 +694,61 @@ const RecordPage = () => {
               </Button>
             )}
 
+            {/* Photo Attachment Section */}
+            <div className="space-y-3">
+              <p className="text-sm font-medium text-muted-foreground">📸 Attach Photos</p>
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  className="flex-1 gap-2 h-11 rounded-xl"
+                  onClick={() => cameraInputRef.current?.click()}
+                >
+                  <Camera className="w-4 h-4" />
+                  Take Photo
+                </Button>
+                <Button
+                  variant="outline"
+                  className="flex-1 gap-2 h-11 rounded-xl"
+                  onClick={() => galleryInputRef.current?.click()}
+                >
+                  <ImagePlus className="w-4 h-4" />
+                  Upload
+                </Button>
+              </div>
+
+              <input
+                ref={cameraInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                className="hidden"
+                onChange={(e) => { handlePhotoSelect(e.target.files); e.target.value = ''; }}
+              />
+              <input
+                ref={galleryInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                onChange={(e) => { handlePhotoSelect(e.target.files); e.target.value = ''; }}
+              />
+
+              {photoPreviewUrls.length > 0 && (
+                <div className="flex gap-2 flex-wrap">
+                  {photoPreviewUrls.map((url, i) => (
+                    <div key={i} className="relative w-20 h-20 rounded-xl overflow-hidden group">
+                      <img src={url} alt="" className="w-full h-full object-cover" />
+                      <button
+                        onClick={() => removePhoto(i)}
+                        className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                      >
+                        <Trash2 className="w-4 h-4 text-white" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
 
             <Button
               className="w-full gap-2 h-14 rounded-2xl gradient-primary"
