@@ -18,6 +18,7 @@ import ProfileSettingsPage from "@/pages/ProfileSettingsPage";
 import VoiceSettingsPage from "@/pages/VoiceSettingsPage";
 import GoalsSettingsPage from "@/pages/GoalsSettingsPage";
 import CoachingPage from "@/pages/CoachingPage";
+import LibraryPage from "@/pages/LibraryPage";
 import ThemesSettingsPage from "@/pages/ThemesSettingsPage";
 import FontsSettingsPage from "@/pages/FontsSettingsPage";
 import RemindersSettingsPage from "@/pages/RemindersSettingsPage";
@@ -179,6 +180,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <CoachingPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/library"
+        element={
+          <ProtectedRoute>
+            <LibraryPage />
           </ProtectedRoute>
         }
       />
