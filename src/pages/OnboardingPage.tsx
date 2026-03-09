@@ -5,11 +5,11 @@ import { ArrowRight, ArrowLeft, Sparkles, Target, Mic, BookOpen, Heart, Shield, 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
-import { useLanguage } from "@/contexts/LanguageContext";
+import { useLanguage, LANGUAGES } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
-type Step = 0 | 1 | 2 | 3 | 4;
+type Step = 0 | 1 | 2 | 3 | 4 | 5;
 
 const PRESET_GOALS = [
   "Get a promotion", "Improve work-life balance", "Build better habits",
