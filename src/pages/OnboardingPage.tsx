@@ -5,11 +5,11 @@ import { ArrowRight, ArrowLeft, Sparkles, Target, Mic, BookOpen, Heart, Shield, 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
-import { useLanguage } from "@/contexts/LanguageContext";
+import { useLanguage, LANGUAGES } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
-type Step = 0 | 1 | 2 | 3 | 4;
+type Step = 0 | 1 | 2 | 3 | 4 | 5;
 
 const PRESET_GOALS = [
   "Get a promotion", "Improve work-life balance", "Build better habits",
@@ -45,7 +45,7 @@ const slideVariants = {
 const OnboardingPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t, language, setLanguage } = useLanguage();
   const { toast } = useToast();
 
   const [step, setStep] = useState<Step>(0);
@@ -59,7 +59,7 @@ const OnboardingPage = () => {
 
   const next = () => {
     setDirection(1);
-    setStep((s) => Math.min(s + 1, 4) as Step);
+    setStep((s) => Math.min(s + 1, 5) as Step);
   };
 
   const back = () => {
@@ -121,7 +121,49 @@ const OnboardingPage = () => {
   };
 
   const steps = [
-    // Step 0 — Welcome
+    // Step 0 — Language Selection
+    <div key="language" className="flex flex-col items-center text-center px-6 pt-16">
+      <motion.div
+        className="w-24 h-24 rounded-full bg-gradient-to-br from-primary/20 to-accent/30 flex items-center justify-center mb-8"
+        animate={{ scale: [1, 1.08, 1] }}
+        transition={{ repeat: Infinity, duration: 3 }}
+      >
+        <Globe className="w-10 h-10 text-primary" />
+      </motion.div>
+      <h1 className="text-3xl font-bold font-serif text-foreground mb-3">
+        Choose Your Language
+      </h1>
+      <p className="text-muted-foreground text-base leading-relaxed max-w-xs mb-8">
+        Select your preferred language for the app interface
+      </p>
+      <div className="grid grid-cols-2 gap-3 w-full max-w-sm">
+        {LANGUAGES.map((lang) => (
+          <motion.button
+            key={lang.code}
+            className={`flex flex-col items-center gap-2 p-4 rounded-xl transition-all ${
+              language === lang.code
+                ? "glass-card-strong ring-2 ring-primary"
+                : "glass-card hover:bg-muted/50"
+            }`}
+            onClick={() => setLanguage(lang.code)}
+            whileTap={{ scale: 0.95 }}
+          >
+            <span className="text-3xl">{lang.flag}</span>
+            <span className="text-sm font-medium">{lang.native}</span>
+            {language === lang.code && (
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+              >
+                <Check className="w-4 h-4 text-primary" />
+              </motion.div>
+            )}
+          </motion.button>
+        ))}
+      </div>
+    </div>,
+
+    // Step 1 — Welcome
     <div key="welcome" className="flex flex-col items-center text-center px-6 pt-16">
       <motion.div
         className="w-24 h-24 rounded-full bg-gradient-to-br from-primary/20 to-accent/30 flex items-center justify-center mb-8"
@@ -152,7 +194,7 @@ const OnboardingPage = () => {
       </div>
     </div>,
 
-    // Step 1 — Goals & Worldview
+    // Step 2 — Goals & Worldview
     <div key="goals" className="px-6 pt-10">
       <div className="flex items-center gap-3 mb-2">
         <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
@@ -201,7 +243,7 @@ const OnboardingPage = () => {
       </div>
     </div>,
 
-    // Step 2 — Strengths & Fears
+    // Step 3 — Strengths & Fears
     <div key="strengths" className="px-6 pt-10">
       <div className="flex items-center gap-3 mb-2">
         <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
@@ -250,7 +292,7 @@ const OnboardingPage = () => {
       </div>
     </div>,
 
-    // Step 3 — Voice Clone teaser
+    // Step 4 — Voice Clone teaser
     <div key="voice" className="flex flex-col items-center text-center px-6 pt-16">
       <motion.div
         className="w-24 h-24 rounded-full bg-gradient-to-br from-primary/20 to-accent/30 flex items-center justify-center mb-8"
@@ -274,7 +316,7 @@ const OnboardingPage = () => {
       <p className="text-xs text-muted-foreground mt-3">{t("onboarding.doLater")}</p>
     </div>,
 
-    // Step 4 — Ready
+    // Step 5 — Ready
     <div key="ready" className="flex flex-col items-center text-center px-6 pt-16">
       <motion.div
         className="w-24 h-24 rounded-full gradient-primary flex items-center justify-center mb-8"
@@ -301,7 +343,7 @@ const OnboardingPage = () => {
   return (
     <div className="min-h-screen gradient-warm flex flex-col">
       <div className="flex gap-1.5 px-6 pt-6">
-        {[0, 1, 2, 3, 4].map((i) => (
+        {[0, 1, 2, 3, 4, 5].map((i) => (
           <div
             key={i}
             className={`h-1 rounded-full flex-1 transition-all duration-300 ${
@@ -312,7 +354,7 @@ const OnboardingPage = () => {
       </div>
 
       <div className="flex justify-end px-6 pt-3">
-        {step < 4 && (
+        {step < 5 && (
           <button
             className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             onClick={handleSkip}
@@ -341,13 +383,13 @@ const OnboardingPage = () => {
 
       <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-background via-background to-transparent">
         <div className="flex gap-3 max-w-md mx-auto">
-          {step > 0 && step < 4 && (
+          {step > 0 && step < 5 && (
             <Button variant="outline" className="rounded-full flex-1" onClick={back}>
               <ArrowLeft className="w-4 h-4 mr-2" />
               {t("onboarding.back")}
             </Button>
           )}
-          {step < 4 && (
+          {step < 5 && (
             <Button className="rounded-full flex-1 gradient-primary text-white" onClick={next}>
               {step === 0 ? t("onboarding.getStarted") : t("onboarding.continue")}
               <ArrowRight className="w-4 h-4 ml-2" />
