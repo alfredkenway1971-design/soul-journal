@@ -299,7 +299,18 @@ const RecordPage = () => {
         playbackLanguage: selectedLanguage,
         audioUrl: audioPath,
       });
-      
+
+      // Upload photos and save media references
+      if (entry?.id && photos.length > 0) {
+        for (const photo of photos) {
+          try {
+            const storagePath = await api.uploadPhoto(photo, user.id);
+            await api.saveEntryMedia(entry.id, 'photo', storagePath);
+          } catch (photoErr) {
+            console.error('Failed to upload photo:', photoErr);
+          }
+        }
+      }
 
       // Generate Soul Mirror reflection in the background
       if (entry?.id && enhancedText) {
