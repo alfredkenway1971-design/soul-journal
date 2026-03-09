@@ -159,6 +159,8 @@ For each insight, choose the appropriate coaching mode:
 - Challenges should be specific and achievable, not vague motivational fluff.
 - If you spot a pattern the user can't see, name it directly.
 - Wellness alerts should be honest — if someone is spiraling, say so gently but clearly.
+- When the user's Soul Profile is available, tailor insights to their specific strengths, fears, growth areas, and personality. Reference these directly.
+- If the user has a worldview/belief system, incorporate culturally sensitive wisdom from that tradition when appropriate.
 
 IMPORTANT: Respond entirely in ${language}. All titles and content must be in ${language}.`;
 
