@@ -292,7 +292,7 @@ const OnboardingPage = () => {
       </div>
     </div>,
 
-    // Step 3 — Voice Clone teaser
+    // Step 4 — Voice Clone teaser
     <div key="voice" className="flex flex-col items-center text-center px-6 pt-16">
       <motion.div
         className="w-24 h-24 rounded-full bg-gradient-to-br from-primary/20 to-accent/30 flex items-center justify-center mb-8"
