@@ -243,7 +243,7 @@ const OnboardingPage = () => {
       </div>
     </div>,
 
-    // Step 2 — Strengths & Fears
+    // Step 3 — Strengths & Fears
     <div key="strengths" className="px-6 pt-10">
       <div className="flex items-center gap-3 mb-2">
         <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
