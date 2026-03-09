@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { X, Type, Smile, Sparkles, Wand2, Play, Volume2 } from "lucide-react";
+import { X, Type, Smile, Sparkles, Wand2, Play, Volume2, Camera, ImagePlus, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -42,6 +42,8 @@ const RecordPage = () => {
   const [recentEntry, setRecentEntry] = useState<{ id: string; title: string; preview: string; date: Date; mood: Mood } | null>(null);
   const [generatedAudioUrl, setGeneratedAudioUrl] = useState<string | null>(null);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+  const [photos, setPhotos] = useState<File[]>([]);
+  const [photoPreviewUrls, setPhotoPreviewUrls] = useState<string[]>([]);
   
   const [recordingDuration, setRecordingDuration] = useState(0);
   
@@ -49,6 +51,22 @@ const RecordPage = () => {
   const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
+
+  const handlePhotoSelect = (files: FileList | null) => {
+    if (!files) return;
+    const newFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
+    if (newFiles.length === 0) return;
+    setPhotos(prev => [...prev, ...newFiles]);
+    setPhotoPreviewUrls(prev => [...prev, ...newFiles.map(f => URL.createObjectURL(f))]);
+  };
+
+  const removePhoto = (index: number) => {
+    URL.revokeObjectURL(photoPreviewUrls[index]);
+    setPhotos(prev => prev.filter((_, i) => i !== index));
+    setPhotoPreviewUrls(prev => prev.filter((_, i) => i !== index));
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -281,7 +299,18 @@ const RecordPage = () => {
         playbackLanguage: selectedLanguage,
         audioUrl: audioPath,
       });
-      
+
+      // Upload photos and save media references
+      if (entry?.id && photos.length > 0) {
+        for (const photo of photos) {
+          try {
+            const storagePath = await api.uploadPhoto(photo, user.id);
+            await api.saveEntryMedia(entry.id, 'photo', storagePath);
+          } catch (photoErr) {
+            console.error('Failed to upload photo:', photoErr);
+          }
+        }
+      }
 
       // Generate Soul Mirror reflection in the background
       if (entry?.id && enhancedText) {
@@ -665,6 +694,61 @@ const RecordPage = () => {
               </Button>
             )}
 
+            {/* Photo Attachment Section */}
+            <div className="space-y-3">
+              <p className="text-sm font-medium text-muted-foreground">📸 Attach Photos</p>
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  className="flex-1 gap-2 h-11 rounded-xl"
+                  onClick={() => cameraInputRef.current?.click()}
+                >
+                  <Camera className="w-4 h-4" />
+                  Take Photo
+                </Button>
+                <Button
+                  variant="outline"
+                  className="flex-1 gap-2 h-11 rounded-xl"
+                  onClick={() => galleryInputRef.current?.click()}
+                >
+                  <ImagePlus className="w-4 h-4" />
+                  Upload
+                </Button>
+              </div>
+
+              <input
+                ref={cameraInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                className="hidden"
+                onChange={(e) => { handlePhotoSelect(e.target.files); e.target.value = ''; }}
+              />
+              <input
+                ref={galleryInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                onChange={(e) => { handlePhotoSelect(e.target.files); e.target.value = ''; }}
+              />
+
+              {photoPreviewUrls.length > 0 && (
+                <div className="flex gap-2 flex-wrap">
+                  {photoPreviewUrls.map((url, i) => (
+                    <div key={i} className="relative w-20 h-20 rounded-xl overflow-hidden group">
+                      <img src={url} alt="" className="w-full h-full object-cover" />
+                      <button
+                        onClick={() => removePhoto(i)}
+                        className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                      >
+                        <Trash2 className="w-4 h-4 text-white" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
 
             <Button
               className="w-full gap-2 h-14 rounded-2xl gradient-primary"
