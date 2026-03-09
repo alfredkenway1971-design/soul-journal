@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS soul_profile_summary jsonb DEFAULT NULL;

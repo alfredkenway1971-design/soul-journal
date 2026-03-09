@@ -1,29 +1,61 @@
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, ArrowLeft, Sparkles, Target, Mic, BookOpen, Heart, Shield, Globe, Check } from "lucide-react";
+import { 
+  ArrowRight, ArrowLeft, Mic, Square, Globe, Check, 
+  Loader2, Sparkles, User, TrendingUp, Award, ShieldAlert, 
+  AlertTriangle, Zap, Heart
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage, LANGUAGES } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
-type Step = 0 | 1 | 2 | 3 | 4 | 5;
-
-const PRESET_GOALS = [
-  "Get a promotion", "Improve work-life balance", "Build better habits",
-  "Reduce stress & anxiety", "Strengthen relationships", "Boost creativity",
-];
-
-const PRESET_STRENGTHS = [
-  "Resilience", "Empathy", "Discipline", "Creativity",
-  "Leadership", "Patience", "Courage", "Gratitude",
-];
-
-const PRESET_FEARS = [
-  "Failure", "Rejection", "Loneliness", "Not being enough",
-  "Change", "Vulnerability", "Disappointing others",
+const ONBOARDING_QUESTIONS = [
+  {
+    id: "identity",
+    icon: User,
+    title: "Tell me about yourself",
+    subtitle: "What brought you here? Share a bit about who you are.",
+    color: "from-primary/20 to-accent/30",
+  },
+  {
+    id: "growth",
+    icon: TrendingUp,
+    title: "What are you trying to improve?",
+    subtitle: "What changes or growth are you seeking in your life?",
+    color: "from-emerald-500/20 to-teal-500/30",
+  },
+  {
+    id: "pride",
+    icon: Award,
+    title: "What are you proud of?",
+    subtitle: "Tell me about something that makes you proud of yourself.",
+    color: "from-amber-500/20 to-orange-500/30",
+  },
+  {
+    id: "blockers",
+    icon: ShieldAlert,
+    title: "What holds you back?",
+    subtitle: "What patterns or obstacles get in your way sometimes?",
+    color: "from-rose-500/20 to-pink-500/30",
+  },
+  {
+    id: "fears",
+    icon: AlertTriangle,
+    title: "What are you afraid of?",
+    subtitle: "What do you fear losing, failing at, or becoming?",
+    color: "from-violet-500/20 to-purple-500/30",
+  },
+  {
+    id: "motivation",
+    icon: Zap,
+    title: "When do you feel most alive?",
+    subtitle: "What moments or activities make you feel truly motivated?",
+    color: "from-sky-500/20 to-blue-500/30",
+  },
 ];
 
 const WORLDVIEW_OPTIONS = [
@@ -35,6 +67,9 @@ const WORLDVIEW_OPTIONS = [
   { label: "Spiritual", emoji: "✨" },
   { label: "No preference", emoji: "🌍" },
 ];
+
+// Steps: 0=language, 1-6=questions, 7=worldview, 8=analyzing, 9=results
+type Step = number;
 
 const slideVariants = {
   enter: (dir: number) => ({ x: dir > 0 ? 300 : -300, opacity: 0 }),
@@ -52,53 +87,183 @@ const OnboardingPage = () => {
   const [direction, setDirection] = useState(1);
   const [saving, setSaving] = useState(false);
 
-  const [selectedGoals, setSelectedGoals] = useState<string[]>([]);
-  const [selectedStrengths, setSelectedStrengths] = useState<string[]>([]);
-  const [selectedFears, setSelectedFears] = useState<string[]>([]);
+  // Voice recording state
+  const [answers, setAnswers] = useState<string[]>(Array(6).fill(""));
+  const [isRecording, setIsRecording] = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Worldview & analysis
   const [worldview, setWorldview] = useState<string | null>(null);
+  const [soulProfile, setSoulProfile] = useState<any>(null);
+  const [analyzing, setAnalyzing] = useState(false);
+
+  const totalSteps = 10; // 0=lang, 1-6=questions, 7=worldview, 8=analyzing, 9=results
+  const progressPercent = (step / (totalSteps - 1)) * 100;
+
+  const currentQuestionIndex = step >= 1 && step <= 6 ? step - 1 : -1;
 
   const next = () => {
     setDirection(1);
-    setStep((s) => Math.min(s + 1, 5) as Step);
+    setStep((s) => s + 1);
   };
 
   const back = () => {
     setDirection(-1);
-    setStep((s) => Math.max(s - 1, 0) as Step);
+    setStep((s) => Math.max(s - 1, 0));
   };
 
-  const toggleItem = (item: string, list: string[], setter: (v: string[]) => void) => {
-    setter(list.includes(item) ? list.filter((i) => i !== item) : [...list, item]);
+  const updateAnswer = (index: number, text: string) => {
+    setAnswers((prev) => {
+      const next = [...prev];
+      next[index] = text;
+      return next;
+    });
   };
 
+  // ── Voice Recording ──
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: MediaRecorder.isTypeSupported('audio/webm;codecs=opus') 
+          ? 'audio/webm;codecs=opus' : 'audio/webm'
+      });
+      mediaRecorderRef.current = mediaRecorder;
+      chunksRef.current = [];
+      setRecordingTime(0);
+
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunksRef.current.push(e.data);
+      };
+
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(chunksRef.current, { type: "audio/webm" });
+        stream.getTracks().forEach((track) => track.stop());
+        if (timerRef.current) clearInterval(timerRef.current);
+        await transcribeAudio(audioBlob, currentQuestionIndex);
+      };
+
+      mediaRecorder.start(1000);
+      setIsRecording(true);
+      timerRef.current = setInterval(() => {
+        setRecordingTime((prev) => prev + 1);
+      }, 1000);
+    } catch (error) {
+      toast({
+        title: "Microphone Error",
+        description: "Could not access microphone. Please check permissions.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      if (timerRef.current) clearInterval(timerRef.current);
+    }
+  };
+
+  const transcribeAudio = async (audioBlob: Blob, qIndex: number) => {
+    setIsTranscribing(true);
+    try {
+      const reader = new FileReader();
+      const base64Promise = new Promise<string>((resolve, reject) => {
+        reader.onloadend = () => resolve((reader.result as string).split(",")[1]);
+        reader.onerror = reject;
+      });
+      reader.readAsDataURL(audioBlob);
+      const base64Audio = await base64Promise;
+
+      const { data, error } = await supabase.functions.invoke("transcribe-audio", {
+        body: { audio: base64Audio, language },
+      });
+
+      if (error) throw new Error(error.message);
+      if (data.error) throw new Error(data.error);
+
+      if (data.text) {
+        updateAnswer(qIndex, data.text);
+        toast({ title: "✓ Recorded", description: "Your answer has been captured." });
+      }
+    } catch (error) {
+      console.error("Transcription error:", error);
+      toast({
+        title: "Transcription Failed",
+        description: "Could not transcribe. Please try again or type your answer.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsTranscribing(false);
+    }
+  };
+
+  const formatTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s.toString().padStart(2, "0")}`;
+  };
+
+  // ── AI Analysis ──
+  const runAnalysis = async () => {
+    setAnalyzing(true);
+    setStep(8); // show analyzing screen
+    setDirection(1);
+
+    try {
+      const allAnswers = [...answers];
+      if (worldview) allAnswers.push(worldview);
+
+      const { data, error } = await supabase.functions.invoke("analyze-soul-profile", {
+        body: { answers: allAnswers, worldview, language },
+      });
+
+      if (error) throw new Error(error.message);
+      if (data.error) throw new Error(data.error);
+
+      setSoulProfile(data.profile);
+      setDirection(1);
+      setStep(9); // show results
+    } catch (error) {
+      console.error("Analysis error:", error);
+      toast({
+        title: "Analysis Failed",
+        description: "Could not analyze your profile. Please try again.",
+        variant: "destructive",
+      });
+      setStep(7); // go back to worldview
+    } finally {
+      setAnalyzing(false);
+    }
+  };
+
+  // ── Save & Complete ──
   const handleComplete = async () => {
-    if (!user) return;
+    if (!user || !soulProfile) return;
     setSaving(true);
     try {
-      const goals = selectedGoals.map((title, i) => ({
-        id: `onb-${i}`,
-        title,
-        category: "personal",
-        icon: "Target",
-      }));
-
       const { error } = await supabase
         .from("profiles")
         .update({
-          goals,
-          strengths: selectedStrengths,
-          fears: selectedFears,
+          strengths: soulProfile.strengths || [],
+          fears: soulProfile.fears || [],
           worldview,
+          soul_profile_summary: soulProfile,
           onboarding_completed: true,
         } as any)
         .eq("id", user.id);
 
       if (error) throw error;
 
-      toast({ title: t("onboarding.welcomeToast"), description: t("onboarding.profileReady") });
+      toast({ title: "Welcome aboard! 🎉", description: "Your Soul Profile is ready." });
       navigate("/", { replace: true });
     } catch (err) {
-      toast({ title: t("common.error"), description: t("common.error"), variant: "destructive" });
+      toast({ title: "Error", description: "Could not save profile.", variant: "destructive" });
     } finally {
       setSaving(false);
     }
@@ -120,251 +285,386 @@ const OnboardingPage = () => {
     }
   };
 
-  const steps = [
-    // Step 0 — Language Selection
-    <div key="language" className="flex flex-col items-center text-center px-6 pt-16">
-      <motion.div
-        className="w-24 h-24 rounded-full bg-gradient-to-br from-primary/20 to-accent/30 flex items-center justify-center mb-8"
-        animate={{ scale: [1, 1.08, 1] }}
-        transition={{ repeat: Infinity, duration: 3 }}
-      >
-        <Globe className="w-10 h-10 text-primary" />
-      </motion.div>
-      <h1 className="text-3xl font-bold font-serif text-foreground mb-3">
-        Choose Your Language
-      </h1>
-      <p className="text-muted-foreground text-base leading-relaxed max-w-xs mb-8">
-        Select your preferred language for the app interface
-      </p>
-      <div className="grid grid-cols-2 gap-3 w-full max-w-sm">
-        {LANGUAGES.map((lang) => (
-          <motion.button
-            key={lang.code}
-            className={`flex flex-col items-center gap-2 p-4 rounded-xl transition-all ${
-              language === lang.code
-                ? "glass-card-strong ring-2 ring-primary"
-                : "glass-card hover:bg-muted/50"
-            }`}
-            onClick={() => setLanguage(lang.code)}
-            whileTap={{ scale: 0.95 }}
-          >
-            <span className="text-3xl">{lang.flag}</span>
-            <span className="text-sm font-medium">{lang.native}</span>
-            {language === lang.code && (
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-              >
-                <Check className="w-4 h-4 text-primary" />
-              </motion.div>
-            )}
-          </motion.button>
-        ))}
-      </div>
-    </div>,
+  // ── Question Step Renderer ──
+  const renderQuestionStep = (qIndex: number) => {
+    const q = ONBOARDING_QUESTIONS[qIndex];
+    const Icon = q.icon;
+    const answer = answers[qIndex];
 
-    // Step 1 — Welcome
-    <div key="welcome" className="flex flex-col items-center text-center px-6 pt-16">
-      <motion.div
-        className="w-24 h-24 rounded-full bg-gradient-to-br from-primary/20 to-accent/30 flex items-center justify-center mb-8"
-        animate={{ scale: [1, 1.08, 1] }}
-        transition={{ repeat: Infinity, duration: 3 }}
-      >
-        <BookOpen className="w-10 h-10 text-primary" />
-      </motion.div>
-      <h1 className="text-3xl font-bold font-serif text-foreground mb-3">
-        {t("onboarding.welcome")} <span className="italic">{t("onboarding.appName")}</span>
-      </h1>
-      <p className="text-muted-foreground text-base leading-relaxed max-w-xs mb-8">
-        {t("onboarding.welcomeDesc")}
-      </p>
-      <div className="space-y-4 w-full max-w-xs">
-        {[
-          { icon: Mic, label: t("onboarding.feature1") },
-          { icon: Sparkles, label: t("onboarding.feature2") },
-          { icon: BookOpen, label: t("onboarding.feature3") },
-        ].map(({ icon: Icon, label }) => (
-          <div key={label} className="flex items-center gap-3 text-left">
-            <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center shrink-0">
-              <Icon className="w-5 h-5 text-primary" />
-            </div>
-            <p className="text-sm text-foreground">{label}</p>
+    return (
+      <div key={q.id} className="flex flex-col items-center px-6 pt-10">
+        <motion.div
+          className={`w-20 h-20 rounded-full bg-gradient-to-br ${q.color} flex items-center justify-center mb-6`}
+          animate={{ scale: [1, 1.06, 1] }}
+          transition={{ repeat: Infinity, duration: 3 }}
+        >
+          <Icon className="w-8 h-8 text-primary" />
+        </motion.div>
+
+        <h2 className="text-2xl font-bold font-serif text-foreground mb-2 text-center">
+          {q.title}
+        </h2>
+        <p className="text-muted-foreground text-sm mb-8 text-center max-w-xs">
+          {q.subtitle}
+        </p>
+
+        {/* Voice Recorder */}
+        <div className="w-full max-w-sm space-y-4">
+          <div className="flex flex-col items-center gap-4">
+            <AnimatePresence mode="wait">
+              {isTranscribing ? (
+                <motion.div
+                  key="transcribing"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  className="flex flex-col items-center gap-3"
+                >
+                  <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center">
+                    <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                  </div>
+                  <p className="text-sm text-muted-foreground">Transcribing...</p>
+                </motion.div>
+              ) : isRecording ? (
+                <motion.div
+                  key="recording"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  className="flex flex-col items-center gap-3"
+                >
+                  <motion.button
+                    className="w-20 h-20 rounded-full bg-destructive flex items-center justify-center shadow-lg"
+                    onClick={stopRecording}
+                    animate={{ scale: [1, 1.08, 1] }}
+                    transition={{ repeat: Infinity, duration: 1.5 }}
+                  >
+                    <Square className="w-8 h-8 text-destructive-foreground" />
+                  </motion.button>
+                  <div className="flex items-center gap-2">
+                    <motion.div
+                      className="w-2 h-2 bg-destructive rounded-full"
+                      animate={{ opacity: [1, 0.3, 1] }}
+                      transition={{ duration: 1, repeat: Infinity }}
+                    />
+                    <span className="text-sm font-medium text-destructive">
+                      Recording {formatTime(recordingTime)}
+                    </span>
+                  </div>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="idle"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  className="flex flex-col items-center gap-3"
+                >
+                  <motion.button
+                    className="w-20 h-20 rounded-full bg-primary flex items-center justify-center shadow-lg"
+                    onClick={startRecording}
+                    whileTap={{ scale: 0.9 }}
+                  >
+                    <Mic className="w-8 h-8 text-primary-foreground" />
+                  </motion.button>
+                  <p className="text-sm text-muted-foreground">
+                    {answer ? "Tap to re-record" : "Tap to record your answer"}
+                  </p>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
-        ))}
-      </div>
-    </div>,
 
-    // Step 2 — Goals & Worldview
-    <div key="goals" className="px-6 pt-10">
-      <div className="flex items-center gap-3 mb-2">
-        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-          <Target className="w-5 h-5 text-primary" />
+          {/* Text fallback */}
+          <textarea
+            value={answer}
+            onChange={(e) => updateAnswer(qIndex, e.target.value)}
+            placeholder="Or type your answer here..."
+            className="w-full min-h-[100px] p-4 rounded-xl bg-muted/50 border border-border text-foreground text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/50"
+          />
+
+          {answer && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400"
+            >
+              <Check className="w-4 h-4" />
+              <span>Answer captured</span>
+            </motion.div>
+          )}
         </div>
-        <h2 className="text-xl font-bold font-serif text-foreground">{t("onboarding.yourGoals")}</h2>
       </div>
-      <p className="text-muted-foreground text-sm mb-5">{t("onboarding.goalsDesc")}</p>
-      <div className="flex flex-wrap gap-2 mb-8">
-        {PRESET_GOALS.map((g) => (
-          <Badge
-            key={g}
-            variant={selectedGoals.includes(g) ? "default" : "outline"}
-            className={`cursor-pointer text-sm py-2 px-3 transition-all ${
-              selectedGoals.includes(g) ? "bg-primary text-primary-foreground" : "hover:bg-secondary"
-            }`}
-            onClick={() => toggleItem(g, selectedGoals, setSelectedGoals)}
-          >
-            {selectedGoals.includes(g) && <Check className="w-3 h-3 mr-1" />}
-            {g}
-          </Badge>
-        ))}
-      </div>
+    );
+  };
 
-      <div className="flex items-center gap-3 mb-2">
-        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-          <Globe className="w-5 h-5 text-primary" />
+  // ── Step Renderers ──
+  const renderStep = () => {
+    // Step 0: Language selection
+    if (step === 0) {
+      return (
+        <div key="language" className="flex flex-col items-center text-center px-6 pt-16">
+          <motion.div
+            className="w-24 h-24 rounded-full bg-gradient-to-br from-primary/20 to-accent/30 flex items-center justify-center mb-8"
+            animate={{ scale: [1, 1.08, 1] }}
+            transition={{ repeat: Infinity, duration: 3 }}
+          >
+            <Globe className="w-10 h-10 text-primary" />
+          </motion.div>
+          <h1 className="text-3xl font-bold font-serif text-foreground mb-3">Choose Your Language</h1>
+          <p className="text-muted-foreground text-base leading-relaxed max-w-xs mb-8">
+            Select your preferred language for the app
+          </p>
+          <div className="grid grid-cols-2 gap-3 w-full max-w-sm">
+            {LANGUAGES.map((lang) => (
+              <motion.button
+                key={lang.code}
+                className={`flex flex-col items-center gap-2 p-4 rounded-xl transition-all ${
+                  language === lang.code
+                    ? "glass-card-strong ring-2 ring-primary"
+                    : "glass-card hover:bg-muted/50"
+                }`}
+                onClick={() => setLanguage(lang.code)}
+                whileTap={{ scale: 0.95 }}
+              >
+                <span className="text-3xl">{lang.flag}</span>
+                <span className="text-sm font-medium">{lang.native}</span>
+                {language === lang.code && (
+                  <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}>
+                    <Check className="w-4 h-4 text-primary" />
+                  </motion.div>
+                )}
+              </motion.button>
+            ))}
+          </div>
         </div>
-        <h2 className="text-xl font-bold font-serif text-foreground">{t("onboarding.worldview")}</h2>
-      </div>
-      <p className="text-muted-foreground text-sm mb-4">{t("onboarding.worldviewDesc")}</p>
-      <div className="flex flex-wrap gap-2">
-        {WORLDVIEW_OPTIONS.map((w) => (
-          <Badge
-            key={w.label}
-            variant={worldview === w.label ? "default" : "outline"}
-            className={`cursor-pointer text-sm py-2 px-3 transition-all ${
-              worldview === w.label ? "bg-primary text-primary-foreground" : "hover:bg-secondary"
-            }`}
-            onClick={() => setWorldview(worldview === w.label ? null : w.label)}
-          >
-            <span className="mr-1">{w.emoji}</span>
-            {w.label}
-          </Badge>
-        ))}
-      </div>
-    </div>,
+      );
+    }
 
-    // Step 3 — Strengths & Fears
-    <div key="strengths" className="px-6 pt-10">
-      <div className="flex items-center gap-3 mb-2">
-        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-          <Shield className="w-5 h-5 text-primary" />
+    // Steps 1-6: Questions
+    if (step >= 1 && step <= 6) {
+      return renderQuestionStep(step - 1);
+    }
+
+    // Step 7: Worldview (religious question)
+    if (step === 7) {
+      return (
+        <div key="worldview" className="flex flex-col items-center px-6 pt-10">
+          <motion.div
+            className="w-20 h-20 rounded-full bg-gradient-to-br from-primary/20 to-accent/30 flex items-center justify-center mb-6"
+            animate={{ scale: [1, 1.06, 1] }}
+            transition={{ repeat: Infinity, duration: 3 }}
+          >
+            <Heart className="w-8 h-8 text-primary" />
+          </motion.div>
+          <h2 className="text-2xl font-bold font-serif text-foreground mb-2 text-center">
+            Your Belief System
+          </h2>
+          <p className="text-muted-foreground text-sm mb-8 text-center max-w-xs">
+            This helps personalize your reflections and coaching with cultural sensitivity.
+          </p>
+          <div className="flex flex-wrap gap-3 justify-center max-w-sm">
+            {WORLDVIEW_OPTIONS.map((w) => (
+              <motion.button
+                key={w.label}
+                className={`flex items-center gap-2 px-5 py-3 rounded-full text-sm font-medium transition-all ${
+                  worldview === w.label
+                    ? "bg-primary text-primary-foreground shadow-md"
+                    : "bg-muted/50 border border-border text-foreground hover:bg-muted"
+                }`}
+                onClick={() => setWorldview(worldview === w.label ? null : w.label)}
+                whileTap={{ scale: 0.95 }}
+              >
+                <span>{w.emoji}</span>
+                <span>{w.label}</span>
+                {worldview === w.label && <Check className="w-4 h-4" />}
+              </motion.button>
+            ))}
+          </div>
         </div>
-        <h2 className="text-xl font-bold font-serif text-foreground">{t("onboarding.yourStrengths")}</h2>
-      </div>
-      <p className="text-muted-foreground text-sm mb-4">{t("onboarding.strengthsDesc")}</p>
-      <div className="flex flex-wrap gap-2 mb-8">
-        {PRESET_STRENGTHS.map((s) => (
-          <Badge
-            key={s}
-            variant={selectedStrengths.includes(s) ? "default" : "outline"}
-            className={`cursor-pointer text-sm py-2 px-3 transition-all ${
-              selectedStrengths.includes(s) ? "bg-primary text-primary-foreground" : "hover:bg-secondary"
-            }`}
-            onClick={() => toggleItem(s, selectedStrengths, setSelectedStrengths)}
-          >
-            {selectedStrengths.includes(s) && <Check className="w-3 h-3 mr-1" />}
-            {s}
-          </Badge>
-        ))}
-      </div>
+      );
+    }
 
-      <div className="flex items-center gap-3 mb-2">
-        <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center">
-          <Heart className="w-5 h-5 text-destructive" />
+    // Step 8: Analyzing
+    if (step === 8) {
+      return (
+        <div key="analyzing" className="flex flex-col items-center text-center px-6 pt-24">
+          <motion.div
+            className="w-28 h-28 rounded-full bg-gradient-to-br from-primary/20 to-accent/30 flex items-center justify-center mb-8"
+            animate={{ rotate: 360 }}
+            transition={{ repeat: Infinity, duration: 8, ease: "linear" }}
+          >
+            <Sparkles className="w-12 h-12 text-primary" />
+          </motion.div>
+          <h2 className="text-2xl font-bold font-serif text-foreground mb-3">
+            Analyzing Your Soul Profile...
+          </h2>
+          <p className="text-muted-foreground text-base leading-relaxed max-w-xs mb-8">
+            AI is reading your answers and building your personalized psychological profile.
+          </p>
+          <div className="w-full max-w-xs">
+            <motion.div
+              className="h-2 bg-muted rounded-full overflow-hidden"
+            >
+              <motion.div
+                className="h-full bg-primary rounded-full"
+                initial={{ width: "0%" }}
+                animate={{ width: "90%" }}
+                transition={{ duration: 8, ease: "easeOut" }}
+              />
+            </motion.div>
+          </div>
         </div>
-        <h2 className="text-xl font-bold font-serif text-foreground">{t("onboarding.yourFears")}</h2>
-      </div>
-      <p className="text-muted-foreground text-sm mb-4">{t("onboarding.fearsDesc")}</p>
-      <div className="flex flex-wrap gap-2">
-        {PRESET_FEARS.map((f) => (
-          <Badge
-            key={f}
-            variant={selectedFears.includes(f) ? "default" : "outline"}
-            className={`cursor-pointer text-sm py-2 px-3 transition-all ${
-              selectedFears.includes(f) ? "bg-destructive text-destructive-foreground" : "hover:bg-secondary"
-            }`}
-            onClick={() => toggleItem(f, selectedFears, setSelectedFears)}
+      );
+    }
+
+    // Step 9: Results
+    if (step === 9 && soulProfile) {
+      return (
+        <div key="results" className="px-6 pt-8 pb-8">
+          <div className="flex flex-col items-center text-center mb-8">
+            <motion.div
+              className="w-20 h-20 rounded-full gradient-primary flex items-center justify-center mb-4"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", stiffness: 200 }}
+            >
+              <Sparkles className="w-8 h-8 text-white" />
+            </motion.div>
+            <h2 className="text-2xl font-bold font-serif text-foreground mb-2">
+              Your Soul Profile
+            </h2>
+            <p className="text-muted-foreground text-sm max-w-xs">
+              Here's what we discovered about you
+            </p>
+          </div>
+
+          {/* Summary */}
+          <motion.div
+            className="glass-card p-5 rounded-2xl mb-4"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
           >
-            {selectedFears.includes(f) && <Check className="w-3 h-3 mr-1" />}
-            {f}
-          </Badge>
-        ))}
-      </div>
-    </div>,
+            <p className="text-sm text-foreground leading-relaxed">{soulProfile.summary}</p>
+          </motion.div>
 
-    // Step 4 — Voice Clone teaser
-    <div key="voice" className="flex flex-col items-center text-center px-6 pt-16">
-      <motion.div
-        className="w-24 h-24 rounded-full bg-gradient-to-br from-primary/20 to-accent/30 flex items-center justify-center mb-8"
-        animate={{ scale: [1, 1.06, 1] }}
-        transition={{ repeat: Infinity, duration: 2.5 }}
-      >
-        <Mic className="w-10 h-10 text-primary" />
-      </motion.div>
-      <h2 className="text-2xl font-bold font-serif text-foreground mb-3">{t("onboarding.cloneVoice")}</h2>
-      <p className="text-muted-foreground text-base leading-relaxed max-w-xs mb-6">
-        {t("onboarding.cloneVoiceDesc")}
-      </p>
-      <Button
-        variant="outline"
-        className="rounded-full px-6"
-        onClick={() => navigate("/settings/voice")}
-      >
-        <Mic className="w-4 h-4 mr-2" />
-        {t("onboarding.setupVoiceClone")}
-      </Button>
-      <p className="text-xs text-muted-foreground mt-3">{t("onboarding.doLater")}</p>
-    </div>,
+          {/* Strengths */}
+          <motion.div
+            className="glass-card p-5 rounded-2xl mb-4"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+          >
+            <h3 className="text-sm font-semibold text-primary mb-3 flex items-center gap-2">
+              <Award className="w-4 h-4" /> Your Strengths
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              {soulProfile.strengths?.map((s: string, i: number) => (
+                <span key={i} className="px-3 py-1.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
+                  {s}
+                </span>
+              ))}
+            </div>
+          </motion.div>
 
-    // Step 5 — Ready
-    <div key="ready" className="flex flex-col items-center text-center px-6 pt-16">
-      <motion.div
-        className="w-24 h-24 rounded-full gradient-primary flex items-center justify-center mb-8"
-        animate={{ scale: [1, 1.1, 1] }}
-        transition={{ repeat: Infinity, duration: 2 }}
-      >
-        <Sparkles className="w-10 h-10 text-white" />
-      </motion.div>
-      <h2 className="text-2xl font-bold font-serif text-foreground mb-3">{t("onboarding.allSet")}</h2>
-      <p className="text-muted-foreground text-base leading-relaxed max-w-xs mb-8">
-        {t("onboarding.allSetDesc")}
-      </p>
-      <Button
-        className="rounded-full px-8 py-6 text-base gradient-primary text-white"
-        onClick={handleComplete}
-        disabled={saving}
-      >
-        {saving ? t("onboarding.saving") : t("onboarding.startJournaling")}
-        <ArrowRight className="w-5 h-5 ml-2" />
-      </Button>
-    </div>,
-  ];
+          {/* Growth Areas / Weaknesses */}
+          <motion.div
+            className="glass-card p-5 rounded-2xl mb-4"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+          >
+            <h3 className="text-sm font-semibold text-amber-600 dark:text-amber-400 mb-3 flex items-center gap-2">
+              <TrendingUp className="w-4 h-4" /> Growth Opportunities
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              {(soulProfile.weaknesses || soulProfile.growth_areas)?.map((w: string, i: number) => (
+                <span key={i} className="px-3 py-1.5 rounded-full text-xs font-medium bg-amber-500/10 text-amber-700 dark:text-amber-300">
+                  {w}
+                </span>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Fears */}
+          <motion.div
+            className="glass-card p-5 rounded-2xl mb-4"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8 }}
+          >
+            <h3 className="text-sm font-semibold text-destructive mb-3 flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4" /> Deep Fears
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              {soulProfile.fears?.map((f: string, i: number) => (
+                <span key={i} className="px-3 py-1.5 rounded-full text-xs font-medium bg-destructive/10 text-destructive">
+                  {f}
+                </span>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Personality Type */}
+          {soulProfile.personality_type && (
+            <motion.div
+              className="glass-card p-5 rounded-2xl mb-4"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.0 }}
+            >
+              <h3 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
+                <User className="w-4 h-4" /> Personality
+              </h3>
+              <p className="text-sm text-muted-foreground">{soulProfile.personality_type}</p>
+            </motion.div>
+          )}
+        </div>
+      );
+    }
+
+    return null;
+  };
+
+  const canProceed = () => {
+    if (step === 0) return true;
+    if (step >= 1 && step <= 6) return !!answers[step - 1]?.trim();
+    if (step === 7) return true; // worldview is optional
+    return false;
+  };
+
+  const handleNext = () => {
+    if (step === 7) {
+      // After worldview, run analysis
+      runAnalysis();
+    } else {
+      next();
+    }
+  };
 
   return (
     <div className="min-h-screen gradient-warm flex flex-col">
-      <div className="flex gap-1.5 px-6 pt-6">
-        {[0, 1, 2, 3, 4, 5].map((i) => (
-          <div
-            key={i}
-            className={`h-1 rounded-full flex-1 transition-all duration-300 ${
-              i <= step ? "bg-primary" : "bg-border"
-            }`}
-          />
-        ))}
+      {/* Progress bar */}
+      <div className="px-6 pt-6">
+        <Progress value={progressPercent} className="h-1.5" />
+        <div className="flex justify-between items-center mt-2">
+          <span className="text-xs text-muted-foreground">
+            {step === 0 ? "Language" : step >= 1 && step <= 6 ? `Question ${step}/6` : step === 7 ? "Belief" : step === 8 ? "Analyzing" : "Profile"}
+          </span>
+          {step < 8 && (
+            <button
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+              onClick={handleSkip}
+              disabled={saving}
+            >
+              Skip for now
+            </button>
+          )}
+        </div>
       </div>
 
-      <div className="flex justify-end px-6 pt-3">
-        {step < 5 && (
-          <button
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-            onClick={handleSkip}
-            disabled={saving}
-          >
-            {t("onboarding.skipForNow")}
-          </button>
-        )}
-      </div>
-
+      {/* Content */}
       <div className="flex-1 overflow-y-auto pb-32">
         <AnimatePresence custom={direction} mode="wait">
           <motion.div
@@ -376,27 +676,44 @@ const OnboardingPage = () => {
             exit="exit"
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
           >
-            {steps[step]}
+            {renderStep()}
           </motion.div>
         </AnimatePresence>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-background via-background to-transparent">
-        <div className="flex gap-3 max-w-md mx-auto">
-          {step > 0 && step < 5 && (
-            <Button variant="outline" className="rounded-full flex-1" onClick={back}>
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              {t("onboarding.back")}
-            </Button>
-          )}
-          {step < 5 && (
-            <Button className="rounded-full flex-1 gradient-primary text-white" onClick={next}>
-              {step === 0 ? t("onboarding.getStarted") : t("onboarding.continue")}
-              <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
-          )}
+      {/* Bottom nav */}
+      {step !== 8 && (
+        <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-background via-background to-transparent">
+          <div className="flex gap-3 max-w-md mx-auto">
+            {step > 0 && step < 8 && step !== 9 && (
+              <Button variant="outline" className="rounded-full flex-1" onClick={back} disabled={isRecording || isTranscribing}>
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back
+              </Button>
+            )}
+            {step < 8 && (
+              <Button
+                className="rounded-full flex-1 gradient-primary text-white"
+                onClick={handleNext}
+                disabled={!canProceed() || isRecording || isTranscribing}
+              >
+                {step === 0 ? "Get Started" : step === 7 ? "Analyze My Profile" : "Next"}
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            )}
+            {step === 9 && (
+              <Button
+                className="rounded-full flex-1 gradient-primary text-white py-6 text-base"
+                onClick={handleComplete}
+                disabled={saving}
+              >
+                {saving ? "Saving..." : "Enter the App"}
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
