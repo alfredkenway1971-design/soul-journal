@@ -121,7 +121,49 @@ const OnboardingPage = () => {
   };
 
   const steps = [
-    // Step 0 — Welcome
+    // Step 0 — Language Selection
+    <div key="language" className="flex flex-col items-center text-center px-6 pt-16">
+      <motion.div
+        className="w-24 h-24 rounded-full bg-gradient-to-br from-primary/20 to-accent/30 flex items-center justify-center mb-8"
+        animate={{ scale: [1, 1.08, 1] }}
+        transition={{ repeat: Infinity, duration: 3 }}
+      >
+        <Globe className="w-10 h-10 text-primary" />
+      </motion.div>
+      <h1 className="text-3xl font-bold font-serif text-foreground mb-3">
+        Choose Your Language
+      </h1>
+      <p className="text-muted-foreground text-base leading-relaxed max-w-xs mb-8">
+        Select your preferred language for the app interface
+      </p>
+      <div className="grid grid-cols-2 gap-3 w-full max-w-sm">
+        {LANGUAGES.map((lang) => (
+          <motion.button
+            key={lang.code}
+            className={`flex flex-col items-center gap-2 p-4 rounded-xl transition-all ${
+              language === lang.code
+                ? "glass-card-strong ring-2 ring-primary"
+                : "glass-card hover:bg-muted/50"
+            }`}
+            onClick={() => setLanguage(lang.code)}
+            whileTap={{ scale: 0.95 }}
+          >
+            <span className="text-3xl">{lang.flag}</span>
+            <span className="text-sm font-medium">{lang.native}</span>
+            {language === lang.code && (
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+              >
+                <Check className="w-4 h-4 text-primary" />
+              </motion.div>
+            )}
+          </motion.button>
+        ))}
+      </div>
+    </div>,
+
+    // Step 1 — Welcome
     <div key="welcome" className="flex flex-col items-center text-center px-6 pt-16">
       <motion.div
         className="w-24 h-24 rounded-full bg-gradient-to-br from-primary/20 to-accent/30 flex items-center justify-center mb-8"
