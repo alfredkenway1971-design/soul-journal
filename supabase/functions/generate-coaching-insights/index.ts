@@ -41,10 +41,10 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Fetch user profile with goals and interests
+    // Fetch user profile with goals, interests, and soul profile
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('goals, interests, display_name')
+      .select('goals, interests, display_name, soul_profile_summary, strengths, fears, worldview')
       .eq('id', userId)
       .single();
 
@@ -59,6 +59,13 @@ serve(async (req) => {
     const goals: Goal[] = (profile?.goals as Goal[]) || [];
     const interests: string[] = profile?.interests || [];
     const displayName = profile?.display_name || 'User';
+    const soulProfile = profile?.soul_profile_summary as Record<string, any> | null;
+    const strengths: string[] = profile?.strengths || soulProfile?.strengths || [];
+    const fears: string[] = profile?.fears || soulProfile?.fears || [];
+    const worldview: string = profile?.worldview || '';
+    const growthAreas: string[] = soulProfile?.growth_areas || [];
+    const personalityType: string = soulProfile?.personality_type || '';
+    const coachingFocus: string[] = soulProfile?.coaching_focus || [];
 
     // Fetch recent journal entries (last 7 days)
     const sevenDaysAgo = new Date();
@@ -96,6 +103,17 @@ serve(async (req) => {
       ? `User's interests: ${interests.join(', ')}`
       : '';
 
+    // Soul profile context
+    const soulProfileContext = [
+      strengths.length > 0 ? `Core strengths: ${strengths.join(', ')}` : '',
+      fears.length > 0 ? `Deep fears: ${fears.join(', ')}` : '',
+      growthAreas.length > 0 ? `Growth areas: ${growthAreas.join(', ')}` : '',
+      personalityType ? `Personality: ${personalityType}` : '',
+      coachingFocus.length > 0 ? `Coaching focus: ${coachingFocus.join(', ')}` : '',
+      worldview ? `Worldview/belief system: ${worldview}` : '',
+      soulProfile?.summary ? `Profile summary: ${soulProfile.summary}` : '',
+    ].filter(Boolean).join('\n');
+
     const entriesContext = entries.map((e: JournalEntry) => 
       `[${new Date(e.created_at).toLocaleDateString()}] Mood: ${e.mood || 'unknown'}\n${e.enhanced_text || ''}`
     ).join('\n\n---\n\n');
@@ -110,6 +128,9 @@ serve(async (req) => {
 
     const systemPrompt = `You are a deeply perceptive AI life coach analyzing journal entries. You do NOT just encourage — you coach with honesty and nuance.
 
+## USER'S SOUL PROFILE
+${soulProfileContext || 'No soul profile available yet.'}
+
 ## STEP 1 — CONTEXTUAL ANALYSIS (internal, do not output)
 Before generating insights, silently analyze ALL entries for:
 • Emotional patterns (persistent low mood, avoidance, stagnation vs. growth, breakthroughs)
@@ -118,6 +139,7 @@ Before generating insights, silently analyze ALL entries for:
 • Goal alignment — is the user actively working toward their goals or drifting?
 • Whether their stated Strengths are being used or neglected
 • Whether their Fears are being confronted or avoided
+• How their Growth Areas and Coaching Focus relate to recent entries
 
 ## STEP 2 — BALANCED RESPONSE FORMULA
 For each insight, choose the appropriate coaching mode:
@@ -137,6 +159,8 @@ For each insight, choose the appropriate coaching mode:
 - Challenges should be specific and achievable, not vague motivational fluff.
 - If you spot a pattern the user can't see, name it directly.
 - Wellness alerts should be honest — if someone is spiraling, say so gently but clearly.
+- When the user's Soul Profile is available, tailor insights to their specific strengths, fears, growth areas, and personality. Reference these directly.
+- If the user has a worldview/belief system, incorporate culturally sensitive wisdom from that tradition when appropriate.
 
 IMPORTANT: Respond entirely in ${language}. All titles and content must be in ${language}.`;
 

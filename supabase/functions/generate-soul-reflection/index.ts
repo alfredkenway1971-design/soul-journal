@@ -11,7 +11,7 @@ serve(async (req) => {
   }
 
   try {
-    const { entryText, goals, fears, strengths, worldview, language = 'English' } = await req.json();
+    const { entryText, goals, fears, strengths, worldview, language = 'English', soulProfileSummary } = await req.json();
 
     if (!entryText) {
       throw new Error('No entry text provided');
@@ -22,10 +22,16 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY is not configured');
     }
 
+    // Use soul_profile_summary data if available, falling back to individual fields
+    const profile = soulProfileSummary as Record<string, any> | null;
     const goalsStr = goals?.length ? goals.map((g: any) => g.title || g).join(', ') : 'None specified';
-    const fearsStr = fears?.length ? fears.join(', ') : 'None specified';
-    const strengthsStr = strengths?.length ? strengths.join(', ') : 'None specified';
+    const fearsStr = (fears?.length ? fears : profile?.fears)?.join(', ') || 'None specified';
+    const strengthsStr = (strengths?.length ? strengths : profile?.strengths)?.join(', ') || 'None specified';
     const worldviewStr = worldview || 'Not specified';
+    const growthAreasStr = profile?.growth_areas?.join(', ') || '';
+    const personalityType = profile?.personality_type || '';
+    const coachingFocus = profile?.coaching_focus?.join(', ') || '';
+    const profileSummary = profile?.summary || '';
 
     const systemPrompt = `You are a "Soul Mirror" — a deeply perceptive, wise inner coach that reflects back what the user truly NEEDS to hear, not just what they want to hear.
 
@@ -34,6 +40,10 @@ SOUL PROFILE:
 - Fears: ${fearsStr}
 - Strengths: ${strengthsStr}
 - Worldview/Faith: ${worldviewStr}
+${personalityType ? `- Personality: ${personalityType}` : ''}
+${growthAreasStr ? `- Growth Areas: ${growthAreasStr}` : ''}
+${coachingFocus ? `- Coaching Focus: ${coachingFocus}` : ''}
+${profileSummary ? `- AI Profile Summary: ${profileSummary}` : ''}
 
 ## STEP 1 — CONTEXTUAL ANALYSIS (internal, do not output this)
 Before responding, silently analyze the entry for:
