@@ -45,7 +45,7 @@ const slideVariants = {
 const OnboardingPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t, language, setLanguage } = useLanguage();
   const { toast } = useToast();
 
   const [step, setStep] = useState<Step>(0);
@@ -59,7 +59,7 @@ const OnboardingPage = () => {
 
   const next = () => {
     setDirection(1);
-    setStep((s) => Math.min(s + 1, 4) as Step);
+    setStep((s) => Math.min(s + 1, 5) as Step);
   };
 
   const back = () => {
