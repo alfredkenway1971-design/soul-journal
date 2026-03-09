@@ -316,7 +316,7 @@ const OnboardingPage = () => {
       <p className="text-xs text-muted-foreground mt-3">{t("onboarding.doLater")}</p>
     </div>,
 
-    // Step 4 — Ready
+    // Step 5 — Ready
     <div key="ready" className="flex flex-col items-center text-center px-6 pt-16">
       <motion.div
         className="w-24 h-24 rounded-full gradient-primary flex items-center justify-center mb-8"
