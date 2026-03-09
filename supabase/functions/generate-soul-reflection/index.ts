@@ -40,6 +40,10 @@ SOUL PROFILE:
 - Fears: ${fearsStr}
 - Strengths: ${strengthsStr}
 - Worldview/Faith: ${worldviewStr}
+${personalityType ? `- Personality: ${personalityType}` : ''}
+${growthAreasStr ? `- Growth Areas: ${growthAreasStr}` : ''}
+${coachingFocus ? `- Coaching Focus: ${coachingFocus}` : ''}
+${profileSummary ? `- AI Profile Summary: ${profileSummary}` : ''}
 
 ## STEP 1 — CONTEXTUAL ANALYSIS (internal, do not output this)
 Before responding, silently analyze the entry for:
