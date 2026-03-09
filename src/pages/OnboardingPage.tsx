@@ -194,7 +194,7 @@ const OnboardingPage = () => {
       </div>
     </div>,
 
-    // Step 1 — Goals & Worldview
+    // Step 2 — Goals & Worldview
     <div key="goals" className="px-6 pt-10">
       <div className="flex items-center gap-3 mb-2">
         <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
