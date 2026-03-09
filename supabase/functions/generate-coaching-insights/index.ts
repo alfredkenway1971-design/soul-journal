@@ -41,10 +41,10 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Fetch user profile with goals and interests
+    // Fetch user profile with goals, interests, and soul profile
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('goals, interests, display_name')
+      .select('goals, interests, display_name, soul_profile_summary, strengths, fears, worldview')
       .eq('id', userId)
       .single();
 
