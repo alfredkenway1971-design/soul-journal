@@ -557,7 +557,7 @@ const OnboardingPage = () => {
             transition={{ delay: 0.4 }}
           >
             <h3 className="text-sm font-semibold text-primary mb-3 flex items-center gap-2">
-              <Award className="w-4 h-4" /> Your Strengths
+              <Award className="w-4 h-4" /> {t("onboarding.yourStrengthsLabel")}
             </h3>
             <div className="flex flex-wrap gap-2">
               {soulProfile.strengths?.map((s: string, i: number) => (
