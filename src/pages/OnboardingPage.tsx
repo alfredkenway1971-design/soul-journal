@@ -17,55 +17,55 @@ const ONBOARDING_QUESTIONS = [
   {
     id: "identity",
     icon: User,
-    title: "Tell me about yourself",
-    subtitle: "What brought you here? Share a bit about who you are.",
+    titleKey: "onboarding.q1.title",
+    subtitleKey: "onboarding.q1.subtitle",
     color: "from-primary/20 to-accent/30",
   },
   {
     id: "growth",
     icon: TrendingUp,
-    title: "What are you trying to improve?",
-    subtitle: "What changes or growth are you seeking in your life?",
+    titleKey: "onboarding.q2.title",
+    subtitleKey: "onboarding.q2.subtitle",
     color: "from-emerald-500/20 to-teal-500/30",
   },
   {
     id: "pride",
     icon: Award,
-    title: "What are you proud of?",
-    subtitle: "Tell me about something that makes you proud of yourself.",
+    titleKey: "onboarding.q3.title",
+    subtitleKey: "onboarding.q3.subtitle",
     color: "from-amber-500/20 to-orange-500/30",
   },
   {
     id: "blockers",
     icon: ShieldAlert,
-    title: "What holds you back?",
-    subtitle: "What patterns or obstacles get in your way sometimes?",
+    titleKey: "onboarding.q4.title",
+    subtitleKey: "onboarding.q4.subtitle",
     color: "from-rose-500/20 to-pink-500/30",
   },
   {
     id: "fears",
     icon: AlertTriangle,
-    title: "What are you afraid of?",
-    subtitle: "What do you fear losing, failing at, or becoming?",
+    titleKey: "onboarding.q5.title",
+    subtitleKey: "onboarding.q5.subtitle",
     color: "from-violet-500/20 to-purple-500/30",
   },
   {
     id: "motivation",
     icon: Zap,
-    title: "When do you feel most alive?",
-    subtitle: "What moments or activities make you feel truly motivated?",
+    titleKey: "onboarding.q6.title",
+    subtitleKey: "onboarding.q6.subtitle",
     color: "from-sky-500/20 to-blue-500/30",
   },
 ];
 
 const WORLDVIEW_OPTIONS = [
-  { label: "Islam", emoji: "☪️" },
-  { label: "Christianity", emoji: "✝️" },
-  { label: "Judaism", emoji: "✡️" },
-  { label: "Buddhism", emoji: "☸️" },
-  { label: "Hinduism", emoji: "🕉️" },
-  { label: "Spiritual", emoji: "✨" },
-  { label: "No preference", emoji: "🌍" },
+  { labelKey: "onboarding.worldviewIslam", value: "Islam", emoji: "☪️" },
+  { labelKey: "onboarding.worldviewChristianity", value: "Christianity", emoji: "✝️" },
+  { labelKey: "onboarding.worldviewJudaism", value: "Judaism", emoji: "✡️" },
+  { labelKey: "onboarding.worldviewBuddhism", value: "Buddhism", emoji: "☸️" },
+  { labelKey: "onboarding.worldviewHinduism", value: "Hinduism", emoji: "🕉️" },
+  { labelKey: "onboarding.worldviewSpiritual", value: "Spiritual", emoji: "✨" },
+  { labelKey: "onboarding.worldviewNoPref", value: "No preference", emoji: "🌍" },
 ];
 
 // Steps: 0=language, 1-6=questions, 7=worldview, 8=analyzing, 9=results
@@ -302,10 +302,10 @@ const OnboardingPage = () => {
         </motion.div>
 
         <h2 className="text-2xl font-bold font-serif text-foreground mb-2 text-center">
-          {q.title}
+          {t(q.titleKey)}
         </h2>
         <p className="text-muted-foreground text-sm mb-8 text-center max-w-xs">
-          {q.subtitle}
+          {t(q.subtitleKey)}
         </p>
 
         {/* Voice Recorder */}
@@ -323,7 +323,7 @@ const OnboardingPage = () => {
                   <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center">
                     <Loader2 className="w-8 h-8 animate-spin text-primary" />
                   </div>
-                  <p className="text-sm text-muted-foreground">Transcribing...</p>
+                  <p className="text-sm text-muted-foreground">{t("onboarding.transcribing")}</p>
                 </motion.div>
               ) : isRecording ? (
                 <motion.div
@@ -368,7 +368,7 @@ const OnboardingPage = () => {
                     <Mic className="w-8 h-8 text-primary-foreground" />
                   </motion.button>
                   <p className="text-sm text-muted-foreground">
-                    {answer ? "Tap to re-record" : "Tap to record your answer"}
+                    {answer ? t("onboarding.tapReRecord") : t("onboarding.tapRecord")}
                   </p>
                 </motion.div>
               )}
@@ -379,7 +379,7 @@ const OnboardingPage = () => {
           <textarea
             value={answer}
             onChange={(e) => updateAnswer(qIndex, e.target.value)}
-            placeholder="Or type your answer here..."
+            placeholder={t("onboarding.orType")}
             className="w-full min-h-[100px] p-4 rounded-xl bg-muted/50 border border-border text-foreground text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/50"
           />
 
@@ -390,7 +390,7 @@ const OnboardingPage = () => {
               className="flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400"
             >
               <Check className="w-4 h-4" />
-              <span>Answer captured</span>
+              <span>{t("onboarding.answerCaptured")}</span>
             </motion.div>
           )}
         </div>
@@ -411,9 +411,9 @@ const OnboardingPage = () => {
           >
             <Globe className="w-10 h-10 text-primary" />
           </motion.div>
-          <h1 className="text-3xl font-bold font-serif text-foreground mb-3">Choose Your Language</h1>
+          <h1 className="text-3xl font-bold font-serif text-foreground mb-3">{t("onboarding.chooseLanguage")}</h1>
           <p className="text-muted-foreground text-base leading-relaxed max-w-xs mb-8">
-            Select your preferred language for the app
+            {t("onboarding.chooseLanguageDesc")}
           </p>
           <div className="grid grid-cols-2 gap-3 w-full max-w-sm">
             {LANGUAGES.map((lang) => (
@@ -458,26 +458,26 @@ const OnboardingPage = () => {
             <Heart className="w-8 h-8 text-primary" />
           </motion.div>
           <h2 className="text-2xl font-bold font-serif text-foreground mb-2 text-center">
-            Your Belief System
+            {t("onboarding.beliefSystem")}
           </h2>
           <p className="text-muted-foreground text-sm mb-8 text-center max-w-xs">
-            This helps personalize your reflections and coaching with cultural sensitivity.
+            {t("onboarding.beliefDesc")}
           </p>
           <div className="flex flex-wrap gap-3 justify-center max-w-sm">
             {WORLDVIEW_OPTIONS.map((w) => (
               <motion.button
-                key={w.label}
+                key={w.value}
                 className={`flex items-center gap-2 px-5 py-3 rounded-full text-sm font-medium transition-all ${
-                  worldview === w.label
+                  worldview === w.value
                     ? "bg-primary text-primary-foreground shadow-md"
                     : "bg-muted/50 border border-border text-foreground hover:bg-muted"
                 }`}
-                onClick={() => setWorldview(worldview === w.label ? null : w.label)}
+                onClick={() => setWorldview(worldview === w.value ? null : w.value)}
                 whileTap={{ scale: 0.95 }}
               >
                 <span>{w.emoji}</span>
-                <span>{w.label}</span>
-                {worldview === w.label && <Check className="w-4 h-4" />}
+                <span>{t(w.labelKey)}</span>
+                {worldview === w.value && <Check className="w-4 h-4" />}
               </motion.button>
             ))}
           </div>
@@ -497,10 +497,10 @@ const OnboardingPage = () => {
             <Sparkles className="w-12 h-12 text-primary" />
           </motion.div>
           <h2 className="text-2xl font-bold font-serif text-foreground mb-3">
-            Analyzing Your Soul Profile...
+            {t("onboarding.analyzingTitle")}
           </h2>
           <p className="text-muted-foreground text-base leading-relaxed max-w-xs mb-8">
-            AI is reading your answers and building your personalized psychological profile.
+            {t("onboarding.analyzingDesc")}
           </p>
           <div className="w-full max-w-xs">
             <motion.div
@@ -532,10 +532,10 @@ const OnboardingPage = () => {
               <Sparkles className="w-8 h-8 text-white" />
             </motion.div>
             <h2 className="text-2xl font-bold font-serif text-foreground mb-2">
-              Your Soul Profile
+              {t("onboarding.soulProfileTitle")}
             </h2>
             <p className="text-muted-foreground text-sm max-w-xs">
-              Here's what we discovered about you
+              {t("onboarding.discovered")}
             </p>
           </div>
 
@@ -557,7 +557,7 @@ const OnboardingPage = () => {
             transition={{ delay: 0.4 }}
           >
             <h3 className="text-sm font-semibold text-primary mb-3 flex items-center gap-2">
-              <Award className="w-4 h-4" /> Your Strengths
+              <Award className="w-4 h-4" /> {t("onboarding.yourStrengthsLabel")}
             </h3>
             <div className="flex flex-wrap gap-2">
               {soulProfile.strengths?.map((s: string, i: number) => (
@@ -576,7 +576,7 @@ const OnboardingPage = () => {
             transition={{ delay: 0.6 }}
           >
             <h3 className="text-sm font-semibold text-amber-600 dark:text-amber-400 mb-3 flex items-center gap-2">
-              <TrendingUp className="w-4 h-4" /> Growth Opportunities
+              <TrendingUp className="w-4 h-4" /> {t("onboarding.growthOpportunities")}
             </h3>
             <div className="flex flex-wrap gap-2">
               {(soulProfile.weaknesses || soulProfile.growth_areas)?.map((w: string, i: number) => (
@@ -595,7 +595,7 @@ const OnboardingPage = () => {
             transition={{ delay: 0.8 }}
           >
             <h3 className="text-sm font-semibold text-destructive mb-3 flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4" /> Deep Fears
+              <AlertTriangle className="w-4 h-4" /> {t("onboarding.deepFears")}
             </h3>
             <div className="flex flex-wrap gap-2">
               {soulProfile.fears?.map((f: string, i: number) => (
@@ -615,7 +615,7 @@ const OnboardingPage = () => {
               transition={{ delay: 1.0 }}
             >
               <h3 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
-                <User className="w-4 h-4" /> Personality
+                <User className="w-4 h-4" /> {t("onboarding.personalityLabel")}
               </h3>
               <p className="text-sm text-muted-foreground">{soulProfile.personality_type}</p>
             </motion.div>
@@ -650,7 +650,7 @@ const OnboardingPage = () => {
         <Progress value={progressPercent} className="h-1.5" />
         <div className="flex justify-between items-center mt-2">
           <span className="text-xs text-muted-foreground">
-            {step === 0 ? "Language" : step >= 1 && step <= 6 ? `Question ${step}/6` : step === 7 ? "Belief" : step === 8 ? "Analyzing" : "Profile"}
+            {step === 0 ? t("onboarding.language") : step >= 1 && step <= 6 ? `${t("onboarding.question")} ${step}/6` : step === 7 ? t("onboarding.belief") : step === 8 ? t("onboarding.analyzing") : t("onboarding.profile")}
           </span>
           {step < 8 && (
             <button
@@ -658,7 +658,7 @@ const OnboardingPage = () => {
               onClick={handleSkip}
               disabled={saving}
             >
-              Skip for now
+              {t("onboarding.skipForNow")}
             </button>
           )}
         </div>
@@ -688,7 +688,7 @@ const OnboardingPage = () => {
             {step > 0 && step < 8 && step !== 9 && (
               <Button variant="outline" className="rounded-full flex-1" onClick={back} disabled={isRecording || isTranscribing}>
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                Back
+                {t("onboarding.back")}
               </Button>
             )}
             {step < 8 && (
@@ -697,7 +697,7 @@ const OnboardingPage = () => {
                 onClick={handleNext}
                 disabled={!canProceed() || isRecording || isTranscribing}
               >
-                {step === 0 ? "Get Started" : step === 7 ? "Analyze My Profile" : "Next"}
+                {step === 0 ? t("onboarding.getStarted") : step === 7 ? t("onboarding.analyzeProfile") : t("onboarding.next")}
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             )}
@@ -707,7 +707,7 @@ const OnboardingPage = () => {
                 onClick={handleComplete}
                 disabled={saving}
               >
-                {saving ? "Saving..." : "Enter the App"}
+                {saving ? t("onboarding.saving") : t("onboarding.enterApp")}
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
             )}
