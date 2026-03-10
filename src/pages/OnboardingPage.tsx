@@ -323,7 +323,7 @@ const OnboardingPage = () => {
                   <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center">
                     <Loader2 className="w-8 h-8 animate-spin text-primary" />
                   </div>
-                  <p className="text-sm text-muted-foreground">Transcribing...</p>
+                  <p className="text-sm text-muted-foreground">{t("onboarding.transcribing")}</p>
                 </motion.div>
               ) : isRecording ? (
                 <motion.div
