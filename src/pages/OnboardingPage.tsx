@@ -658,7 +658,7 @@ const OnboardingPage = () => {
               onClick={handleSkip}
               disabled={saving}
             >
-              Skip for now
+              {t("onboarding.skipForNow")}
             </button>
           )}
         </div>
