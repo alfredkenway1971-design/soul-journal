@@ -379,7 +379,7 @@ const OnboardingPage = () => {
           <textarea
             value={answer}
             onChange={(e) => updateAnswer(qIndex, e.target.value)}
-            placeholder="Or type your answer here..."
+            placeholder={t("onboarding.orType")}
             className="w-full min-h-[100px] p-4 rounded-xl bg-muted/50 border border-border text-foreground text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/50"
           />
 
