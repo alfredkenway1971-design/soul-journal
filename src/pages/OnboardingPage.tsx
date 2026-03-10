@@ -595,7 +595,7 @@ const OnboardingPage = () => {
             transition={{ delay: 0.8 }}
           >
             <h3 className="text-sm font-semibold text-destructive mb-3 flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4" /> Deep Fears
+              <AlertTriangle className="w-4 h-4" /> {t("onboarding.deepFears")}
             </h3>
             <div className="flex flex-wrap gap-2">
               {soulProfile.fears?.map((f: string, i: number) => (
