@@ -368,7 +368,7 @@ const OnboardingPage = () => {
                     <Mic className="w-8 h-8 text-primary-foreground" />
                   </motion.button>
                   <p className="text-sm text-muted-foreground">
-                    {answer ? "Tap to re-record" : "Tap to record your answer"}
+                    {answer ? t("onboarding.tapReRecord") : t("onboarding.tapRecord")}
                   </p>
                 </motion.div>
               )}
