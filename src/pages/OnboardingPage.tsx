@@ -615,7 +615,7 @@ const OnboardingPage = () => {
               transition={{ delay: 1.0 }}
             >
               <h3 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
-                <User className="w-4 h-4" /> Personality
+                <User className="w-4 h-4" /> {t("onboarding.personalityLabel")}
               </h3>
               <p className="text-sm text-muted-foreground">{soulProfile.personality_type}</p>
             </motion.div>
