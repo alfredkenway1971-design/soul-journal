@@ -497,10 +497,10 @@ const OnboardingPage = () => {
             <Sparkles className="w-12 h-12 text-primary" />
           </motion.div>
           <h2 className="text-2xl font-bold font-serif text-foreground mb-3">
-            Analyzing Your Soul Profile...
+            {t("onboarding.analyzingTitle")}
           </h2>
           <p className="text-muted-foreground text-base leading-relaxed max-w-xs mb-8">
-            AI is reading your answers and building your personalized psychological profile.
+            {t("onboarding.analyzingDesc")}
           </p>
           <div className="w-full max-w-xs">
             <motion.div
