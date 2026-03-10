@@ -458,26 +458,26 @@ const OnboardingPage = () => {
             <Heart className="w-8 h-8 text-primary" />
           </motion.div>
           <h2 className="text-2xl font-bold font-serif text-foreground mb-2 text-center">
-            Your Belief System
+            {t("onboarding.beliefSystem")}
           </h2>
           <p className="text-muted-foreground text-sm mb-8 text-center max-w-xs">
-            This helps personalize your reflections and coaching with cultural sensitivity.
+            {t("onboarding.beliefDesc")}
           </p>
           <div className="flex flex-wrap gap-3 justify-center max-w-sm">
             {WORLDVIEW_OPTIONS.map((w) => (
               <motion.button
-                key={w.label}
+                key={w.value}
                 className={`flex items-center gap-2 px-5 py-3 rounded-full text-sm font-medium transition-all ${
-                  worldview === w.label
+                  worldview === w.value
                     ? "bg-primary text-primary-foreground shadow-md"
                     : "bg-muted/50 border border-border text-foreground hover:bg-muted"
                 }`}
-                onClick={() => setWorldview(worldview === w.label ? null : w.label)}
+                onClick={() => setWorldview(worldview === w.value ? null : w.value)}
                 whileTap={{ scale: 0.95 }}
               >
                 <span>{w.emoji}</span>
-                <span>{w.label}</span>
-                {worldview === w.label && <Check className="w-4 h-4" />}
+                <span>{t(w.labelKey)}</span>
+                {worldview === w.value && <Check className="w-4 h-4" />}
               </motion.button>
             ))}
           </div>
