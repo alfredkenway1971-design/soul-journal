@@ -697,7 +697,7 @@ const OnboardingPage = () => {
                 onClick={handleNext}
                 disabled={!canProceed() || isRecording || isTranscribing}
               >
-                {step === 0 ? "Get Started" : step === 7 ? "Analyze My Profile" : "Next"}
+                {step === 0 ? t("onboarding.getStarted") : step === 7 ? t("onboarding.analyzeProfile") : t("onboarding.next")}
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             )}
