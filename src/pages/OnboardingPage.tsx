@@ -411,9 +411,9 @@ const OnboardingPage = () => {
           >
             <Globe className="w-10 h-10 text-primary" />
           </motion.div>
-          <h1 className="text-3xl font-bold font-serif text-foreground mb-3">Choose Your Language</h1>
+          <h1 className="text-3xl font-bold font-serif text-foreground mb-3">{t("onboarding.chooseLanguage")}</h1>
           <p className="text-muted-foreground text-base leading-relaxed max-w-xs mb-8">
-            Select your preferred language for the app
+            {t("onboarding.chooseLanguageDesc")}
           </p>
           <div className="grid grid-cols-2 gap-3 w-full max-w-sm">
             {LANGUAGES.map((lang) => (
