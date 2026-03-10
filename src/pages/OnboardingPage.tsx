@@ -576,7 +576,7 @@ const OnboardingPage = () => {
             transition={{ delay: 0.6 }}
           >
             <h3 className="text-sm font-semibold text-amber-600 dark:text-amber-400 mb-3 flex items-center gap-2">
-              <TrendingUp className="w-4 h-4" /> Growth Opportunities
+              <TrendingUp className="w-4 h-4" /> {t("onboarding.growthOpportunities")}
             </h3>
             <div className="flex flex-wrap gap-2">
               {(soulProfile.weaknesses || soulProfile.growth_areas)?.map((w: string, i: number) => (
