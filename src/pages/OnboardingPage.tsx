@@ -650,7 +650,7 @@ const OnboardingPage = () => {
         <Progress value={progressPercent} className="h-1.5" />
         <div className="flex justify-between items-center mt-2">
           <span className="text-xs text-muted-foreground">
-            {step === 0 ? "Language" : step >= 1 && step <= 6 ? `Question ${step}/6` : step === 7 ? "Belief" : step === 8 ? "Analyzing" : "Profile"}
+            {step === 0 ? t("onboarding.language") : step >= 1 && step <= 6 ? `${t("onboarding.question")} ${step}/6` : step === 7 ? t("onboarding.belief") : step === 8 ? t("onboarding.analyzing") : t("onboarding.profile")}
           </span>
           {step < 8 && (
             <button
