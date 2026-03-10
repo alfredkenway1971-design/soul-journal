@@ -302,10 +302,10 @@ const OnboardingPage = () => {
         </motion.div>
 
         <h2 className="text-2xl font-bold font-serif text-foreground mb-2 text-center">
-          {q.title}
+          {t(q.titleKey)}
         </h2>
         <p className="text-muted-foreground text-sm mb-8 text-center max-w-xs">
-          {q.subtitle}
+          {t(q.subtitleKey)}
         </p>
 
         {/* Voice Recorder */}
