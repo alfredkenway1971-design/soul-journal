@@ -532,10 +532,10 @@ const OnboardingPage = () => {
               <Sparkles className="w-8 h-8 text-white" />
             </motion.div>
             <h2 className="text-2xl font-bold font-serif text-foreground mb-2">
-              Your Soul Profile
+              {t("onboarding.soulProfileTitle")}
             </h2>
             <p className="text-muted-foreground text-sm max-w-xs">
-              Here's what we discovered about you
+              {t("onboarding.discovered")}
             </p>
           </div>
 
