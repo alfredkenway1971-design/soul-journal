@@ -390,7 +390,7 @@ const OnboardingPage = () => {
               className="flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400"
             >
               <Check className="w-4 h-4" />
-              <span>Answer captured</span>
+              <span>{t("onboarding.answerCaptured")}</span>
             </motion.div>
           )}
         </div>
