@@ -707,7 +707,7 @@ const OnboardingPage = () => {
                 onClick={handleComplete}
                 disabled={saving}
               >
-                {saving ? "Saving..." : "Enter the App"}
+                {saving ? t("onboarding.saving") : t("onboarding.enterApp")}
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
             )}
