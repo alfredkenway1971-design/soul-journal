@@ -688,7 +688,7 @@ const OnboardingPage = () => {
             {step > 0 && step < 8 && step !== 9 && (
               <Button variant="outline" className="rounded-full flex-1" onClick={back} disabled={isRecording || isTranscribing}>
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                Back
+                {t("onboarding.back")}
               </Button>
             )}
             {step < 8 && (
