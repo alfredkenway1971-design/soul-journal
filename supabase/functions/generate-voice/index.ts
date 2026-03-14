@@ -10,8 +10,15 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Languages supported by eleven_multilingual_v2. Anything outside this list
+  // requires eleven_turbo_v2_5 (which has broader language coverage incl. Swahili).
+  const MULTILINGUAL_V2_SUPPORTED = new Set([
+    'en','de','pl','es','it','fr','pt','hi','ar','zh','ja','ko','nl','tr',
+    'sv','id','fil','ms','ro','uk','el','cs','da','fi','bg','hr','sk','ta','ru',
+  ]);
+
   try {
-    const { text, voiceId } = await req.json();
+    const { text, voiceId, language } = await req.json();
 
     if (!text) {
       throw new Error('No text provided');
@@ -24,8 +31,14 @@ serve(async (req) => {
 
     // Use provided voiceId or default to "George" stock voice
     const selectedVoiceId = voiceId || 'JBFqnCBsd6RMkjVDRZzb';
-    
-    console.log('Generating voice with ElevenLabs, voice ID:', selectedVoiceId);
+
+    // eleven_multilingual_v2 doesn't support Swahili; use eleven_turbo_v2_5 for it
+    const langCode = language || 'en';
+    const modelId = MULTILINGUAL_V2_SUPPORTED.has(langCode)
+      ? 'eleven_multilingual_v2'
+      : 'eleven_turbo_v2_5';
+
+    console.log(`Generating voice – model: ${modelId}, language: ${langCode}, voice ID: ${selectedVoiceId}`);
 
     const response = await fetch(
       `https://api.elevenlabs.io/v1/text-to-speech/${selectedVoiceId}?output_format=mp3_44100_128`,
@@ -37,7 +50,8 @@ serve(async (req) => {
         },
         body: JSON.stringify({
           text,
-          model_id: 'eleven_multilingual_v2',
+          model_id: modelId,
+          language_code: langCode,
           voice_settings: {
             stability: 0.5,
             similarity_boost: 0.75,

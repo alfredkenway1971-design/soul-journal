@@ -81,7 +81,7 @@ export const useJournalAPI = (appLanguage?: AppLanguage) => {
     }
 
     const { data, error } = await supabase.functions.invoke('generate-voice', {
-      body: { text, voiceId: selectedVoiceId },
+      body: { text, voiceId: selectedVoiceId, language: appLanguage || 'en' },
     });
 
     if (error) throw new Error(error.message);
