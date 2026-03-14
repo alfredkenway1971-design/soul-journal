@@ -6,17 +6,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage, LANGUAGES } from "@/contexts/LanguageContext";
 import { lovable } from "@/integrations/lovable/index";
 import { z } from "zod";
 
-const emailSchema = z.string().email("Please enter a valid email address");
-const passwordSchema = z.string().min(6, "Password must be at least 6 characters");
+const AUTH_LANGUAGES = ["en", "fr", "es", "ar", "zh", "ja", "sw", "de"] as const;
 
 const AuthPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { signIn, signUp } = useAuth();
-  
+  const { language, setLanguage, t, dir } = useLanguage();
+
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -28,6 +29,9 @@ const AuthPage = () => {
 
   const validateForm = () => {
     const newErrors: { email?: string; password?: string } = {};
+    
+    const emailSchema = z.string().email(t("auth.validation.email"));
+    const passwordSchema = z.string().min(6, t("auth.validation.password"));
     
     const emailResult = emailSchema.safeParse(email);
     if (!emailResult.success) {
@@ -56,21 +60,21 @@ const AuthPage = () => {
         if (error) {
           if (error.message.includes("Invalid login credentials")) {
             toast({
-              title: "Login Failed",
-              description: "Invalid email or password. Please try again.",
+              title: t("auth.loginFailed"),
+              description: t("auth.invalidCredentials"),
               variant: "destructive",
             });
           } else {
             toast({
-              title: "Login Failed",
+              title: t("auth.loginFailed"),
               description: error.message,
               variant: "destructive",
             });
           }
         } else {
           toast({
-            title: "Welcome back! 👋",
-            description: "You've successfully logged in.",
+            title: t("auth.welcomeBackToast"),
+            description: t("auth.welcomeToastDescription"),
           });
           navigate("/");
         }
@@ -79,21 +83,21 @@ const AuthPage = () => {
         if (error) {
           if (error.message.includes("already registered")) {
             toast({
-              title: "Account Exists",
-              description: "This email is already registered. Please log in instead.",
+              title: t("auth.accountExists"),
+              description: t("auth.accountExists"),
               variant: "destructive",
             });
           } else {
             toast({
-              title: "Sign Up Failed",
+              title: t("auth.signUpFailed"),
               description: error.message,
               variant: "destructive",
             });
           }
         } else {
           toast({
-            title: "Account Created! 🎉",
-            description: "Welcome to your AI voice journal.",
+            title: t("auth.accountCreatedToast"),
+            description: t("auth.accountCreatedDescription"),
           });
           navigate("/");
         }
@@ -104,7 +108,7 @@ const AuthPage = () => {
   };
 
   return (
-    <div className="min-h-screen gradient-warm flex items-center justify-center px-4">
+    <div dir={dir} lang={language} className="min-h-screen gradient-warm flex items-center justify-center px-4">
       <motion.div
         className="w-full max-w-md"
         initial={{ opacity: 0, y: 20 }}
@@ -123,8 +127,28 @@ const AuthPage = () => {
             Voice Journal
           </h1>
           <p className="text-muted-foreground">
-            {isLogin ? "Welcome back! Sign in to continue" : "Create your account"}
+            {isLogin ? t("auth.welcomeBack") : t("auth.createAccount")}
           </p>
+
+          {/* Language Selector */}
+          <div className="flex items-center justify-center gap-2 mt-4 flex-wrap">
+            {LANGUAGES.filter((l) => AUTH_LANGUAGES.includes(l.code as any)).map((lang) => (
+              <motion.button
+                key={lang.code}
+                type="button"
+                onClick={() => setLanguage(lang.code)}
+                whileTap={{ scale: 0.9 }}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${
+                  language === lang.code
+                    ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                    : "bg-background/60 text-muted-foreground border-border/50 hover:border-primary/50 hover:text-foreground"
+                }`}
+              >
+                <span className="text-base leading-none">{lang.flag}</span>
+                <span>{lang.native}</span>
+              </motion.button>
+            ))}
+          </div>
         </div>
 
         {/* Auth Form */}
@@ -141,7 +165,7 @@ const AuthPage = () => {
                   <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <Input
                     type="text"
-                    placeholder="Your name"
+                    placeholder={t("auth.namePlaceholder")}
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
                     className="pl-12 h-14 rounded-2xl bg-background/50 border-border/50"
@@ -156,7 +180,7 @@ const AuthPage = () => {
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
                   type="email"
-                  placeholder="Email address"
+                    placeholder={t("auth.emailPlaceholder")}
                   value={email}
                   onChange={(e) => {
                     setEmail(e.target.value);
@@ -178,7 +202,7 @@ const AuthPage = () => {
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
                   type={showPassword ? "text" : "password"}
-                  placeholder="Password"
+                    placeholder={t("auth.passwordPlaceholder")}
                   value={password}
                   onChange={(e) => {
                     setPassword(e.target.value);
@@ -215,7 +239,7 @@ const AuthPage = () => {
                 />
               ) : (
                 <>
-                  {isLogin ? "Sign In" : "Create Account"}
+                   {isLogin ? t("auth.signIn") : t("auth.signUp")}
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </>
               )}
@@ -225,7 +249,7 @@ const AuthPage = () => {
           {/* Divider */}
           <div className="flex items-center gap-3 my-5">
             <div className="flex-1 h-px bg-border" />
-            <span className="text-xs text-muted-foreground">or</span>
+             <span className="text-xs text-muted-foreground">{t("common.or")}</span>
             <div className="flex-1 h-px bg-border" />
           </div>
 
@@ -239,8 +263,8 @@ const AuthPage = () => {
                 redirect_uri: window.location.origin,
               });
               if (error) {
-                toast({
-                  title: "Google Sign In Failed",
+                 toast({
+                  title: t("auth.googleSignInFailed"),
                   description: String(error),
                   variant: "destructive",
                 });
@@ -253,7 +277,7 @@ const AuthPage = () => {
               <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
               <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
             </svg>
-            Continue with Google
+             {t("auth.continueWithGoogle")}
           </Button>
 
           {/* Toggle Auth Mode */}
@@ -268,13 +292,13 @@ const AuthPage = () => {
             >
               {isLogin ? (
                 <>
-                  Don't have an account?{" "}
-                  <span className="text-primary font-medium">Sign up</span>
+                  {t("auth.noAccount")}{" "}
+                  <span className="text-primary font-medium">{t("auth.signUpLink")}</span>
                 </>
               ) : (
                 <>
-                  Already have an account?{" "}
-                  <span className="text-primary font-medium">Sign in</span>
+                  {t("auth.haveAccount")}{" "}
+                  <span className="text-primary font-medium">{t("auth.signInLink")}</span>
                 </>
               )}
             </button>
