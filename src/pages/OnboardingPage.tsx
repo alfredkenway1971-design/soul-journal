@@ -436,24 +436,27 @@ const OnboardingPage = () => {
           </p>
           <div className="grid grid-cols-2 gap-3 w-full max-w-sm">
             {LANGUAGES.map((lang) => (
-              <motion.button
-                key={lang.code}
-                className={`flex flex-col items-center gap-2 p-4 rounded-xl transition-all ${
-                  language === lang.code
-                    ? "glass-card-strong ring-2 ring-primary"
-                    : "glass-card hover:bg-muted/50"
-                }`}
-                onClick={() => setLanguage(lang.code)}
-                whileTap={{ scale: 0.95 }}
-              >
-                <span className="text-3xl">{lang.flag}</span>
-                <span className="text-sm font-medium">{lang.native}</span>
-                {language === lang.code && (
-                  <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}>
-                    <Check className="w-4 h-4 text-primary" />
-                  </motion.div>
-                )}
-              </motion.button>
+               <motion.button
+                 key={lang.code}
+                 className={`flex flex-col items-center gap-3 p-5 rounded-xl transition-all ${
+                   language === lang.code
+                     ? "glass-card-strong ring-2 ring-primary"
+                     : "glass-card hover:bg-muted/50"
+                 }`}
+                 onClick={() => setLanguage(lang.code)}
+                 whileTap={{ scale: 0.95 }}
+               >
+                 <span className="text-4xl">{lang.flag}</span>
+                 <div className="text-center">
+                   <span className="text-sm font-medium">{lang.native}</span>
+                   <span className="text-xs text-muted-foreground block">{lang.name}</span>
+                 </div>
+                 {language === lang.code && (
+                   <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}>
+                     <Check className="w-4 h-4 text-primary" />
+                   </motion.div>
+                 )}
+               </motion.button>
             ))}
           </div>
         </div>

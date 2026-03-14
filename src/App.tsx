@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-route
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import AuthPage from "@/pages/AuthPage";
+import ResetPasswordPage from "@/pages/ResetPasswordPage";
 import HomePage from "@/pages/HomePage";
 import RecordPage from "@/pages/RecordPage";
 import InsightsPage from "@/pages/InsightsPage";
@@ -107,6 +108,14 @@ const AppRoutes = () => {
         element={
           <PublicRoute>
             <AuthPage />
+          </PublicRoute>
+        }
+      />
+      <Route
+        path="/auth/reset-password"
+        element={
+          <PublicRoute>
+            <ResetPasswordPage />
           </PublicRoute>
         }
       />
