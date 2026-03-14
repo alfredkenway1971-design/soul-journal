@@ -42,16 +42,23 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const checkOnboarding = async () => {
       if (!user) return;
-      const { data } = await supabase
+      console.log("Checking onboarding status for user:", user.id);
+      const { data, error } = await supabase
         .from("profiles")
         .select("onboarding_completed")
         .eq("id", user.id)
         .single();
-      setNeedsOnboarding(!(data as any)?.onboarding_completed);
+      if (error) {
+        console.error("Error fetching onboarding status:", error);
+        return;
+      }
+      const completed = (data as { onboarding_completed: boolean })?.onboarding_completed;
+      console.log("Onboarding completed status:", completed);
+      setNeedsOnboarding(!completed);
       setOnboardingChecked(true);
     };
     if (user) checkOnboarding();
-  }, [user]);
+  }, [user, location.pathname]);
   
   if (loading || (user && !onboardingChecked)) {
     return (

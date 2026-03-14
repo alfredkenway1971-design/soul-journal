@@ -13,6 +13,16 @@ import { useLanguage, LANGUAGES } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
+interface SoulProfile {
+  strengths?: string[];
+  fears?: string[];
+  summary?: string;
+  personality_type?: string;
+  weaknesses?: string[];
+  growth_areas?: string[];
+  [key: string]: unknown;
+}
+
 const ONBOARDING_QUESTIONS = [
   {
     id: "identity",
@@ -98,7 +108,7 @@ const OnboardingPage = () => {
 
   // Worldview & analysis
   const [worldview, setWorldview] = useState<string | null>(null);
-  const [soulProfile, setSoulProfile] = useState<any>(null);
+  const [soulProfile, setSoulProfile] = useState<SoulProfile | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
 
   const totalSteps = 10; // 0=lang, 1-6=questions, 7=worldview, 8=analyzing, 9=results
@@ -226,7 +236,7 @@ const OnboardingPage = () => {
       if (error) throw new Error(error.message);
       if (data.error) throw new Error(data.error);
 
-      setSoulProfile(data.profile);
+      setSoulProfile(data.profile as SoulProfile);
       setDirection(1);
       setStep(9); // show results
     } catch (error) {
@@ -255,14 +265,16 @@ const OnboardingPage = () => {
           worldview,
           soul_profile_summary: soulProfile,
           onboarding_completed: true,
-        } as any)
+        } as any) // eslint-disable-line @typescript-eslint/no-explicit-any
         .eq("id", user.id);
 
       if (error) throw error;
 
+      console.log("Onboarding completed: profile updated successfully");
       toast({ title: "Welcome aboard! 🎉", description: "Your Soul Profile is ready." });
       navigate("/", { replace: true });
     } catch (err) {
+      console.error("Failed to update profile:", err);
       toast({ title: "Error", description: "Could not save profile.", variant: "destructive" });
     } finally {
       setSaving(false);
@@ -273,13 +285,20 @@ const OnboardingPage = () => {
     if (!user) return;
     setSaving(true);
     try {
-      await supabase
+      const { error } = await supabase
         .from("profiles")
-        .update({ onboarding_completed: true } as any)
+        .update({ onboarding_completed: true } as any) // eslint-disable-line @typescript-eslint/no-explicit-any
         .eq("id", user.id);
+      if (error) {
+        console.error("Failed to skip onboarding:", error);
+        toast({ title: "Error", description: "Could not skip onboarding. Please try again.", variant: "destructive" });
+        return;
+      }
+      console.log("Onboarding skipped: onboarding_completed set to true");
       navigate("/", { replace: true });
-    } catch {
-      navigate("/", { replace: true });
+    } catch (err) {
+      console.error("Error skipping onboarding:", err);
+      toast({ title: "Error", description: "Could not skip onboarding. Please try again.", variant: "destructive" });
     } finally {
       setSaving(false);
     }
