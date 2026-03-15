@@ -271,6 +271,37 @@ const OnboardingPage = () => {
       if (error) throw error;
 
       console.log("Onboarding completed: profile updated successfully");
+      
+      // Verify the update by fetching the profile and checking onboarding_completed
+      let verified = false;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        await new Promise(resolve => setTimeout(resolve, 500)); // wait a bit
+        const { data, error: fetchError } = await supabase
+          .from("profiles")
+          .select("onboarding_completed")
+          .eq("id", user.id)
+          .single();
+        
+        if (fetchError) {
+          console.warn("Failed to verify onboarding status:", fetchError);
+          continue;
+        }
+        
+        if (data?.onboarding_completed === true) {
+          verified = true;
+          break;
+        }
+      }
+      
+      if (!verified) {
+        console.warn("Onboarding status not verified, but proceeding anyway");
+      }
+      
+      try {
+        sessionStorage.setItem(`onboarding_completed_${user.id}`, 'true');
+      } catch (err) {
+        console.warn('Failed to set session storage:', err);
+      }
       toast({ title: "Welcome aboard! 🎉", description: "Your Soul Profile is ready." });
       navigate("/", { replace: true });
     } catch (err) {
@@ -295,6 +326,37 @@ const OnboardingPage = () => {
         return;
       }
       console.log("Onboarding skipped: onboarding_completed set to true");
+      
+      // Verify the update by fetching the profile and checking onboarding_completed
+      let verified = false;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        await new Promise(resolve => setTimeout(resolve, 500)); // wait a bit
+        const { data, error: fetchError } = await supabase
+          .from("profiles")
+          .select("onboarding_completed")
+          .eq("id", user.id)
+          .single();
+        
+        if (fetchError) {
+          console.warn("Failed to verify onboarding status:", fetchError);
+          continue;
+        }
+        
+        if (data?.onboarding_completed === true) {
+          verified = true;
+          break;
+        }
+      }
+      
+      if (!verified) {
+        console.warn("Onboarding status not verified, but proceeding anyway");
+      }
+      
+      try {
+        sessionStorage.setItem(`onboarding_completed_${user.id}`, 'true');
+      } catch (err) {
+        console.warn('Failed to set session storage:', err);
+      }
       navigate("/", { replace: true });
     } catch (err) {
       console.error("Error skipping onboarding:", err);

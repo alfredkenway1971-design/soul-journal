@@ -44,6 +44,23 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const checkOnboarding = async () => {
       if (!user) return;
+      
+      // Check session storage first to avoid race conditions
+      let sessionCompleted = null;
+      let sessionKey = '';
+      try {
+        sessionKey = `onboarding_completed_${user.id}`;
+        sessionCompleted = sessionStorage.getItem(sessionKey);
+        if (sessionCompleted === 'true') {
+          console.log("Onboarding completed (session storage)");
+          setNeedsOnboarding(false);
+          setOnboardingChecked(true);
+          // Still fetch in background to ensure consistency
+        }
+      } catch (err) {
+        console.warn("Failed to access session storage:", err);
+      }
+      
       console.log("Checking onboarding status for user:", user.id);
       const { data, error } = await supabase
         .from("profiles")
@@ -56,6 +73,17 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
       }
       const completed = (data as { onboarding_completed: boolean })?.onboarding_completed;
       console.log("Onboarding completed status:", completed);
+      
+      // If session storage says completed but database says not, trust database
+      if (sessionCompleted === 'true' && completed === false) {
+        console.warn("Session storage says completed but database says not, clearing session storage");
+        try {
+          sessionStorage.removeItem(sessionKey);
+        } catch (err) {
+          console.warn("Failed to clear session storage:", err);
+        }
+      }
+      
       setNeedsOnboarding(!completed);
       setOnboardingChecked(true);
     };
