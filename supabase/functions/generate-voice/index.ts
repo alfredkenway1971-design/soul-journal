@@ -11,7 +11,7 @@ serve(async (req) => {
   }
 
   try {
-    const { text, voiceId } = await req.json();
+    const { text, voiceId, language } = await req.json();
 
     if (!text) {
       throw new Error('No text provided');
@@ -25,7 +25,20 @@ serve(async (req) => {
     // Use provided voiceId or default to "George" stock voice
     const selectedVoiceId = voiceId || 'JBFqnCBsd6RMkjVDRZzb';
     
-    console.log('Generating voice with ElevenLabs, voice ID:', selectedVoiceId);
+    // Map app language codes to ElevenLabs ISO 639-1 codes
+    const languageMap: Record<string, string> = {
+      en: 'en',
+      fr: 'fr',
+      es: 'es',
+      ar: 'ar',
+      zh: 'zh',
+      ja: 'ja',
+      sw: 'sw',
+      de: 'de',
+    };
+    const languageCode = language ? languageMap[language] : undefined;
+    
+    console.log('Generating voice with ElevenLabs, voice ID:', selectedVoiceId, language ? `language: ${languageCode}` : '');
 
     const response = await fetch(
       `https://api.elevenlabs.io/v1/text-to-speech/${selectedVoiceId}?output_format=mp3_44100_128`,
@@ -38,6 +51,7 @@ serve(async (req) => {
         body: JSON.stringify({
           text,
           model_id: 'eleven_multilingual_v2',
+          ...(languageCode && { language_code: languageCode }),
           voice_settings: {
             stability: 0.5,
             similarity_boost: 0.75,

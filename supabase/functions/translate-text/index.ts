@@ -21,6 +21,7 @@ const languageNames: Record<string, string> = {
   ar: 'Arabic',
   hi: 'Hindi',
   ru: 'Russian',
+  sw: 'Swahili',
 };
 
 serve(async (req) => {

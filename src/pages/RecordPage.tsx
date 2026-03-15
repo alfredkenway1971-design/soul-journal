@@ -252,7 +252,7 @@ const RecordPage = () => {
       if (selectedLanguage !== 'en') {
         textForVoice = await api.translateText(enhancedText, selectedLanguage);
       }
-      const audioUrl = await api.generateVoice(textForVoice);
+      const audioUrl = await api.generateVoice(textForVoice, undefined, selectedLanguage);
       setGeneratedAudioUrl(audioUrl);
       toast({
         title: "Voice Generated! 🎙️",
