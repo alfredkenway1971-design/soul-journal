@@ -144,27 +144,46 @@ const AuthPage = () => {
         const redirectTo = `${window.location.origin}/auth/callback`;
         console.log("Google sign-in redirect URL:", redirectTo);
         
-        // Try Supabase OAuth directly
-        const { error } = await supabase.auth.signInWithOAuth({
-          provider: 'google',
-          options: {
-            redirectTo,
-            skipBrowserRedirect: false,
-          },
+        // Try Lovable OAuth first (for mobile/Capacitor apps)
+        const result = await lovable.auth.signInWithOAuth("google", {
+          redirect_uri: redirectTo,
         });
         
-        if (error) {
-          let errorMessage = error.message || String(error);
-          console.error("Google sign-in error:", error);
-          // Provide more user-friendly messages for common OAuth errors
-          if (errorMessage.includes("OAuth") || errorMessage.includes("configuration") || errorMessage.includes("provider")) {
-            errorMessage = t("auth.googleSignInFailed") + ": " + "Google OAuth might not be properly configured. Please contact support.";
-          }
-          toast({
-            title: t("auth.googleSignInFailed"),
-            description: errorMessage,
-            variant: "destructive",
+        if (result.redirected) {
+          console.log("Lovable OAuth redirected successfully");
+          return; // Let the redirect happen
+        }
+        
+        if (result.error) {
+          console.error("Lovable Google sign-in error:", result.error);
+          // Fallback to Supabase OAuth for web
+          const { error } = await supabase.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+              redirectTo,
+              skipBrowserRedirect: false,
+            },
           });
+          
+          if (error) {
+            let errorMessage = error.message || String(error);
+            console.error("Supabase Google sign-in error:", error);
+            // Provide more user-friendly messages for common OAuth errors
+            if (errorMessage.includes("Unsupported provider") || errorMessage.includes("missing OAuth secret")) {
+              errorMessage = t("auth.googleSignInFailed") + ": " + "Google OAuth is not properly configured in Supabase. Please ensure Google OAuth is enabled with correct Client ID and Secret in the Supabase dashboard > Authentication > Providers.";
+            } else if (errorMessage.includes("OAuth") || errorMessage.includes("configuration") || errorMessage.includes("provider")) {
+              errorMessage = t("auth.googleSignInFailed") + ": " + "Google OAuth might not be properly configured. Please check Supabase Authentication settings.";
+            }
+            toast({
+              title: t("auth.googleSignInFailed"),
+              description: errorMessage,
+              variant: "destructive",
+            });
+          }
+        } else {
+          // Lovable OAuth succeeded without error or redirect (session was set)
+          console.log("Lovable OAuth succeeded, session set");
+          navigate("/");
         }
       } finally {
         setIsLoading(false);
