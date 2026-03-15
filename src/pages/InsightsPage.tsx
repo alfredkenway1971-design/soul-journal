@@ -320,7 +320,9 @@ const InsightsPage = () => {
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.5 + index * 0.1 }}
                     >
-                      <span className="text-2xl">{lang.flag}</span>
+                        <div className="flex items-center justify-center w-9 h-9 rounded-full bg-background/20">
+                          <span className="text-xl">{lang.flag}</span>
+                        </div>
                       <span className="flex-1 text-sm font-medium">{lang.name}</span>
                       <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
                         <motion.div

@@ -9,6 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import AppLanguageSwitcher from "@/components/AppLanguageSwitcher";
 import { lovable } from "@/integrations/lovable/index";
+import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
 
 
@@ -140,11 +141,21 @@ const AuthPage = () => {
     const handleGoogleSignIn = async () => {
       setIsLoading(true);
       try {
-        const { error } = await lovable.auth.signInWithOAuth("google", {
-          redirect_uri: window.location.origin,
+        const redirectTo = `${window.location.origin}/auth/callback`;
+        console.log("Google sign-in redirect URL:", redirectTo);
+        
+        // Try Supabase OAuth directly
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo,
+            skipBrowserRedirect: false,
+          },
         });
+        
         if (error) {
           let errorMessage = error.message || String(error);
+          console.error("Google sign-in error:", error);
           // Provide more user-friendly messages for common OAuth errors
           if (errorMessage.includes("OAuth") || errorMessage.includes("configuration") || errorMessage.includes("provider")) {
             errorMessage = t("auth.googleSignInFailed") + ": " + "Google OAuth might not be properly configured. Please contact support.";

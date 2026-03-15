@@ -40,11 +40,13 @@ const LanguageSelector = ({ selected, onSelect }: LanguageSelectorProps) => {
               transition={{ delay: index * 0.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <span className="text-2xl">{lang.flag}</span>
-              <div className="text-left">
-                <span className="text-sm font-medium">{lang.native}</span>
-                <span className="text-xs text-muted-foreground block">{lang.name}</span>
-              </div>
+               <div className="flex items-center justify-center w-9 h-9 rounded-full bg-background/20">
+                 <span className="text-xl">{lang.flag}</span>
+               </div>
+               <div className="text-left">
+                 <span className="text-sm font-medium">{lang.native}</span>
+                 <span className="text-xs text-muted-foreground block">{lang.name}</span>
+               </div>
               {selected === lang.code && (
                 <motion.div
                   initial={{ scale: 0 }}

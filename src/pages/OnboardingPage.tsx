@@ -446,7 +446,9 @@ const OnboardingPage = () => {
                  onClick={() => setLanguage(lang.code)}
                  whileTap={{ scale: 0.95 }}
                >
-                 <span className="text-4xl">{lang.flag}</span>
+                  <div className="flex items-center justify-center w-12 h-12 rounded-full bg-background/20">
+                    <span className="text-3xl">{lang.flag}</span>
+                  </div>
                  <div className="text-center">
                    <span className="text-sm font-medium">{lang.native}</span>
                    <span className="text-xs text-muted-foreground block">{lang.name}</span>
