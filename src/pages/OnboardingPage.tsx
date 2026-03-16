@@ -249,14 +249,14 @@ const OnboardingPage = () => {
     try {
       const { error } = await supabase
         .from("profiles")
-        .upsert({
-          id: user.id,
+        .update({
           strengths: soulProfile.strengths || [],
           fears: soulProfile.fears || [],
           worldview,
           soul_profile_summary: soulProfile,
           onboarding_completed: true,
-        });
+        } as any)
+        .eq("id", user.id);
 
       if (error) throw error;
 
@@ -275,7 +275,8 @@ const OnboardingPage = () => {
     try {
       await supabase
         .from("profiles")
-        .upsert({ id: user.id, onboarding_completed: true });
+        .update({ onboarding_completed: true } as any)
+        .eq("id", user.id);
       navigate("/", { replace: true });
     } catch {
       navigate("/", { replace: true });
