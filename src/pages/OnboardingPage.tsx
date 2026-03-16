@@ -13,16 +13,6 @@ import { useLanguage, LANGUAGES } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
-interface SoulProfile {
-  strengths?: string[];
-  fears?: string[];
-  summary?: string;
-  personality_type?: string;
-  weaknesses?: string[];
-  growth_areas?: string[];
-  [key: string]: unknown;
-}
-
 const ONBOARDING_QUESTIONS = [
   {
     id: "identity",
@@ -108,7 +98,7 @@ const OnboardingPage = () => {
 
   // Worldview & analysis
   const [worldview, setWorldview] = useState<string | null>(null);
-  const [soulProfile, setSoulProfile] = useState<SoulProfile | null>(null);
+  const [soulProfile, setSoulProfile] = useState<any>(null);
   const [analyzing, setAnalyzing] = useState(false);
 
   const totalSteps = 10; // 0=lang, 1-6=questions, 7=worldview, 8=analyzing, 9=results
@@ -236,7 +226,7 @@ const OnboardingPage = () => {
       if (error) throw new Error(error.message);
       if (data.error) throw new Error(data.error);
 
-      setSoulProfile(data.profile as SoulProfile);
+      setSoulProfile(data.profile);
       setDirection(1);
       setStep(9); // show results
     } catch (error) {
@@ -259,53 +249,20 @@ const OnboardingPage = () => {
     try {
       const { error } = await supabase
         .from("profiles")
-        .update({
+        .upsert({
+          id: user.id,
           strengths: soulProfile.strengths || [],
           fears: soulProfile.fears || [],
           worldview,
           soul_profile_summary: soulProfile,
           onboarding_completed: true,
-        } as any) // eslint-disable-line @typescript-eslint/no-explicit-any
-        .eq("id", user.id);
+        });
 
       if (error) throw error;
 
-      console.log("Onboarding completed: profile updated successfully");
-      
-      // Verify the update by fetching the profile and checking onboarding_completed
-      let verified = false;
-      for (let attempt = 0; attempt < 3; attempt++) {
-        await new Promise(resolve => setTimeout(resolve, 500)); // wait a bit
-        const { data, error: fetchError } = await supabase
-          .from("profiles")
-          .select("onboarding_completed")
-          .eq("id", user.id)
-          .single();
-        
-        if (fetchError) {
-          console.warn("Failed to verify onboarding status:", fetchError);
-          continue;
-        }
-        
-        if (data?.onboarding_completed === true) {
-          verified = true;
-          break;
-        }
-      }
-      
-      if (!verified) {
-        console.warn("Onboarding status not verified, but proceeding anyway");
-      }
-      
-      try {
-        sessionStorage.setItem(`onboarding_completed_${user.id}`, 'true');
-      } catch (err) {
-        console.warn('Failed to set session storage:', err);
-      }
       toast({ title: "Welcome aboard! 🎉", description: "Your Soul Profile is ready." });
       navigate("/", { replace: true });
     } catch (err) {
-      console.error("Failed to update profile:", err);
       toast({ title: "Error", description: "Could not save profile.", variant: "destructive" });
     } finally {
       setSaving(false);
@@ -316,51 +273,12 @@ const OnboardingPage = () => {
     if (!user) return;
     setSaving(true);
     try {
-      const { error } = await supabase
+      await supabase
         .from("profiles")
-        .update({ onboarding_completed: true } as any) // eslint-disable-line @typescript-eslint/no-explicit-any
-        .eq("id", user.id);
-      if (error) {
-        console.error("Failed to skip onboarding:", error);
-        toast({ title: "Error", description: "Could not skip onboarding. Please try again.", variant: "destructive" });
-        return;
-      }
-      console.log("Onboarding skipped: onboarding_completed set to true");
-      
-      // Verify the update by fetching the profile and checking onboarding_completed
-      let verified = false;
-      for (let attempt = 0; attempt < 3; attempt++) {
-        await new Promise(resolve => setTimeout(resolve, 500)); // wait a bit
-        const { data, error: fetchError } = await supabase
-          .from("profiles")
-          .select("onboarding_completed")
-          .eq("id", user.id)
-          .single();
-        
-        if (fetchError) {
-          console.warn("Failed to verify onboarding status:", fetchError);
-          continue;
-        }
-        
-        if (data?.onboarding_completed === true) {
-          verified = true;
-          break;
-        }
-      }
-      
-      if (!verified) {
-        console.warn("Onboarding status not verified, but proceeding anyway");
-      }
-      
-      try {
-        sessionStorage.setItem(`onboarding_completed_${user.id}`, 'true');
-      } catch (err) {
-        console.warn('Failed to set session storage:', err);
-      }
+        .upsert({ id: user.id, onboarding_completed: true });
       navigate("/", { replace: true });
-    } catch (err) {
-      console.error("Error skipping onboarding:", err);
-      toast({ title: "Error", description: "Could not skip onboarding. Please try again.", variant: "destructive" });
+    } catch {
+      navigate("/", { replace: true });
     } finally {
       setSaving(false);
     }
@@ -498,29 +416,24 @@ const OnboardingPage = () => {
           </p>
           <div className="grid grid-cols-2 gap-3 w-full max-w-sm">
             {LANGUAGES.map((lang) => (
-               <motion.button
-                 key={lang.code}
-                 className={`flex flex-col items-center gap-3 p-5 rounded-xl transition-all ${
-                   language === lang.code
-                     ? "glass-card-strong ring-2 ring-primary"
-                     : "glass-card hover:bg-muted/50"
-                 }`}
-                 onClick={() => setLanguage(lang.code)}
-                 whileTap={{ scale: 0.95 }}
-               >
-                  <div className="flex items-center justify-center w-12 h-12 rounded-full bg-background/20">
-                    <span className="text-3xl">{lang.flag}</span>
-                  </div>
-                 <div className="text-center">
-                   <span className="text-sm font-medium">{lang.native}</span>
-                   <span className="text-xs text-muted-foreground block">{lang.name}</span>
-                 </div>
-                 {language === lang.code && (
-                   <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}>
-                     <Check className="w-4 h-4 text-primary" />
-                   </motion.div>
-                 )}
-               </motion.button>
+              <motion.button
+                key={lang.code}
+                className={`flex flex-col items-center gap-2 p-4 rounded-xl transition-all ${
+                  language === lang.code
+                    ? "glass-card-strong ring-2 ring-primary"
+                    : "glass-card hover:bg-muted/50"
+                }`}
+                onClick={() => setLanguage(lang.code)}
+                whileTap={{ scale: 0.95 }}
+              >
+                <span className="text-3xl">{lang.flag}</span>
+                <span className="text-sm font-medium">{lang.native}</span>
+                {language === lang.code && (
+                  <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}>
+                    <Check className="w-4 h-4 text-primary" />
+                  </motion.div>
+                )}
+              </motion.button>
             ))}
           </div>
         </div>

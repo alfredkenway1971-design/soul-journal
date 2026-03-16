@@ -27,13 +27,15 @@ interface LanguageCount {
 
 const languageInfo: Record<string, { flag: string; name: string }> = {
   en: { flag: "🇺🇸", name: "English" },
-  fr: { flag: "🇫🇷", name: "French" },
   es: { flag: "🇪🇸", name: "Spanish" },
-  ar: { flag: "🇸🇦", name: "Arabic" },
-  zh: { flag: "🇨🇳", name: "Chinese" },
-  ja: { flag: "🇯🇵", name: "Japanese" },
-  sw: { flag: "🇰🇪", name: "Swahili" },
+  fr: { flag: "🇫🇷", name: "French" },
   de: { flag: "🇩🇪", name: "German" },
+  it: { flag: "🇮🇹", name: "Italian" },
+  pt: { flag: "🇵🇹", name: "Portuguese" },
+  ja: { flag: "🇯🇵", name: "Japanese" },
+  ko: { flag: "🇰🇷", name: "Korean" },
+  zh: { flag: "🇨🇳", name: "Chinese" },
+  sw: { flag: "🇰🇪", name: "Kiswahili" },
 };
 
 const InsightsPage = () => {
@@ -320,9 +322,7 @@ const InsightsPage = () => {
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.5 + index * 0.1 }}
                     >
-                        <div className="flex items-center justify-center w-9 h-9 rounded-full bg-background/20">
-                          <span className="text-xl">{lang.flag}</span>
-                        </div>
+                      <span className="text-xl">{lang.flag}</span>
                       <span className="flex-1 text-sm font-medium">{lang.name}</span>
                       <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
                         <motion.div

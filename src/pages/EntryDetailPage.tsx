@@ -175,7 +175,7 @@ const EntryDetailPage = () => {
         textForVoice = await api.translateText(entry.enhanced_text, entry.playback_language);
       }
       
-      const audioUrl = await api.generateVoice(textForVoice, undefined, entry.playback_language);
+      const audioUrl = await api.generateVoice(textForVoice);
       setGeneratedAudioUrl(audioUrl);
     } catch (error) {
       console.error('Error generating voice:', error);
@@ -200,7 +200,7 @@ const EntryDetailPage = () => {
   const handleGenerateVoiceForText = async (text: string) => {
     setIsGeneratingVoice(true);
     try {
-      const audioUrl = await api.generateVoice(text, undefined, language);
+      const audioUrl = await api.generateVoice(text);
       setGeneratedAudioUrl(audioUrl);
       setTimeout(() => {
         if (audioRef.current) {

@@ -7,8 +7,6 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-route
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import AuthPage from "@/pages/AuthPage";
-import ResetPasswordPage from "@/pages/ResetPasswordPage";
-import AuthCallbackPage from "@/pages/AuthCallbackPage";
 import HomePage from "@/pages/HomePage";
 import RecordPage from "@/pages/RecordPage";
 import InsightsPage from "@/pages/InsightsPage";
@@ -44,51 +42,16 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const checkOnboarding = async () => {
       if (!user) return;
-      
-      // Check session storage first to avoid race conditions
-      let sessionCompleted = null;
-      let sessionKey = '';
-      try {
-        sessionKey = `onboarding_completed_${user.id}`;
-        sessionCompleted = sessionStorage.getItem(sessionKey);
-        if (sessionCompleted === 'true') {
-          console.log("Onboarding completed (session storage)");
-          setNeedsOnboarding(false);
-          setOnboardingChecked(true);
-          // Still fetch in background to ensure consistency
-        }
-      } catch (err) {
-        console.warn("Failed to access session storage:", err);
-      }
-      
-      console.log("Checking onboarding status for user:", user.id);
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from("profiles")
         .select("onboarding_completed")
         .eq("id", user.id)
         .single();
-      if (error) {
-        console.error("Error fetching onboarding status:", error);
-        return;
-      }
-      const completed = (data as { onboarding_completed: boolean })?.onboarding_completed;
-      console.log("Onboarding completed status:", completed);
-      
-      // If session storage says completed but database says not, trust database
-      if (sessionCompleted === 'true' && completed === false) {
-        console.warn("Session storage says completed but database says not, clearing session storage");
-        try {
-          sessionStorage.removeItem(sessionKey);
-        } catch (err) {
-          console.warn("Failed to clear session storage:", err);
-        }
-      }
-      
-      setNeedsOnboarding(!completed);
+      setNeedsOnboarding(!(data as any)?.onboarding_completed);
       setOnboardingChecked(true);
     };
     if (user) checkOnboarding();
-  }, [user, location.pathname]);
+  }, [user]);
   
   if (loading || (user && !onboardingChecked)) {
     return (
@@ -137,22 +100,6 @@ const AppRoutes = () => {
         element={
           <PublicRoute>
             <AuthPage />
-          </PublicRoute>
-        }
-      />
-      <Route
-        path="/auth/reset-password"
-        element={
-          <PublicRoute>
-            <ResetPasswordPage />
-          </PublicRoute>
-        }
-      />
-      <Route
-        path="/auth/callback"
-        element={
-          <PublicRoute>
-            <AuthCallbackPage />
           </PublicRoute>
         }
       />

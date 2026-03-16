@@ -63,7 +63,7 @@ export const useJournalAPI = (appLanguage?: AppLanguage) => {
     return data.translatedText;
   };
 
-  const generateVoice = async (text: string, voiceId?: string, language?: string): Promise<string> => {
+  const generateVoice = async (text: string, voiceId?: string): Promise<string> => {
     // Fetch user's voice clone ID if not provided
     let selectedVoiceId = voiceId;
     if (!selectedVoiceId) {
@@ -81,7 +81,7 @@ export const useJournalAPI = (appLanguage?: AppLanguage) => {
     }
 
     const { data, error } = await supabase.functions.invoke('generate-voice', {
-      body: { text, voiceId: selectedVoiceId, language },
+      body: { text, voiceId: selectedVoiceId, language: appLanguage || 'en' },
     });
 
     if (error) throw new Error(error.message);
