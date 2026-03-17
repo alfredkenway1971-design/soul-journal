@@ -11,10 +11,18 @@ serve(async (req) => {
   }
 
   try {
-    const { text, voiceId } = await req.json();
+    const { text, voiceId, language = 'en' } = await req.json();
 
     if (!text) {
       throw new Error('No text provided');
+    }
+
+    // Truncate text to reduce credit usage
+    const maxLength = 1000;
+    let processedText = text;
+    if (text.length > maxLength) {
+      console.log(`Text truncated from ${text.length} to ${maxLength} characters to reduce credit usage`);
+      processedText = text.substring(0, maxLength) + '...';
     }
 
     const elevenLabsApiKey = Deno.env.get('ELEVENLABS_API_KEY');
@@ -27,8 +35,15 @@ serve(async (req) => {
     
     console.log('Generating voice with ElevenLabs, voice ID:', selectedVoiceId);
 
+    // Select model based on language (monolingual is cheaper for English)
+    const modelId = language.startsWith('en') ? 'eleven_monolingual_v1' : 'eleven_multilingual_v2';
+    // Use lower quality output format to reduce credit usage
+    const outputFormat = 'mp3_22050_32';
+    
+    console.log(`Using model: ${modelId}, output format: ${outputFormat}, text length: ${processedText.length}`);
+
     const response = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${selectedVoiceId}?output_format=mp3_44100_128`,
+      `https://api.elevenlabs.io/v1/text-to-speech/${selectedVoiceId}?output_format=${outputFormat}`,
       {
         method: 'POST',
         headers: {
@@ -36,8 +51,8 @@ serve(async (req) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          text,
-          model_id: 'eleven_multilingual_v2',
+          text: processedText,
+          model_id: modelId,
           voice_settings: {
             stability: 0.5,
             similarity_boost: 0.75,
@@ -51,6 +66,16 @@ serve(async (req) => {
     if (!response.ok) {
       const errorText = await response.text();
       console.error('ElevenLabs API error:', errorText);
+      
+      try {
+        const errorJson = JSON.parse(errorText);
+        if (errorJson.detail?.status === 'quota_exceeded') {
+          throw new Error(`ElevenLabs quota exceeded: ${errorJson.detail.message}. Please upgrade your ElevenLabs plan or use a different API key.`);
+        }
+      } catch (parseError) {
+        // If parsing fails, continue with original error
+      }
+      
       throw new Error(`ElevenLabs API error: ${errorText}`);
     }
 
