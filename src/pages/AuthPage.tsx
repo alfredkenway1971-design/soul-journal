@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { LANGUAGES, useLanguage } from "@/contexts/LanguageContext";
 import { lovable } from "@/integrations/lovable/index";
 import { z } from "zod";
 
@@ -16,6 +17,7 @@ const AuthPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { signIn, signUp } = useAuth();
+  const { language, setLanguage, t } = useLanguage();
   
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
@@ -110,6 +112,29 @@ const AuthPage = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
       >
+        <div className="glass-card rounded-3xl p-4 mb-5">
+          <p className="text-center text-xs font-medium uppercase tracking-[0.24em] text-muted-foreground mb-3">
+            {t("common.language")}
+          </p>
+          <div className="grid grid-cols-4 gap-2">
+            {LANGUAGES.map((lang) => (
+              <button
+                key={lang.code}
+                type="button"
+                onClick={() => setLanguage(lang.code)}
+                className={`rounded-2xl border px-2 py-3 text-center transition-colors ${
+                  language === lang.code
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-border/50 bg-background/50 text-foreground hover:bg-muted"
+                }`}
+              >
+                <span className="block text-lg">{lang.flag}</span>
+                <span className="mt-1 block text-[11px] font-medium leading-tight">{lang.native}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Logo & Title */}
         <div className="text-center mb-8">
           <motion.div

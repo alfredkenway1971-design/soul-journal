@@ -16,14 +16,14 @@ const ProfileSettingsPage = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   
-  const [displayName, setDisplayName] = useState("Alex Morgan");
+  const [displayName, setDisplayName] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   
   const [manifesto, setManifesto] = useState('"To live with intention, embrace the chaos, and find stillness in the motion."');
   const [isEditingManifesto, setIsEditingManifesto] = useState(false);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ streak: 0, entries: 0, topMood: "happy" as Mood });
-  const [interests, setInterests] = useState<string[]>(["Mindfulness", "Marathon Prep", "Digital Art"]);
+  const [interests, setInterests] = useState<string[]>([]);
 
   const interestEmojis: Record<string, string> = {
     "Mindfulness": "🌿",
@@ -116,7 +116,7 @@ const ProfileSettingsPage = () => {
     });
   };
 
-  const firstName = displayName.split(' ')[0];
+  const resolvedDisplayName = displayName.trim() || user?.user_metadata?.display_name || user?.email?.split('@')[0] || "Journal User";
 
   if (loading) {
     return (
@@ -165,12 +165,12 @@ const ProfileSettingsPage = () => {
               <AvatarUpload
                 userId={user.id}
                 currentAvatarUrl={avatarUrl}
-                displayName={displayName}
+                  displayName={resolvedDisplayName}
                 onAvatarChange={setAvatarUrl}
               />
             )}
           </div>
-          <h1 className="text-2xl font-display font-semibold text-foreground">{displayName}</h1>
+          <h1 className="text-2xl font-display font-semibold text-foreground">{resolvedDisplayName}</h1>
           
         </motion.div>
 
