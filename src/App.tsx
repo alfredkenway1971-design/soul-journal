@@ -51,7 +51,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
       setOnboardingChecked(true);
     };
     if (user) checkOnboarding();
-  }, [user]);
+  }, [user, location.pathname]);
   
   if (loading || (user && !onboardingChecked)) {
     return (
@@ -69,6 +69,11 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const allowedPaths = ["/onboarding", "/settings/voice"];
   if (needsOnboarding && !allowedPaths.includes(location.pathname)) {
     return <Navigate to="/onboarding" replace />;
+  }
+
+  // If onboarding is completed, block access to /onboarding and redirect to home
+  if (!needsOnboarding && location.pathname === "/onboarding") {
+    return <Navigate to="/" replace />;
   }
   
   return <>{children}</>;

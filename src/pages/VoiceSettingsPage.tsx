@@ -28,7 +28,7 @@ const VoiceSettingsPage = () => {
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const MIN_RECORDING_TIME = 30; // ElevenLabs needs ~30 seconds minimum
