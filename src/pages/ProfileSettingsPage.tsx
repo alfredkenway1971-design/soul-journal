@@ -193,8 +193,28 @@ const ProfileSettingsPage = () => {
               />
             )}
           </div>
-          <h1 className="text-2xl font-display font-semibold text-foreground">{resolvedDisplayName}</h1>
-          
+          {isEditingName ? (
+            <div className="flex items-center gap-2 mt-1">
+              <Input
+                value={editedName}
+                onChange={(e) => setEditedName(e.target.value)}
+                className="h-10 text-center text-lg font-semibold rounded-xl max-w-[200px]"
+                autoFocus
+                onKeyDown={(e) => e.key === "Enter" && handleSaveDisplayName()}
+              />
+              <Button size="icon" variant="ghost" className="rounded-full w-8 h-8" onClick={handleSaveDisplayName}>
+                <Check className="w-4 h-4 text-primary" />
+              </Button>
+              <Button size="icon" variant="ghost" className="rounded-full w-8 h-8" onClick={() => setIsEditingName(false)}>
+                <X className="w-4 h-4 text-muted-foreground" />
+              </Button>
+            </div>
+          ) : (
+            <button className="flex items-center gap-2 group" onClick={startEditingName}>
+              <h1 className="text-2xl font-display font-semibold text-foreground">{resolvedDisplayName}</h1>
+              <Pencil className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+            </button>
+          )}
         </motion.div>
 
         {/* Stats */}
