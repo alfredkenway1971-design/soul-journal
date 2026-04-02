@@ -34,10 +34,11 @@ const shouldBypass = (requestUrl) => {
 
   return (
     path.startsWith("/~oauth") ||
-    path.startsWith("/auth") ||
+    path.startsWith("/auth/v1") ||
     path.startsWith("/rest") ||
     path.startsWith("/storage") ||
-    path.startsWith("/functions")
+    path.startsWith("/functions") ||
+    requestUrl.hostname.includes("supabase.co")
   );
 };
 
