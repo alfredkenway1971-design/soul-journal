@@ -119,6 +119,26 @@ const ProfileSettingsPage = () => {
     });
   };
 
+  const handleSaveDisplayName = async () => {
+    if (!user || !editedName.trim()) return;
+    try {
+      await supabase
+        .from('profiles')
+        .update({ display_name: editedName.trim() })
+        .eq('id', user.id);
+      setDisplayName(editedName.trim());
+      setIsEditingName(false);
+      toast({ title: "Name Updated", description: "Your display name has been saved." });
+    } catch {
+      toast({ title: "Error", description: "Failed to update name.", variant: "destructive" });
+    }
+  };
+
+  const startEditingName = () => {
+    setEditedName(resolvedDisplayName);
+    setIsEditingName(true);
+  };
+
   const resolvedDisplayName = displayName.trim() || user?.user_metadata?.display_name || user?.email?.split('@')[0] || "Journal User";
 
   if (loading) {
