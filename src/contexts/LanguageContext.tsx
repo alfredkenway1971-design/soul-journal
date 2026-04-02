@@ -806,6 +806,7 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "home.morning": "صباح الخير",
     "home.afternoon": "مساء الخير",
     "home.evening": "مساء الخير",
+    "home.friend": "صديق",
     "home.quickCapture": "التقاط سريع",
     "home.recentEntries": "الإدخالات الأخيرة",
     "home.viewAll": "عرض الكل",
