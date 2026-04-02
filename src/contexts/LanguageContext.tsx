@@ -1059,6 +1059,7 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "home.morning": "早上好",
     "home.afternoon": "下午好",
     "home.evening": "晚上好",
+    "home.friend": "朋友",
     "home.quickCapture": "快速记录",
     "home.recentEntries": "最近的条目",
     "home.viewAll": "查看全部",
