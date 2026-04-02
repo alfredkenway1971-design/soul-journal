@@ -103,7 +103,7 @@ const HomePage = () => {
     fetchData();
   }, [user]);
 
-  const firstName = displayName?.split(' ')[0] || 'Alex';
+  const firstName = displayName?.split(' ')[0] || user?.user_metadata?.display_name?.split(' ')[0] || user?.email?.split('@')[0] || t("home.friend");
 
   return (
     <div className="min-h-screen gradient-warm pb-28">
