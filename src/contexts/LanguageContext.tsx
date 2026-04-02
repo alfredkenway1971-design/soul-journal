@@ -1312,6 +1312,7 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "home.morning": "おはようございます",
     "home.afternoon": "こんにちは",
     "home.evening": "こんばんは",
+    "home.friend": "フレンド",
     "home.quickCapture": "クイック記録",
     "home.recentEntries": "最近のエントリー",
     "home.viewAll": "すべて表示",
