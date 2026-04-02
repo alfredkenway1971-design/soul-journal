@@ -22,6 +22,8 @@ const ProfileSettingsPage = () => {
   
   const [manifesto, setManifesto] = useState('"To live with intention, embrace the chaos, and find stillness in the motion."');
   const [isEditingManifesto, setIsEditingManifesto] = useState(false);
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editedName, setEditedName] = useState("");
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ streak: 0, entries: 0, topMood: "happy" as Mood });
   const [interests, setInterests] = useState<string[]>([]);
