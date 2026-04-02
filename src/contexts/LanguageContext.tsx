@@ -553,6 +553,7 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "home.morning": "Buenos días",
     "home.afternoon": "Buenas tardes",
     "home.evening": "Buenas noches",
+    "home.friend": "Amigo",
     "home.quickCapture": "Captura rápida",
     "home.recentEntries": "Entradas recientes",
     "home.viewAll": "Ver todo",
