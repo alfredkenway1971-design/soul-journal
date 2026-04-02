@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ChevronLeft, Settings, Plus } from "lucide-react";
+import { ChevronLeft, Settings, Plus, Pencil, Check, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import AvatarUpload from "@/components/premium/AvatarUpload";
 import BottomNav from "@/components/BottomNav";
 import { useToast } from "@/hooks/use-toast";
@@ -21,6 +22,8 @@ const ProfileSettingsPage = () => {
   
   const [manifesto, setManifesto] = useState('"To live with intention, embrace the chaos, and find stillness in the motion."');
   const [isEditingManifesto, setIsEditingManifesto] = useState(false);
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editedName, setEditedName] = useState("");
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ streak: 0, entries: 0, topMood: "happy" as Mood });
   const [interests, setInterests] = useState<string[]>([]);
@@ -116,6 +119,26 @@ const ProfileSettingsPage = () => {
     });
   };
 
+  const handleSaveDisplayName = async () => {
+    if (!user || !editedName.trim()) return;
+    try {
+      await supabase
+        .from('profiles')
+        .update({ display_name: editedName.trim() })
+        .eq('id', user.id);
+      setDisplayName(editedName.trim());
+      setIsEditingName(false);
+      toast({ title: "Name Updated", description: "Your display name has been saved." });
+    } catch {
+      toast({ title: "Error", description: "Failed to update name.", variant: "destructive" });
+    }
+  };
+
+  const startEditingName = () => {
+    setEditedName(resolvedDisplayName);
+    setIsEditingName(true);
+  };
+
   const resolvedDisplayName = displayName.trim() || user?.user_metadata?.display_name || user?.email?.split('@')[0] || "Journal User";
 
   if (loading) {
@@ -170,8 +193,28 @@ const ProfileSettingsPage = () => {
               />
             )}
           </div>
-          <h1 className="text-2xl font-display font-semibold text-foreground">{resolvedDisplayName}</h1>
-          
+          {isEditingName ? (
+            <div className="flex items-center gap-2 mt-1">
+              <Input
+                value={editedName}
+                onChange={(e) => setEditedName(e.target.value)}
+                className="h-10 text-center text-lg font-semibold rounded-xl max-w-[200px]"
+                autoFocus
+                onKeyDown={(e) => e.key === "Enter" && handleSaveDisplayName()}
+              />
+              <Button size="icon" variant="ghost" className="rounded-full w-8 h-8" onClick={handleSaveDisplayName}>
+                <Check className="w-4 h-4 text-primary" />
+              </Button>
+              <Button size="icon" variant="ghost" className="rounded-full w-8 h-8" onClick={() => setIsEditingName(false)}>
+                <X className="w-4 h-4 text-muted-foreground" />
+              </Button>
+            </div>
+          ) : (
+            <button className="flex items-center gap-2 group" onClick={startEditingName}>
+              <h1 className="text-2xl font-display font-semibold text-foreground">{resolvedDisplayName}</h1>
+              <Pencil className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+            </button>
+          )}
         </motion.div>
 
         {/* Stats */}

@@ -46,7 +46,7 @@ const BookBuilderPage = () => {
   const [generating, setGenerating] = useState(false);
 
   // User profile
-  const [userName, setUserName] = useState("Alex");
+  const [userName, setUserName] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   // Step 1 — Date Range
