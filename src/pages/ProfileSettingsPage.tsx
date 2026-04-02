@@ -4,6 +4,7 @@ import { ChevronLeft, Settings, Plus, Pencil, Check, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import AvatarUpload from "@/components/premium/AvatarUpload";
 import BottomNav from "@/components/BottomNav";
 import { useToast } from "@/hooks/use-toast";
