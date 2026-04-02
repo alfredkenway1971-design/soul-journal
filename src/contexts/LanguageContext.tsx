@@ -35,6 +35,7 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "home.morning": "Morning",
     "home.afternoon": "Afternoon",
     "home.evening": "Evening",
+    "home.friend": "Friend",
     "home.quickCapture": "Quick Capture",
     "home.recentEntries": "Recent Entries",
     "home.viewAll": "View All",
