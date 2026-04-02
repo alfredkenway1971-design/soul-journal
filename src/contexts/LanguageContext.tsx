@@ -1565,6 +1565,7 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "home.morning": "Habari za asubuhi",
     "home.afternoon": "Habari za mchana",
     "home.evening": "Habari za jioni",
+    "home.friend": "Rafiki",
     "home.quickCapture": "Chukua haraka",
     "home.recentEntries": "Maingizo ya hivi karibuni",
     "home.viewAll": "Tazama yote",
