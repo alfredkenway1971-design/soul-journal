@@ -104,6 +104,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(session?.user ?? null);
         if (session?.user) {
           checkAdminRole(session.user.id);
+          backfillDisplayName(session.user);
         } else {
           setIsAdmin(false);
         }
