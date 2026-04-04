@@ -1,51 +1,31 @@
 
 
-## Plan: Expand Font Selection + Fix Page Background in PDF
+# Auto-populate Display Name from Google Profile
 
-### Problem Summary
-1. **Fonts**: Only 3 font options exist (Modern, Classic, Handwritten). User wants 12 specific handwritten/calligraphic fonts added.
-2. **Page backgrounds**: The `getPageBackgroundCSS` function generates CSS for lined/dotted patterns, but `html2canvas` doesn't reliably capture CSS `background-image` patterns (repeating-linear-gradient, radial-gradient). The backgrounds appear blank in the exported PDF.
+## Problem
+When signing in with Google, the `handle_new_user` trigger only reads `raw_user_meta_data->>'display_name'`, but Google OAuth stores the name in `full_name` (and sometimes `name`). This results in a NULL display name for Google sign-in users.
 
-### Changes
+## Plan
 
-#### 1. Expand FontSelector with 12 new fonts
-**File: `src/components/book-builder/FontSelector.tsx`**
+### 1. Update the `handle_new_user` database function (Migration)
+Modify the trigger function to check multiple metadata fields with a COALESCE fallback:
+```sql
+INSERT INTO public.profiles (id, display_name)
+VALUES (
+  new.id,
+  COALESCE(
+    new.raw_user_meta_data ->> 'display_name',
+    new.raw_user_meta_data ->> 'full_name',
+    new.raw_user_meta_data ->> 'name'
+  )
+);
+```
+This covers email signup (`display_name`), Google OAuth (`full_name`/`name`), and other providers.
 
-- Change `BookFont` type to a union of all font IDs (e.g., `"modern" | "classic" | "handwritten" | "phitradesign" | "shadows-into-light" | ...`)
-- Add all 12 requested fonts to the fonts array. Most are available on Google Fonts:
-  - Shadows Into Light, Euphoria Script, Arizonia, Dancing Script (already exists) — **Google Fonts**
-  - For fonts NOT on Google Fonts (Phitradesign, Agata, Alanis, Honey Script Light, Scriptina, Anke Calligraphic, Gravity, Quilline Script Thin, Farewell), we'll use the closest Google Fonts alternatives since custom font hosting isn't available:
-    - Phitradesign → **Caveat** (similar hand-drawn style)
-    - Agata → **Sacramento** (flowing calligraphic)
-    - Alanis → **Kalam** (natural handwriting)
-    - Honey Script Light → **Alex Brush** (elegant script)
-    - Scriptina → **Great Vibes** (formal calligraphy)
-    - Anke Calligraphic → **Tangerine** (calligraphic)
-    - Gravity → **Patrick Hand** (casual handwritten)
-    - Quilline Script Thin → **Petit Formal Script** (thin script)
-    - Farewell → **Satisfy** (flowing farewell-style)
-- Group fonts into categories (Modern, Classic, Handwritten/Script) with a scrollable list
-- Each font shows a live preview line rendered in its own typeface
+### 2. Fix existing Google users with missing display names
+Add a one-time update in `AuthContext.tsx` — after detecting a signed-in user whose profile has no `display_name`, read it from `user.user_metadata.full_name` or `user.user_metadata.name` and patch the `profiles` table.
 
-#### 2. Fix page backgrounds in PDF export
-**File: `src/lib/generateBookPDF.ts`**
-
-The root cause: `html2canvas` poorly captures CSS `background-image` with gradients. Fix by rendering lined/dotted patterns as **inline SVG elements** instead of CSS background properties.
-
-- Replace `getPageBackgroundCSS()` with `getPageBackgroundHTML()` that returns an absolutely-positioned SVG overlay:
-  - **Lined**: SVG with horizontal `<line>` elements every 28px
-  - **Dotted**: SVG with `<circle>` elements in a grid pattern
-- Apply this SVG as an absolutely-positioned layer behind entry content in `buildSingleEntryHTML` and `buildEntryPageHTML`
-- This ensures `html2canvas` captures the visual pattern as real DOM elements rather than CSS properties
-
-#### 3. Update BookBuilderPage
-**File: `src/pages/BookBuilderPage.tsx`**
-- Update the `BookFont` type import to match the expanded type
-- No other changes needed since it already passes `font` to the generator
-
-### Technical Details
-- All new fonts loaded via Google Fonts CDN `<link>` tags injected into the PDF iframe
-- The font import URLs are bundled per-font in the config so only the selected font is loaded
-- SVG patterns for lined/dotted are rendered as DOM nodes so html2canvas captures them faithfully
-- The existing 3 original fonts (Modern, Classic, Handwritten) remain as-is
+### 3. Files to change
+- **New migration SQL** — update `handle_new_user` function
+- **`src/contexts/AuthContext.tsx`** — backfill logic for existing users
 
