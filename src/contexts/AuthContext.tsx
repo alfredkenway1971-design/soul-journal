@@ -49,6 +49,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const backfillDisplayName = async (user: User) => {
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('display_name')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (profile && !profile.display_name) {
+        const name = user.user_metadata?.display_name
+          || user.user_metadata?.full_name
+          || user.user_metadata?.name;
+        if (name) {
+          await supabase
+            .from('profiles')
+            .update({ display_name: name })
+            .eq('id', user.id);
+        }
+      }
+    } catch {
+      // silent fail
+    }
+  };
+
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
