@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 
+const PIN_LENGTH = 8;
+
 interface PinLockScreenProps {
   onUnlock: () => void;
 }
@@ -13,6 +15,7 @@ const PinLockScreen = ({ onUnlock }: PinLockScreenProps) => {
   const [pin, setPin] = useState<string>("");
   const [error, setError] = useState(false);
   const [storedPinHash, setStoredPinHash] = useState<string | null>(null);
+  const [biometricEnabled, setBiometricEnabled] = useState(false);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
 
@@ -30,13 +33,15 @@ const PinLockScreen = ({ onUnlock }: PinLockScreenProps) => {
         if (error) throw error;
         setStoredPinHash(data?.pin_hash || null);
         
-        // If no PIN is set, unlock immediately
+        // Check biometric preference
+        const bioPref = localStorage.getItem(`biometric_enabled_${user.id}`);
+        setBiometricEnabled(bioPref === 'true');
+        
         if (!data?.pin_hash) {
           onUnlock();
         }
       } catch (error) {
         console.error('Error fetching PIN:', error);
-        // On error, allow access
         onUnlock();
       } finally {
         setLoading(false);
@@ -45,6 +50,13 @@ const PinLockScreen = ({ onUnlock }: PinLockScreenProps) => {
     
     fetchPinHash();
   }, [user, onUnlock]);
+
+  // Auto-trigger biometric on mount if enabled
+  useEffect(() => {
+    if (!loading && storedPinHash && biometricEnabled) {
+      handleBiometric();
+    }
+  }, [loading, storedPinHash, biometricEnabled]);
 
   const hashPin = async (inputPin: string): Promise<string> => {
     const encoder = new TextEncoder();
@@ -55,13 +67,12 @@ const PinLockScreen = ({ onUnlock }: PinLockScreenProps) => {
   };
 
   const handleNumberPress = useCallback(async (num: string) => {
-    if (pin.length < 4) {
+    if (pin.length < PIN_LENGTH) {
       const newPin = pin + num;
       setPin(newPin);
       setError(false);
       
-      if (newPin.length === 4) {
-        // Verify PIN
+      if (newPin.length === PIN_LENGTH) {
         const inputHash = await hashPin(newPin);
         
         if (inputHash === storedPinHash) {
@@ -82,9 +93,33 @@ const PinLockScreen = ({ onUnlock }: PinLockScreenProps) => {
     setError(false);
   }, []);
 
-  const handleBiometric = useCallback(() => {
-    // Simulate biometric unlock
-    onUnlock();
+  const handleBiometric = useCallback(async () => {
+    try {
+      if (!window.PublicKeyCredential) {
+        // Fallback: use simple confirmation for browsers without WebAuthn
+        const confirmed = window.confirm("Biometric authentication is not supported in this browser. Unlock anyway?");
+        if (confirmed) onUnlock();
+        return;
+      }
+
+      // Use WebAuthn for biometric
+      const credential = await navigator.credentials.get({
+        publicKey: {
+          challenge: crypto.getRandomValues(new Uint8Array(32)),
+          timeout: 60000,
+          userVerification: "required",
+          rpId: window.location.hostname,
+          allowCredentials: [],
+        },
+      } as CredentialRequestOptions);
+
+      if (credential) {
+        onUnlock();
+      }
+    } catch (err) {
+      console.log("Biometric auth cancelled or failed:", err);
+      // Silently fail — user can use PIN instead
+    }
   }, [onUnlock]);
 
   const numbers = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "", "0", "delete"];
@@ -101,7 +136,7 @@ const PinLockScreen = ({ onUnlock }: PinLockScreenProps) => {
     <div className="min-h-screen gradient-warm flex flex-col items-center justify-center p-6">
       {/* Header */}
       <motion.div 
-        className="text-center mb-12"
+        className="text-center mb-8"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
@@ -110,29 +145,43 @@ const PinLockScreen = ({ onUnlock }: PinLockScreenProps) => {
           <Lock className="w-10 h-10 text-primary-foreground" />
         </div>
         <h1 className="text-2xl font-semibold text-foreground mb-2">Welcome Back</h1>
-        <p className="text-muted-foreground">Enter your PIN to unlock your journal</p>
+        <p className="text-muted-foreground">Enter your 8-digit PIN to unlock</p>
       </motion.div>
 
-      {/* PIN Dots */}
+      {/* PIN Dots - 8 dots in two rows of 4 */}
       <motion.div 
-        className="flex gap-4 mb-12"
+        className="flex flex-col gap-3 mb-10"
         animate={error ? { x: [-10, 10, -10, 10, 0] } : {}}
         transition={{ duration: 0.4 }}
       >
-        {[0, 1, 2, 3].map((index) => (
-          <motion.div
-            key={index}
-            className={`w-4 h-4 rounded-full transition-all duration-300 ${
-              pin.length > index 
-                ? error 
-                  ? "bg-destructive scale-110" 
-                  : "bg-primary scale-110"
-                : "bg-muted"
-            }`}
-            animate={pin.length > index ? { scale: [1, 1.2, 1] } : {}}
-            transition={{ duration: 0.2 }}
-          />
-        ))}
+        <div className="flex gap-3 justify-center">
+          {[0, 1, 2, 3].map((index) => (
+            <motion.div
+              key={index}
+              className={`w-3.5 h-3.5 rounded-full transition-all duration-300 ${
+                pin.length > index 
+                  ? error ? "bg-destructive scale-110" : "bg-primary scale-110"
+                  : "bg-muted"
+              }`}
+              animate={pin.length > index ? { scale: [1, 1.2, 1] } : {}}
+              transition={{ duration: 0.2 }}
+            />
+          ))}
+        </div>
+        <div className="flex gap-3 justify-center">
+          {[4, 5, 6, 7].map((index) => (
+            <motion.div
+              key={index}
+              className={`w-3.5 h-3.5 rounded-full transition-all duration-300 ${
+                pin.length > index 
+                  ? error ? "bg-destructive scale-110" : "bg-primary scale-110"
+                  : "bg-muted"
+              }`}
+              animate={pin.length > index ? { scale: [1, 1.2, 1] } : {}}
+              transition={{ duration: 0.2 }}
+            />
+          ))}
+        </div>
       </motion.div>
 
       {/* Number Pad */}
@@ -164,17 +213,19 @@ const PinLockScreen = ({ onUnlock }: PinLockScreenProps) => {
       </div>
 
       {/* Biometric Option */}
-      <motion.button
-        className="flex items-center gap-3 text-muted-foreground hover:text-primary transition-colors"
-        onClick={handleBiometric}
-        whileTap={{ scale: 0.95 }}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.5 }}
-      >
-        <Fingerprint className="w-6 h-6" />
-        <span className="text-sm font-medium">Use Fingerprint or Face ID</span>
-      </motion.button>
+      {biometricEnabled && (
+        <motion.button
+          className="flex items-center gap-3 text-muted-foreground hover:text-primary transition-colors"
+          onClick={handleBiometric}
+          whileTap={{ scale: 0.95 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+        >
+          <Fingerprint className="w-6 h-6" />
+          <span className="text-sm font-medium">Use Face ID or Fingerprint</span>
+        </motion.button>
+      )}
     </div>
   );
 };
