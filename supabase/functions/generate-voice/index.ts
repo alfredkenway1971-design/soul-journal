@@ -1,11 +1,12 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-async function generateWithElevenLabs(text: string, voiceId: string): Promise<{ audioContent: string }> {
+async function generateWithElevenLabs(text: string, voiceId: string): Promise<Uint8Array> {
   const elevenLabsApiKey = Deno.env.get('ELEVENLABS_API_KEY');
   if (!elevenLabsApiKey) throw new Error('ElevenLabs API key not configured');
 
@@ -40,13 +41,11 @@ async function generateWithElevenLabs(text: string, voiceId: string): Promise<{ 
   }
 
   const audioBuffer = await response.arrayBuffer();
-  const { encode: base64Encode } = await import("https://deno.land/std@0.168.0/encoding/base64.ts");
-  const base64Audio = base64Encode(audioBuffer);
   console.log('ElevenLabs voice generation successful');
-  return { audioContent: base64Audio };
+  return new Uint8Array(audioBuffer);
 }
 
-async function generateWithCartesia(text: string): Promise<{ audioContent: string }> {
+async function generateWithCartesia(text: string): Promise<Uint8Array> {
   const cartesiaApiKey = Deno.env.get('CARTESIA_API_KEY');
   if (!cartesiaApiKey) throw new Error('Cartesia API key not configured');
 
@@ -64,7 +63,7 @@ async function generateWithCartesia(text: string): Promise<{ audioContent: strin
       model_id: 'sonic-2',
       voice: {
         mode: 'id',
-        id: 'a0e99841-438c-4a64-b679-ae501e7d6091', // Default English voice
+        id: 'a0e99841-438c-4a64-b679-ae501e7d6091',
       },
       output_format: {
         container: 'mp3',
@@ -81,10 +80,8 @@ async function generateWithCartesia(text: string): Promise<{ audioContent: strin
   }
 
   const audioBuffer = await response.arrayBuffer();
-  const { encode: base64Encode } = await import("https://deno.land/std@0.168.0/encoding/base64.ts");
-  const base64Audio = base64Encode(audioBuffer);
   console.log('Cartesia voice generation successful');
-  return { audioContent: base64Audio };
+  return new Uint8Array(audioBuffer);
 }
 
 serve(async (req) => {
@@ -93,20 +90,67 @@ serve(async (req) => {
   }
 
   try {
-    const { text, voiceId } = await req.json();
+    const { text, voiceId, entryId, textType } = await req.json();
     if (!text) throw new Error('No text provided');
 
-    let result: { audioContent: string };
-
+    // Generate audio bytes
+    let audioBytes: Uint8Array;
     try {
-      result = await generateWithElevenLabs(text, voiceId);
+      audioBytes = await generateWithElevenLabs(text, voiceId);
     } catch (elevenLabsError) {
       console.warn('ElevenLabs failed, switching to Cartesia fallback:', elevenLabsError);
-      result = await generateWithCartesia(text);
+      audioBytes = await generateWithCartesia(text);
     }
 
+    // If entryId provided, cache to storage and update DB
+    if (entryId) {
+      try {
+        const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+        const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+        const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+        const suffix = textType === 'reflection' ? '_reflection' : '';
+        const storagePath = `voice-cache/${entryId}${suffix}.mp3`;
+
+        // Upload to storage
+        const { error: uploadError } = await supabase.storage
+          .from('journal-audio')
+          .upload(storagePath, audioBytes, {
+            contentType: 'audio/mpeg',
+            upsert: true,
+          });
+
+        if (uploadError) {
+          console.error('Storage upload error:', uploadError);
+        } else {
+          // Update journal_entries with the cached path
+          if (textType === 'reflection') {
+            // Store reflection audio path in audio_url with a prefix
+            // We'll use a convention: reflection audio stored separately
+            await supabase
+              .from('journal_entries')
+              .update({ audio_url: `cached:${storagePath}` })
+              .eq('id', entryId)
+              .is('audio_url', null); // Only set if not already cached for main
+          } else {
+            await supabase
+              .from('journal_entries')
+              .update({ audio_url: `cached:${storagePath}` })
+              .eq('id', entryId);
+          }
+          console.log('Audio cached to storage:', storagePath);
+        }
+      } catch (cacheError) {
+        console.error('Caching error (non-fatal):', cacheError);
+      }
+    }
+
+    // Return base64 for immediate playback
+    const { encode: base64Encode } = await import("https://deno.land/std@0.168.0/encoding/base64.ts");
+    const base64Audio = base64Encode(audioBytes);
+
     return new Response(
-      JSON.stringify(result),
+      JSON.stringify({ audioContent: base64Audio }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
