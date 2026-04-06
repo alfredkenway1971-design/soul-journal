@@ -170,18 +170,16 @@ const EntryDetailPage = () => {
     
     try {
       let textForVoice = entry.enhanced_text;
-      // Only translate if a non-English language is explicitly selected
       if (entry.playback_language && entry.playback_language !== 'en') {
         textForVoice = await api.translateText(entry.enhanced_text, entry.playback_language);
       }
       
-      const audioUrl = await api.generateVoice(textForVoice);
+      const audioUrl = await api.generateVoice(textForVoice, undefined, id, 'entry');
       setGeneratedAudioUrl(audioUrl);
     } catch (error) {
       console.error('Error generating voice:', error);
       const errorMessage = error instanceof Error ? error.message : "Failed to generate voice";
       
-      // Provide more helpful error message for ElevenLabs issues
       let userMessage = errorMessage;
       if (errorMessage.includes('unusual_activity') || errorMessage.includes('Free Tier')) {
         userMessage = "ElevenLabs free tier limit reached. Please upgrade your ElevenLabs API key to a paid plan in Settings → Voice to continue using voice playback.";
@@ -200,7 +198,7 @@ const EntryDetailPage = () => {
   const handleGenerateVoiceForText = async (text: string) => {
     setIsGeneratingVoice(true);
     try {
-      const audioUrl = await api.generateVoice(text);
+      const audioUrl = await api.generateVoice(text, undefined, id, 'reflection');
       setGeneratedAudioUrl(audioUrl);
       setTimeout(() => {
         if (audioRef.current) {
