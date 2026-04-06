@@ -123,21 +123,15 @@ serve(async (req) => {
         if (uploadError) {
           console.error('Storage upload error:', uploadError);
         } else {
-          // Update journal_entries with the cached path
-          if (textType === 'reflection') {
-            // Store reflection audio path in audio_url with a prefix
-            // We'll use a convention: reflection audio stored separately
-            await supabase
-              .from('journal_entries')
-              .update({ audio_url: `cached:${storagePath}` })
-              .eq('id', entryId)
-              .is('audio_url', null); // Only set if not already cached for main
-          } else {
-            await supabase
-              .from('journal_entries')
-              .update({ audio_url: `cached:${storagePath}` })
-              .eq('id', entryId);
-          }
+          // Update journal_entries with the cached storage path
+          const updateField = textType === 'reflection' 
+            ? { reflection_audio_url: storagePath }
+            : { audio_url: storagePath };
+          
+          await supabase
+            .from('journal_entries')
+            .update(updateField)
+            .eq('id', entryId);
           console.log('Audio cached to storage:', storagePath);
         }
       } catch (cacheError) {
