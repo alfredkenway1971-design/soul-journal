@@ -63,7 +63,30 @@ export const useJournalAPI = (appLanguage?: AppLanguage) => {
     return data.translatedText;
   };
 
-  const generateVoice = async (text: string, voiceId?: string): Promise<string> => {
+  const generateVoice = async (text: string, voiceId?: string, entryId?: string, textType?: 'entry' | 'reflection'): Promise<string> => {
+    // Check cache first if entryId is provided
+    if (entryId) {
+      const { data: entry } = await supabase
+        .from('journal_entries')
+        .select('audio_url, reflection_audio_url')
+        .eq('id', entryId)
+        .single();
+
+      const cachedPath = textType === 'reflection' 
+        ? (entry as any)?.reflection_audio_url 
+        : entry?.audio_url;
+
+      if (cachedPath) {
+        console.log('Using cached audio from storage:', cachedPath);
+        const { data: signedData } = await supabase.storage
+          .from('journal-audio')
+          .createSignedUrl(cachedPath, 3600);
+        if (signedData?.signedUrl) {
+          return signedData.signedUrl;
+        }
+      }
+    }
+
     // Fetch user's voice clone ID if not provided
     let selectedVoiceId = voiceId;
     if (!selectedVoiceId) {
@@ -81,7 +104,7 @@ export const useJournalAPI = (appLanguage?: AppLanguage) => {
     }
 
     const { data, error } = await supabase.functions.invoke('generate-voice', {
-      body: { text, voiceId: selectedVoiceId },
+      body: { text, voiceId: selectedVoiceId, entryId, textType },
     });
 
     if (error) throw new Error(error.message);
