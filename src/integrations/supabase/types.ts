@@ -147,6 +147,7 @@ export type Database = {
           mood: string | null
           original_transcription: string | null
           playback_language: string | null
+          reflection_audio_url: string | null
           soul_reflection: string | null
           title: string | null
           updated_at: string
@@ -160,6 +161,7 @@ export type Database = {
           mood?: string | null
           original_transcription?: string | null
           playback_language?: string | null
+          reflection_audio_url?: string | null
           soul_reflection?: string | null
           title?: string | null
           updated_at?: string
@@ -173,6 +175,7 @@ export type Database = {
           mood?: string | null
           original_transcription?: string | null
           playback_language?: string | null
+          reflection_audio_url?: string | null
           soul_reflection?: string | null
           title?: string | null
           updated_at?: string
