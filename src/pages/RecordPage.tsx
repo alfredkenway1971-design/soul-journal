@@ -567,6 +567,25 @@ const RecordPage = () => {
               <p className="font-journal text-foreground leading-relaxed">
                 {transcription}
               </p>
+              {/* Auto-detected mood suggestion */}
+              {selectedMood && (
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-4 flex items-center gap-2 p-3 rounded-xl bg-primary/10 border border-primary/20"
+                >
+                  <Smile className="w-4 h-4 text-primary" />
+                  <span className="text-sm text-foreground">
+                    Detected mood: <strong>{selectedMood === 'happy' ? '😊 Happy' : selectedMood === 'good' ? '🙂 Good' : selectedMood === 'fine' ? '😐 Fine' : selectedMood === 'sad' ? '😔 Sad' : '😢 Unhappy'}</strong>
+                  </span>
+                  <button
+                    className="ml-auto text-xs text-primary underline"
+                    onClick={() => setStep("mood")}
+                  >
+                    Change
+                  </button>
+                </motion.div>
+              )}
             </div>
 
             {!enhancedText && (
