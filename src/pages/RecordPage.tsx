@@ -515,7 +515,19 @@ const RecordPage = () => {
               </Button>
               <Button
                 className="flex-1 gradient-primary"
-                onClick={() => setStep("enhance")}
+                onClick={async () => {
+                  if (!transcription.trim()) return;
+                  // Auto-detect mood when moving from write to enhance
+                  if (!selectedMood) {
+                    try {
+                      const detectedMood = await api.detectMood(transcription);
+                      setSelectedMood(detectedMood as Mood);
+                    } catch (err) {
+                      console.error('Mood detection error:', err);
+                    }
+                  }
+                  setStep("enhance");
+                }}
                 disabled={!transcription.trim()}
               >
                 {t("record.continue")}
