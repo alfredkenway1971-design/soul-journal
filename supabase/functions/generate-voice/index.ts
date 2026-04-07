@@ -10,7 +10,8 @@ async function generateWithElevenLabs(text: string, voiceId: string): Promise<Ui
   const elevenLabsApiKey = Deno.env.get('ELEVENLABS_API_KEY');
   if (!elevenLabsApiKey) throw new Error('ElevenLabs API key not configured');
 
-  const selectedVoiceId = voiceId || 'JBFqnCBsd6RMkjVDRZzb';
+  // Default to Roger (US American accent) instead of George (British)
+  const selectedVoiceId = voiceId || 'CwhRBWXzGAHq8TQ4Fs17';
   console.log('Generating voice with ElevenLabs, voice ID:', selectedVoiceId);
 
   const response = await fetch(
@@ -63,8 +64,10 @@ async function generateWithCartesia(text: string): Promise<Uint8Array> {
       model_id: 'sonic-2',
       voice: {
         mode: 'id',
+        // Canadian French (Quebec) accent voice
         id: 'a0e99841-438c-4a64-b679-ae501e7d6091',
       },
+      language: 'fr',
       output_format: {
         container: 'mp3',
         bit_rate: 128000,

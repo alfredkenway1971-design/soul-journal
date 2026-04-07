@@ -133,6 +133,13 @@ const RecordPage = () => {
         try {
           const text = await api.transcribeAudio(audioBlob);
           setTranscription(text);
+          // Auto-detect mood from transcription
+          try {
+            const detectedMood = await api.detectMood(text);
+            setSelectedMood(detectedMood as Mood);
+          } catch (moodErr) {
+            console.error('Mood detection error:', moodErr);
+          }
           setStep("enhance");
         } catch (error) {
           console.error('Transcription error:', error);
@@ -508,7 +515,19 @@ const RecordPage = () => {
               </Button>
               <Button
                 className="flex-1 gradient-primary"
-                onClick={() => setStep("enhance")}
+                onClick={async () => {
+                  if (!transcription.trim()) return;
+                  // Auto-detect mood when moving from write to enhance
+                  if (!selectedMood) {
+                    try {
+                      const detectedMood = await api.detectMood(transcription);
+                      setSelectedMood(detectedMood as Mood);
+                    } catch (err) {
+                      console.error('Mood detection error:', err);
+                    }
+                  }
+                  setStep("enhance");
+                }}
                 disabled={!transcription.trim()}
               >
                 {t("record.continue")}
@@ -548,6 +567,25 @@ const RecordPage = () => {
               <p className="font-journal text-foreground leading-relaxed">
                 {transcription}
               </p>
+              {/* Auto-detected mood suggestion */}
+              {selectedMood && (
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-4 flex items-center gap-2 p-3 rounded-xl bg-primary/10 border border-primary/20"
+                >
+                  <Smile className="w-4 h-4 text-primary" />
+                  <span className="text-sm text-foreground">
+                    Detected mood: <strong>{selectedMood === 'happy' ? '😊 Happy' : selectedMood === 'good' ? '🙂 Good' : selectedMood === 'fine' ? '😐 Fine' : selectedMood === 'sad' ? '😔 Sad' : '😢 Unhappy'}</strong>
+                  </span>
+                  <button
+                    className="ml-auto text-xs text-primary underline"
+                    onClick={() => setStep("mood")}
+                  >
+                    Change
+                  </button>
+                </motion.div>
+              )}
             </div>
 
             {!enhancedText && (
