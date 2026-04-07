@@ -52,6 +52,23 @@ export const useJournalAPI = (appLanguage?: AppLanguage) => {
     return data.enhancedText.replace(/["']/g, '').trim();
   };
 
+  const detectMood = async (text: string): Promise<string> => {
+    const { data, error } = await supabase.functions.invoke('enhance-text', {
+      body: {
+        text,
+        tone: 'mood-detect',
+        customPrompt: 'Analyze the sentiment of this journal entry and respond with EXACTLY one word from this list: happy, good, fine, sad, unhappy. Nothing else, just the single word:',
+      },
+    });
+
+    if (error) throw new Error(error.message);
+    if (data.error) throw new Error(data.error);
+
+    const mood = data.enhancedText.trim().toLowerCase();
+    const validMoods = ['happy', 'good', 'fine', 'sad', 'unhappy'];
+    return validMoods.includes(mood) ? mood : 'fine';
+  };
+
   const translateText = async (text: string, targetLanguage: string): Promise<string> => {
     const { data, error } = await supabase.functions.invoke('translate-text', {
       body: { text, targetLanguage },
