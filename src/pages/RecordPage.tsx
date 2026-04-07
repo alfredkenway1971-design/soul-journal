@@ -133,6 +133,13 @@ const RecordPage = () => {
         try {
           const text = await api.transcribeAudio(audioBlob);
           setTranscription(text);
+          // Auto-detect mood from transcription
+          try {
+            const detectedMood = await api.detectMood(text);
+            setSelectedMood(detectedMood as Mood);
+          } catch (moodErr) {
+            console.error('Mood detection error:', moodErr);
+          }
           setStep("enhance");
         } catch (error) {
           console.error('Transcription error:', error);
