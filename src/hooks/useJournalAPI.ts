@@ -82,6 +82,7 @@ export const useJournalAPI = (appLanguage?: AppLanguage) => {
 
   const generateVoice = async (text: string, voiceId?: string, entryId?: string, textType?: 'entry' | 'reflection'): Promise<string> => {
     // Check cache first if entryId is provided
+    // IMPORTANT: Only use voice-cache/ paths (AI-generated), never raw recordings
     if (entryId) {
       const { data: entry } = await supabase
         .from('journal_entries')
@@ -93,8 +94,10 @@ export const useJournalAPI = (appLanguage?: AppLanguage) => {
         ? (entry as any)?.reflection_audio_url 
         : entry?.audio_url;
 
-      if (cachedPath) {
-        console.log('Using cached audio from storage:', cachedPath);
+      // Only use cached path if it's an AI-generated voice file (voice-cache/ prefix)
+      // Never fall back to raw user recordings
+      if (cachedPath && cachedPath.startsWith('voice-cache/')) {
+        console.log('Using cached AI voice from storage:', cachedPath);
         const { data: signedData } = await supabase.storage
           .from('journal-audio')
           .createSignedUrl(cachedPath, 3600);
