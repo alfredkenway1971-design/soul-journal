@@ -64,8 +64,10 @@ async function generateWithCartesia(text: string): Promise<Uint8Array> {
       model_id: 'sonic-2',
       voice: {
         mode: 'id',
+        // Canadian French (Quebec) accent voice
         id: 'a0e99841-438c-4a64-b679-ae501e7d6091',
       },
+      language: 'fr',
       output_format: {
         container: 'mp3',
         bit_rate: 128000,

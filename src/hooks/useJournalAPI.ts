@@ -300,6 +300,7 @@ export const useJournalAPI = (appLanguage?: AppLanguage) => {
     transcribeAudio,
     enhanceText,
     generateTitle,
+    detectMood,
     translateText,
     generateVoice,
     generateSoulReflection,
