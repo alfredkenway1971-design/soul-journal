@@ -8,7 +8,6 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import BottomNav from "@/components/BottomNav";
 import AppLanguageSwitcher from "@/components/AppLanguageSwitcher";
-import AIInsightCard from "@/components/premium/AIInsightCard";
 import QuickCapture from "@/components/premium/QuickCapture";
 import RecentEntryCard from "@/components/premium/RecentEntryCard";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -35,7 +34,7 @@ const HomePage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [displayName, setDisplayName] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [latestInsight, setLatestInsight] = useState<string | null>(null);
+  
   
   const currentDate = new Date();
   const dayOfWeek = format(currentDate, "EEEE");
@@ -65,19 +64,6 @@ const HomePage = () => {
         }
         if (profile?.avatar_url) {
           setAvatarUrl(profile.avatar_url);
-        }
-
-        // Fetch latest AI insight
-        const { data: insights } = await supabase
-          .from('coaching_insights')
-          .select('content')
-          .eq('user_id', user.id)
-          .eq('is_read', false)
-          .order('created_at', { ascending: false })
-          .limit(1);
-        
-        if (insights && insights.length > 0) {
-          setLatestInsight(insights[0].content);
         }
 
         // Fetch entries
@@ -146,17 +132,6 @@ const HomePage = () => {
 
       {/* Content */}
       <main className="max-w-lg mx-auto px-5 space-y-6">
-        {/* AI Insight */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-        >
-          <AIInsightCard insight={latestInsight || undefined} userName={firstName} />
-        </motion.div>
-
-        {/* Quick Capture - moved up */}
-
         {/* Quick Capture */}
         <section>
           <h2 className="font-semibold text-foreground mb-3">{t("home.quickCapture")}</h2>

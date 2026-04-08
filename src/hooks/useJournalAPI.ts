@@ -94,8 +94,6 @@ export const useJournalAPI = (appLanguage?: AppLanguage) => {
         ? (entry as any)?.reflection_audio_url 
         : entry?.audio_url;
 
-      // Only use cached path if it's an AI-generated voice file (voice-cache/ prefix)
-      // Never fall back to raw user recordings
       if (cachedPath && cachedPath.startsWith('voice-cache/')) {
         console.log('Using cached AI voice from storage:', cachedPath);
         const { data: signedData } = await supabase.storage
@@ -107,30 +105,33 @@ export const useJournalAPI = (appLanguage?: AppLanguage) => {
       }
     }
 
-    // Fetch user's voice clone ID if not provided
+    // Fetch user's voice clone ID and gender preference
     let selectedVoiceId = voiceId;
+    let userGender = 'male';
     if (!selectedVoiceId) {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('voice_clone_id')
+          .select('voice_clone_id, gender')
           .eq('id', user.id)
           .single();
         if (profile?.voice_clone_id) {
           selectedVoiceId = profile.voice_clone_id;
         }
+        if ((profile as any)?.gender) {
+          userGender = (profile as any).gender;
+        }
       }
     }
 
     const { data, error } = await supabase.functions.invoke('generate-voice', {
-      body: { text, voiceId: selectedVoiceId, entryId, textType },
+      body: { text, voiceId: selectedVoiceId, entryId, textType, language: appLanguage || 'en', gender: userGender },
     });
 
     if (error) throw new Error(error.message);
     if (data.error) throw new Error(data.error);
     
-    // Return audio URL from base64
     return `data:audio/mpeg;base64,${data.audioContent}`;
   };
 
