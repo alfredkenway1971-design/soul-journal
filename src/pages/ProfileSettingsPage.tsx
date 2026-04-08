@@ -245,54 +245,31 @@ const ProfileSettingsPage = () => {
           </div>
         </motion.div>
 
-        {/* My Manifesto */}
+        {/* Voice Gender Preference */}
         <motion.section
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <p className="section-label mb-3">MY MANIFESTO</p>
-          <div className="glass-premium p-5">
-            <div className="text-4xl text-primary/30 font-display mb-2">"</div>
-            {isEditingManifesto ? (
-              <div className="space-y-4">
-                <Textarea
-                  value={manifesto}
-                  onChange={(e) => setManifesto(e.target.value)}
-                  className="min-h-[100px] font-journal text-lg border-0 bg-transparent resize-none focus-visible:ring-0 -mt-4"
-                />
-                <div className="flex gap-3">
-                  <Button
-                    variant="outline"
-                    className="flex-1"
-                    onClick={() => setIsEditingManifesto(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    className="flex-1 gradient-primary"
-                    onClick={handleSaveManifesto}
-                  >
-                    Save
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <>
-                <p className="font-journal text-lg text-foreground leading-relaxed -mt-4">
-                  {manifesto.replace(/"/g, '')}
-                  {" "}
-                  <span className="text-primary">intention</span>
-                  {", embrace the chaos, and find stillness in the motion.\""}
-                </p>
-                <button 
-                  className="mt-4 text-sm font-semibold text-charcoal dark:text-primary uppercase tracking-wider border-b-2 border-dashed border-charcoal/30 dark:border-primary/30 pb-0.5"
-                  onClick={() => setIsEditingManifesto(true)}
-                >
-                  Edit Manifesto
-                </button>
-              </>
-            )}
+          <p className="section-label mb-3">VOICE PREFERENCE</p>
+          <div className="glass-premium p-5 space-y-3">
+            <p className="text-sm text-muted-foreground">Select your preferred playback voice gender:</p>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                className={`p-4 rounded-xl border-2 text-center transition-all ${gender === 'male' ? 'border-primary bg-primary/10 text-primary font-semibold' : 'border-border/50 bg-white/40 dark:bg-white/5 text-foreground'}`}
+                onClick={() => handleGenderChange('male')}
+              >
+                <span className="text-2xl block mb-1">🧔</span>
+                <span className="text-sm">Male</span>
+              </button>
+              <button
+                className={`p-4 rounded-xl border-2 text-center transition-all ${gender === 'female' ? 'border-primary bg-primary/10 text-primary font-semibold' : 'border-border/50 bg-white/40 dark:bg-white/5 text-foreground'}`}
+                onClick={() => handleGenderChange('female')}
+              >
+                <span className="text-2xl block mb-1">👩</span>
+                <span className="text-sm">Female</span>
+              </button>
+            </div>
           </div>
         </motion.section>
 
