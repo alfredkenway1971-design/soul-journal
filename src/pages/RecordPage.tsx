@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import MoodSelector, { Mood } from "@/components/MoodSelector";
 import LanguageSelector, { Language } from "@/components/LanguageSelector";
-import CoachReflectionCard from "@/components/premium/CoachReflectionCard";
 import RecentEntryCard from "@/components/premium/RecentEntryCard";
 
 import BottomNav from "@/components/BottomNav";
@@ -460,11 +459,6 @@ const RecordPage = () => {
                 </Button>
               </div>
 
-              {/* AI Coach Reflection */}
-              <section>
-                <p className="section-label mb-3">{t("record.aiCoachReflection")}</p>
-                <CoachReflectionCard />
-              </section>
 
               {/* Recent Entries */}
               {recentEntry && (
