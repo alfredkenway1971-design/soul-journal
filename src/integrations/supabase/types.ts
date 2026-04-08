@@ -197,6 +197,7 @@ export type Database = {
           created_at: string
           display_name: string | null
           fears: string[] | null
+          gender: string | null
           goals: Json | null
           id: string
           interests: string[] | null
@@ -213,6 +214,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           fears?: string[] | null
+          gender?: string | null
           goals?: Json | null
           id: string
           interests?: string[] | null
@@ -229,6 +231,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           fears?: string[] | null
+          gender?: string | null
           goals?: Json | null
           id?: string
           interests?: string[] | null
