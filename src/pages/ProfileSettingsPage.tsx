@@ -3,7 +3,6 @@ import { motion } from "framer-motion";
 import { ChevronLeft, Settings, Plus, Pencil, Check, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import AvatarUpload from "@/components/premium/AvatarUpload";
 import BottomNav from "@/components/BottomNav";
@@ -20,10 +19,9 @@ const ProfileSettingsPage = () => {
   const [displayName, setDisplayName] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   
-  const [manifesto, setManifesto] = useState('"To live with intention, embrace the chaos, and find stillness in the motion."');
-  const [isEditingManifesto, setIsEditingManifesto] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState("");
+  const [gender, setGender] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ streak: 0, entries: 0, topMood: "happy" as Mood });
   const [interests, setInterests] = useState<string[]>([]);
@@ -44,7 +42,7 @@ const ProfileSettingsPage = () => {
       try {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('display_name, interests, avatar_url')
+          .select('display_name, interests, avatar_url, gender')
           .eq('id', user.id)
           .single();
         
@@ -56,6 +54,9 @@ const ProfileSettingsPage = () => {
         }
         if (profile?.avatar_url) {
           setAvatarUrl(profile.avatar_url);
+        }
+        if ((profile as any)?.gender) {
+          setGender((profile as any).gender);
         }
 
         // Fetch entries for stats
@@ -111,12 +112,18 @@ const ProfileSettingsPage = () => {
     fetchProfile();
   }, [user]);
 
-  const handleSaveManifesto = async () => {
-    setIsEditingManifesto(false);
-    toast({
-      title: "Manifesto Updated",
-      description: "Your personal manifesto has been saved.",
-    });
+  const handleGenderChange = async (newGender: string) => {
+    if (!user) return;
+    setGender(newGender);
+    try {
+      await supabase
+        .from('profiles')
+        .update({ gender: newGender } as any)
+        .eq('id', user.id);
+      toast({ title: "Voice Preference Updated", description: `Playback voice set to ${newGender}.` });
+    } catch {
+      toast({ title: "Error", description: "Failed to save preference.", variant: "destructive" });
+    }
   };
 
   const handleSaveDisplayName = async () => {
