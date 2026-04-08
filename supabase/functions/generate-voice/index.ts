@@ -6,16 +6,32 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Gender-based voice IDs for ElevenLabs
+const VOICE_IDS = {
+  en: {
+    male: 'Cz0K1kOv9tD8l0b5Qu53',   // Jon – Canadian English male
+    female: 'TgnhEILA8UwUqIMi20rp',   // Jenna – Canadian English female
+  },
+  fr: {
+    male: '6aRkp7Pz4MBOSpUyJCTO',    // Rafiki – French male
+    female: 'HuLbOdhRlvQQN8oPP0AJ',   // Claire – French female
+  },
+};
+
+function pickDefaultVoiceId(language: string, gender: string): string {
+  const lang = language?.startsWith('fr') ? 'fr' : 'en';
+  const g = gender === 'female' ? 'female' : 'male';
+  return VOICE_IDS[lang][g];
+}
+
 async function generateWithElevenLabs(text: string, voiceId: string): Promise<Uint8Array> {
   const elevenLabsApiKey = Deno.env.get('ELEVENLABS_API_KEY');
   if (!elevenLabsApiKey) throw new Error('ElevenLabs API key not configured');
 
-  // Default to Roger (US American accent) instead of George (British)
-  const selectedVoiceId = voiceId || 'CwhRBWXzGAHq8TQ4Fs17';
-  console.log('Generating voice with ElevenLabs, voice ID:', selectedVoiceId);
+  console.log('Generating voice with ElevenLabs, voice ID:', voiceId);
 
   const response = await fetch(
-    `https://api.elevenlabs.io/v1/text-to-speech/${selectedVoiceId}?output_format=mp3_44100_128`,
+    `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=mp3_44100_128`,
     {
       method: 'POST',
       headers: {
@@ -24,7 +40,7 @@ async function generateWithElevenLabs(text: string, voiceId: string): Promise<Ui
       },
       body: JSON.stringify({
         text,
-        model_id: 'eleven_turbo_v2_5',
+        model_id: 'eleven_flash_v2_5',
         voice_settings: {
           stability: 0.5,
           similarity_boost: 0.75,
@@ -46,11 +62,13 @@ async function generateWithElevenLabs(text: string, voiceId: string): Promise<Ui
   return new Uint8Array(audioBuffer);
 }
 
-async function generateWithCartesia(text: string): Promise<Uint8Array> {
+async function generateWithCartesia(text: string, language: string): Promise<Uint8Array> {
   const cartesiaApiKey = Deno.env.get('CARTESIA_API_KEY');
   if (!cartesiaApiKey) throw new Error('Cartesia API key not configured');
 
   console.log('Falling back to Cartesia for voice generation...');
+
+  const isFrench = language?.startsWith('fr');
 
   const response = await fetch('https://api.cartesia.ai/tts/bytes', {
     method: 'POST',
@@ -64,10 +82,11 @@ async function generateWithCartesia(text: string): Promise<Uint8Array> {
       model_id: 'sonic-2',
       voice: {
         mode: 'id',
-        // Canadian French (Quebec) accent voice
-        id: 'a0e99841-438c-4a64-b679-ae501e7d6091',
+        id: isFrench
+          ? 'a0e99841-438c-4a64-b679-ae501e7d6091'  // French voice
+          : '79a125e8-cd45-4c13-8a67-188112f4dd22',  // Canadian English voice
       },
-      language: 'fr',
+      language: isFrench ? 'fr' : 'en',
       output_format: {
         container: 'mp3',
         bit_rate: 128000,
@@ -93,16 +112,21 @@ serve(async (req) => {
   }
 
   try {
-    const { text, voiceId, entryId, textType } = await req.json();
+    const { text, voiceId, entryId, textType, language, gender } = await req.json();
     if (!text) throw new Error('No text provided');
+
+    // Determine the voice to use:
+    // 1. User's cloned voice (voiceId) takes priority
+    // 2. Otherwise pick gender+language default
+    const effectiveVoiceId = voiceId || pickDefaultVoiceId(language || 'en', gender || 'male');
 
     // Generate audio bytes
     let audioBytes: Uint8Array;
     try {
-      audioBytes = await generateWithElevenLabs(text, voiceId);
+      audioBytes = await generateWithElevenLabs(text, effectiveVoiceId);
     } catch (elevenLabsError) {
       console.warn('ElevenLabs failed, switching to Cartesia fallback:', elevenLabsError);
-      audioBytes = await generateWithCartesia(text);
+      audioBytes = await generateWithCartesia(text, language || 'en');
     }
 
     // If entryId provided, cache to storage and update DB
@@ -115,7 +139,6 @@ serve(async (req) => {
         const suffix = textType === 'reflection' ? '_reflection' : '';
         const storagePath = `voice-cache/${entryId}${suffix}.mp3`;
 
-        // Upload to storage
         const { error: uploadError } = await supabase.storage
           .from('journal-audio')
           .upload(storagePath, audioBytes, {
@@ -126,7 +149,6 @@ serve(async (req) => {
         if (uploadError) {
           console.error('Storage upload error:', uploadError);
         } else {
-          // Update journal_entries with the cached storage path
           const updateField = textType === 'reflection' 
             ? { reflection_audio_url: storagePath }
             : { audio_url: storagePath };
@@ -142,7 +164,6 @@ serve(async (req) => {
       }
     }
 
-    // Return base64 for immediate playback
     const { encode: base64Encode } = await import("https://deno.land/std@0.168.0/encoding/base64.ts");
     const base64Audio = base64Encode(audioBytes);
 
