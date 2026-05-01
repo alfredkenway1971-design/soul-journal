@@ -144,7 +144,9 @@ const RecordPage = () => {
           // Auto-detect mood from transcription
           try {
             const detectedMood = await api.detectMood(text);
-            setSelectedMood(detectedMood as Mood);
+            const m = detectedMood as Mood;
+            setSelectedMood(m);
+            setMoodScore(moodToScore(m));
           } catch (moodErr) {
             console.error('Mood detection error:', moodErr);
           }
