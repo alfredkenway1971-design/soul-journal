@@ -5,9 +5,12 @@ import { X, Type, Smile, Sparkles, Wand2, Play, Volume2, Camera, ImagePlus, Tras
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import MoodSelector, { Mood } from "@/components/MoodSelector";
+import { Mood } from "@/components/MoodSelector";
+import MoodSlider, { moodToScore } from "@/components/MoodSlider";
+import RichTextEditor from "@/components/RichTextToolbar";
 import LanguageSelector, { Language } from "@/components/LanguageSelector";
 import RecentEntryCard from "@/components/premium/RecentEntryCard";
+import { captureEntryContext } from "@/lib/contextCapture";
 
 import BottomNav from "@/components/BottomNav";
 import { useToast } from "@/hooks/use-toast";
