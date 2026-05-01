@@ -73,9 +73,12 @@ const getPageBackgroundHTML = (bg: PageBackground, w: number, h: number): string
 // A5 dimensions in mm
 const PAGE_W_MM = 148;
 const PAGE_H_MM = 210;
-const SCALE = 2;
-const PAGE_W_PX = Math.round(PAGE_W_MM * 3.78 * SCALE);
-const PAGE_H_PX = Math.round(PAGE_H_MM * 3.78 * SCALE);
+// Render at 300 DPI for print quality (300 / 72 ≈ 4.17 ×).
+// 1mm = 3.7795 CSS px; multiplying by SCALE pushes the underlying canvas
+// to true print resolution while jsPDF still places it on an A5 page.
+const SCALE = 4;
+const PAGE_W_PX = Math.round(PAGE_W_MM * 3.7795 * SCALE);
+const PAGE_H_PX = Math.round(PAGE_H_MM * 3.7795 * SCALE);
 
 const getFontSizePx = (size: FontSize): { body: number; title: number; meta: number } => {
   switch (size) {
@@ -188,8 +191,10 @@ const renderHTMLToCanvas = async (html: string): Promise<HTMLCanvasElement> => {
 
 const addCanvasToPDF = (pdf: jsPDF, canvas: HTMLCanvasElement, addNewPage: boolean) => {
   if (addNewPage) pdf.addPage([PAGE_W_MM, PAGE_H_MM]);
-  const imgData = canvas.toDataURL("image/png");
-  pdf.addImage(imgData, "PNG", 0, 0, PAGE_W_MM, PAGE_H_MM, undefined, "FAST");
+  // Use JPEG at high quality for smaller file size while keeping 300 DPI fidelity,
+  // and skip jsPDF's downscaling ('SLOW' = no resample) to preserve photo quality.
+  const imgData = canvas.toDataURL("image/jpeg", 0.95);
+  pdf.addImage(imgData, "JPEG", 0, 0, PAGE_W_MM, PAGE_H_MM, undefined, "SLOW");
 };
 
 // ── Image Gallery Engine ──
