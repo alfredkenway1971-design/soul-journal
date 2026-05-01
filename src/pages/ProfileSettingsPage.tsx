@@ -286,6 +286,33 @@ const ProfileSettingsPage = () => {
           </div>
         </motion.section>
 
+        {/* Context Capture */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25 }}
+        >
+          <p className="section-label mb-3">CONTEXT CAPTURE</p>
+          <div className="glass-premium p-5">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1">
+                <p className="font-medium text-foreground mb-1">Auto-capture weather & location</p>
+                <p className="text-xs text-muted-foreground">
+                  Add city, weather and time of day to new entries. Asks for browser location permission. Off by default.
+                </p>
+              </div>
+              <button
+                role="switch"
+                aria-checked={captureContext}
+                onClick={() => handleCaptureContextToggle(!captureContext)}
+                className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${captureContext ? 'bg-primary' : 'bg-muted'}`}
+              >
+                <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${captureContext ? 'translate-x-5' : 'translate-x-0.5'}`} />
+              </button>
+            </div>
+          </div>
+        </motion.section>
+
         {/* Current Focus */}
         <motion.section
           initial={{ opacity: 0, y: 20 }}
