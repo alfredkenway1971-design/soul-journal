@@ -200,8 +200,13 @@ export const useJournalAPI = (appLanguage?: AppLanguage) => {
     originalTranscription: string;
     enhancedText: string;
     mood: string;
+    moodScore?: number | null;
     playbackLanguage: string;
     audioUrl?: string;
+    richContent?: string | null;
+    weather?: any;
+    location?: any;
+    timeOfDay?: string | null;
   }) => {
     const { data, error } = await supabase
       .from('journal_entries')
@@ -211,9 +216,14 @@ export const useJournalAPI = (appLanguage?: AppLanguage) => {
         original_transcription: entry.originalTranscription,
         enhanced_text: entry.enhancedText,
         mood: entry.mood,
+        mood_score: entry.moodScore ?? null,
         playback_language: entry.playbackLanguage,
         audio_url: entry.audioUrl,
-      })
+        rich_content: entry.richContent ?? null,
+        weather: entry.weather ?? null,
+        location: entry.location ?? null,
+        time_of_day: entry.timeOfDay ?? null,
+      } as any)
       .select()
       .single();
 
