@@ -32,6 +32,8 @@ const RecordPage = () => {
   
   const [step, setStep] = useState<RecordingStep>("main");
   const [selectedMood, setSelectedMood] = useState<Mood | null>(null);
+  const [moodScore, setMoodScore] = useState<number | null>(null);
+  const [richContent, setRichContent] = useState<string>("");
   const [selectedLanguage, setSelectedLanguage] = useState<Language>("en");
   const [isProcessing, setIsProcessing] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
@@ -41,6 +43,7 @@ const RecordPage = () => {
   const [entryTitle, setEntryTitle] = useState("");
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [displayName, setDisplayName] = useState("");
+  const [captureContext, setCaptureContext] = useState(false);
   const [recentEntry, setRecentEntry] = useState<{ id: string; title: string; preview: string; date: Date; mood: Mood } | null>(null);
   const [generatedAudioUrl, setGeneratedAudioUrl] = useState<string | null>(null);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
