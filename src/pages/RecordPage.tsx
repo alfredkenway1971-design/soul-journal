@@ -295,7 +295,7 @@ const RecordPage = () => {
       if (audioBlob) {
         audioPath = await api.uploadAudio(audioBlob, user.id);
       }
-      
+
       // Auto-generate title if still empty
       let finalTitle = entryTitle;
       if (!finalTitle && enhancedText) {
@@ -306,15 +306,23 @@ const RecordPage = () => {
           finalTitle = `Entry ${new Date().toLocaleDateString()}`;
         }
       }
-      
+
+      // Capture contextual metadata (weather/location/time-of-day)
+      const ctx = await captureEntryContext(captureContext);
+
       const entry = await api.saveEntry({
         userId: user.id,
         title: finalTitle || `Entry ${new Date().toLocaleDateString()}`,
         originalTranscription: transcription,
         enhancedText: enhancedText,
         mood: selectedMood || "fine",
+        moodScore: moodScore,
         playbackLanguage: selectedLanguage,
         audioUrl: audioPath,
+        richContent: richContent || null,
+        weather: ctx.weather,
+        location: ctx.location,
+        timeOfDay: ctx.time_of_day,
       });
 
       // Upload photos and save media references
