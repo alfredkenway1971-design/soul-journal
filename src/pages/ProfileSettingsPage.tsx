@@ -120,6 +120,25 @@ const ProfileSettingsPage = () => {
     }
   };
 
+  const handleCaptureContextToggle = async (next: boolean) => {
+    if (!user) return;
+    setCaptureContext(next);
+    try {
+      await supabase
+        .from('profiles')
+        .update({ capture_context: next } as any)
+        .eq('id', user.id);
+      toast({
+        title: next ? "Context capture enabled" : "Context capture disabled",
+        description: next
+          ? "New entries will include weather, city and time of day."
+          : "We'll only store the time of day for new entries.",
+      });
+    } catch {
+      toast({ title: "Error", description: "Failed to save preference.", variant: "destructive" });
+    }
+  };
+
   const handleSaveDisplayName = async () => {
     if (!user || !editedName.trim()) return;
     try {
