@@ -502,11 +502,14 @@ const RecordPage = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <Textarea
-              value={transcription}
-              onChange={(e) => setTranscription(e.target.value)}
+            <RichTextEditor
+              value={richContent}
               placeholder={t("record.whatsOnMind")}
-              className="min-h-[200px] font-journal text-lg border-0 bg-transparent resize-none focus-visible:ring-0"
+              onChange={(html, plain) => {
+                setRichContent(html);
+                setTranscription(plain);
+              }}
+              minHeight={220}
             />
             <div className="flex gap-3">
               <Button
@@ -524,7 +527,9 @@ const RecordPage = () => {
                   if (!selectedMood) {
                     try {
                       const detectedMood = await api.detectMood(transcription);
-                      setSelectedMood(detectedMood as Mood);
+                      const m = detectedMood as Mood;
+                      setSelectedMood(m);
+                      setMoodScore(moodToScore(m));
                     } catch (err) {
                       console.error('Mood detection error:', err);
                     }
@@ -539,20 +544,26 @@ const RecordPage = () => {
           </motion.div>
         )}
 
-        {/* Mood Selection */}
+        {/* Mood Selection — granular slider */}
         {step === "mood" && (
           <motion.div
             className="glass-premium p-6"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <MoodSelector 
-              selected={selectedMood} 
-              onSelect={(mood) => {
+            <MoodSlider
+              value={moodScore}
+              onChange={(score, mood) => {
+                setMoodScore(score);
                 setSelectedMood(mood);
-                setTimeout(() => setStep("main"), 500);
-              }} 
+              }}
             />
+            <Button
+              className="w-full mt-6 gradient-primary"
+              onClick={() => setStep("main")}
+            >
+              {t("common.cancel") /* reuse 'Done' visually */ ? "Done" : "Done"}
+            </Button>
           </motion.div>
         )}
 
