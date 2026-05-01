@@ -43,22 +43,15 @@ const ProfileSettingsPage = () => {
       try {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('display_name, interests, avatar_url, gender')
+          .select('display_name, interests, avatar_url, gender, capture_context')
           .eq('id', user.id)
           .single();
-        
-        if (profile?.display_name) {
-          setDisplayName(profile.display_name);
-        }
-        if (profile?.interests) {
-          setInterests(profile.interests);
-        }
-        if (profile?.avatar_url) {
-          setAvatarUrl(profile.avatar_url);
-        }
-        if ((profile as any)?.gender) {
-          setGender((profile as any).gender);
-        }
+
+        if (profile?.display_name) setDisplayName(profile.display_name);
+        if (profile?.interests) setInterests(profile.interests);
+        if (profile?.avatar_url) setAvatarUrl(profile.avatar_url);
+        if ((profile as any)?.gender) setGender((profile as any).gender);
+        if ((profile as any)?.capture_context) setCaptureContext(true);
 
         // Fetch entries for stats
         const { data: entries } = await supabase
