@@ -77,15 +77,18 @@ const RecordPage = () => {
     const fetchData = async () => {
       if (!user) return;
       
-      // Fetch profile name
+      // Fetch profile name + capture preference
       const { data: profile } = await supabase
         .from('profiles')
-        .select('display_name')
+        .select('display_name, capture_context')
         .eq('id', user.id)
         .single();
-      
+
       if (profile?.display_name) {
         setDisplayName(profile.display_name.split(' ')[0]);
+      }
+      if ((profile as any)?.capture_context) {
+        setCaptureContext(true);
       }
 
       // Fetch recent entry
