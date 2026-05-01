@@ -5,9 +5,12 @@ import { X, Type, Smile, Sparkles, Wand2, Play, Volume2, Camera, ImagePlus, Tras
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import MoodSelector, { Mood } from "@/components/MoodSelector";
+import { Mood } from "@/components/MoodSelector";
+import MoodSlider, { moodToScore } from "@/components/MoodSlider";
+import RichTextEditor from "@/components/RichTextToolbar";
 import LanguageSelector, { Language } from "@/components/LanguageSelector";
 import RecentEntryCard from "@/components/premium/RecentEntryCard";
+import { captureEntryContext } from "@/lib/contextCapture";
 
 import BottomNav from "@/components/BottomNav";
 import { useToast } from "@/hooks/use-toast";
@@ -29,6 +32,8 @@ const RecordPage = () => {
   
   const [step, setStep] = useState<RecordingStep>("main");
   const [selectedMood, setSelectedMood] = useState<Mood | null>(null);
+  const [moodScore, setMoodScore] = useState<number | null>(null);
+  const [richContent, setRichContent] = useState<string>("");
   const [selectedLanguage, setSelectedLanguage] = useState<Language>("en");
   const [isProcessing, setIsProcessing] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
@@ -38,6 +43,7 @@ const RecordPage = () => {
   const [entryTitle, setEntryTitle] = useState("");
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [displayName, setDisplayName] = useState("");
+  const [captureContext, setCaptureContext] = useState(false);
   const [recentEntry, setRecentEntry] = useState<{ id: string; title: string; preview: string; date: Date; mood: Mood } | null>(null);
   const [generatedAudioUrl, setGeneratedAudioUrl] = useState<string | null>(null);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
@@ -71,15 +77,18 @@ const RecordPage = () => {
     const fetchData = async () => {
       if (!user) return;
       
-      // Fetch profile name
+      // Fetch profile name + capture preference
       const { data: profile } = await supabase
         .from('profiles')
-        .select('display_name')
+        .select('display_name, capture_context')
         .eq('id', user.id)
         .single();
-      
+
       if (profile?.display_name) {
         setDisplayName(profile.display_name.split(' ')[0]);
+      }
+      if ((profile as any)?.capture_context) {
+        setCaptureContext(true);
       }
 
       // Fetch recent entry
@@ -135,7 +144,9 @@ const RecordPage = () => {
           // Auto-detect mood from transcription
           try {
             const detectedMood = await api.detectMood(text);
-            setSelectedMood(detectedMood as Mood);
+            const m = detectedMood as Mood;
+            setSelectedMood(m);
+            setMoodScore(moodToScore(m));
           } catch (moodErr) {
             console.error('Mood detection error:', moodErr);
           }
@@ -284,7 +295,7 @@ const RecordPage = () => {
       if (audioBlob) {
         audioPath = await api.uploadAudio(audioBlob, user.id);
       }
-      
+
       // Auto-generate title if still empty
       let finalTitle = entryTitle;
       if (!finalTitle && enhancedText) {
@@ -295,15 +306,23 @@ const RecordPage = () => {
           finalTitle = `Entry ${new Date().toLocaleDateString()}`;
         }
       }
-      
+
+      // Capture contextual metadata (weather/location/time-of-day)
+      const ctx = await captureEntryContext(captureContext);
+
       const entry = await api.saveEntry({
         userId: user.id,
         title: finalTitle || `Entry ${new Date().toLocaleDateString()}`,
         originalTranscription: transcription,
         enhancedText: enhancedText,
         mood: selectedMood || "fine",
+        moodScore: moodScore,
         playbackLanguage: selectedLanguage,
         audioUrl: audioPath,
+        richContent: richContent || null,
+        weather: ctx.weather,
+        location: ctx.location,
+        timeOfDay: ctx.time_of_day,
       });
 
       // Upload photos and save media references
@@ -493,11 +512,14 @@ const RecordPage = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <Textarea
-              value={transcription}
-              onChange={(e) => setTranscription(e.target.value)}
+            <RichTextEditor
+              value={richContent}
               placeholder={t("record.whatsOnMind")}
-              className="min-h-[200px] font-journal text-lg border-0 bg-transparent resize-none focus-visible:ring-0"
+              onChange={(html, plain) => {
+                setRichContent(html);
+                setTranscription(plain);
+              }}
+              minHeight={220}
             />
             <div className="flex gap-3">
               <Button
@@ -515,7 +537,9 @@ const RecordPage = () => {
                   if (!selectedMood) {
                     try {
                       const detectedMood = await api.detectMood(transcription);
-                      setSelectedMood(detectedMood as Mood);
+                      const m = detectedMood as Mood;
+                      setSelectedMood(m);
+                      setMoodScore(moodToScore(m));
                     } catch (err) {
                       console.error('Mood detection error:', err);
                     }
@@ -530,20 +554,26 @@ const RecordPage = () => {
           </motion.div>
         )}
 
-        {/* Mood Selection */}
+        {/* Mood Selection — granular slider */}
         {step === "mood" && (
           <motion.div
             className="glass-premium p-6"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <MoodSelector 
-              selected={selectedMood} 
-              onSelect={(mood) => {
+            <MoodSlider
+              value={moodScore}
+              onChange={(score, mood) => {
+                setMoodScore(score);
                 setSelectedMood(mood);
-                setTimeout(() => setStep("main"), 500);
-              }} 
+              }}
             />
+            <Button
+              className="w-full mt-6 gradient-primary"
+              onClick={() => setStep("main")}
+            >
+              {t("common.cancel") /* reuse 'Done' visually */ ? "Done" : "Done"}
+            </Button>
           </motion.div>
         )}
 

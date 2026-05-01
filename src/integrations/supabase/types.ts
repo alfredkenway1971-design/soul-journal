@@ -144,42 +144,57 @@ export type Database = {
           created_at: string
           enhanced_text: string | null
           id: string
+          location: Json | null
           mood: string | null
+          mood_score: number | null
           original_transcription: string | null
           playback_language: string | null
           reflection_audio_url: string | null
+          rich_content: string | null
           soul_reflection: string | null
+          time_of_day: string | null
           title: string | null
           updated_at: string
           user_id: string
+          weather: Json | null
         }
         Insert: {
           audio_url?: string | null
           created_at?: string
           enhanced_text?: string | null
           id?: string
+          location?: Json | null
           mood?: string | null
+          mood_score?: number | null
           original_transcription?: string | null
           playback_language?: string | null
           reflection_audio_url?: string | null
+          rich_content?: string | null
           soul_reflection?: string | null
+          time_of_day?: string | null
           title?: string | null
           updated_at?: string
           user_id: string
+          weather?: Json | null
         }
         Update: {
           audio_url?: string | null
           created_at?: string
           enhanced_text?: string | null
           id?: string
+          location?: Json | null
           mood?: string | null
+          mood_score?: number | null
           original_transcription?: string | null
           playback_language?: string | null
           reflection_audio_url?: string | null
+          rich_content?: string | null
           soul_reflection?: string | null
+          time_of_day?: string | null
           title?: string | null
           updated_at?: string
           user_id?: string
+          weather?: Json | null
         }
         Relationships: [
           {
@@ -194,6 +209,7 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          capture_context: boolean
           created_at: string
           display_name: string | null
           fears: string[] | null
@@ -211,6 +227,7 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          capture_context?: boolean
           created_at?: string
           display_name?: string | null
           fears?: string[] | null
@@ -228,6 +245,7 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          capture_context?: boolean
           created_at?: string
           display_name?: string | null
           fears?: string[] | null

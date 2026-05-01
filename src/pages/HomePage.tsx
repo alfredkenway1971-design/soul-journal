@@ -10,6 +10,7 @@ import BottomNav from "@/components/BottomNav";
 import AppLanguageSwitcher from "@/components/AppLanguageSwitcher";
 import QuickCapture from "@/components/premium/QuickCapture";
 import RecentEntryCard from "@/components/premium/RecentEntryCard";
+import OnThisDayCard from "@/components/OnThisDayCard";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
 import type { Mood } from "@/components/MoodSelector";
@@ -137,6 +138,9 @@ const HomePage = () => {
           <h2 className="font-semibold text-foreground mb-3">{t("home.quickCapture")}</h2>
           <QuickCapture />
         </section>
+
+        {/* On This Day memories */}
+        <OnThisDayCard />
 
         {/* Recent Entries */}
         <section>

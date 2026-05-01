@@ -18,10 +18,11 @@ const ProfileSettingsPage = () => {
   
   const [displayName, setDisplayName] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  
+
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState("");
   const [gender, setGender] = useState<string | null>(null);
+  const [captureContext, setCaptureContext] = useState(false);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ streak: 0, entries: 0, topMood: "happy" as Mood });
   const [interests, setInterests] = useState<string[]>([]);
@@ -42,22 +43,15 @@ const ProfileSettingsPage = () => {
       try {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('display_name, interests, avatar_url, gender')
+          .select('display_name, interests, avatar_url, gender, capture_context')
           .eq('id', user.id)
           .single();
-        
-        if (profile?.display_name) {
-          setDisplayName(profile.display_name);
-        }
-        if (profile?.interests) {
-          setInterests(profile.interests);
-        }
-        if (profile?.avatar_url) {
-          setAvatarUrl(profile.avatar_url);
-        }
-        if ((profile as any)?.gender) {
-          setGender((profile as any).gender);
-        }
+
+        if (profile?.display_name) setDisplayName(profile.display_name);
+        if (profile?.interests) setInterests(profile.interests);
+        if (profile?.avatar_url) setAvatarUrl(profile.avatar_url);
+        if ((profile as any)?.gender) setGender((profile as any).gender);
+        if ((profile as any)?.capture_context) setCaptureContext(true);
 
         // Fetch entries for stats
         const { data: entries } = await supabase
@@ -121,6 +115,25 @@ const ProfileSettingsPage = () => {
         .update({ gender: newGender } as any)
         .eq('id', user.id);
       toast({ title: "Voice Preference Updated", description: `Playback voice set to ${newGender}.` });
+    } catch {
+      toast({ title: "Error", description: "Failed to save preference.", variant: "destructive" });
+    }
+  };
+
+  const handleCaptureContextToggle = async (next: boolean) => {
+    if (!user) return;
+    setCaptureContext(next);
+    try {
+      await supabase
+        .from('profiles')
+        .update({ capture_context: next } as any)
+        .eq('id', user.id);
+      toast({
+        title: next ? "Context capture enabled" : "Context capture disabled",
+        description: next
+          ? "New entries will include weather, city and time of day."
+          : "We'll only store the time of day for new entries.",
+      });
     } catch {
       toast({ title: "Error", description: "Failed to save preference.", variant: "destructive" });
     }
@@ -268,6 +281,33 @@ const ProfileSettingsPage = () => {
               >
                 <span className="text-2xl block mb-1">👩</span>
                 <span className="text-sm">Female</span>
+              </button>
+            </div>
+          </div>
+        </motion.section>
+
+        {/* Context Capture */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25 }}
+        >
+          <p className="section-label mb-3">CONTEXT CAPTURE</p>
+          <div className="glass-premium p-5">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1">
+                <p className="font-medium text-foreground mb-1">Auto-capture weather & location</p>
+                <p className="text-xs text-muted-foreground">
+                  Add city, weather and time of day to new entries. Asks for browser location permission. Off by default.
+                </p>
+              </div>
+              <button
+                role="switch"
+                aria-checked={captureContext}
+                onClick={() => handleCaptureContextToggle(!captureContext)}
+                className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${captureContext ? 'bg-primary' : 'bg-muted'}`}
+              >
+                <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${captureContext ? 'translate-x-5' : 'translate-x-0.5'}`} />
               </button>
             </div>
           </div>
