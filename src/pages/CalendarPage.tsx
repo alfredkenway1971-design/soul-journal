@@ -64,7 +64,7 @@ const CalendarPage = () => {
         
         const { data: entries, error } = await supabase
           .from('journal_entries')
-          .select('id, mood, created_at, title, enhanced_text, original_transcription')
+          .select('id, mood, mood_score, created_at, title, enhanced_text, original_transcription')
           .eq('user_id', user.id)
           .gte('created_at', monthStart.toISOString())
           .lte('created_at', monthEnd.toISOString())
@@ -87,12 +87,15 @@ const CalendarPage = () => {
         }
         
         const dataMap: Record<string, CalendarEntry> = {};
-        entries?.forEach(entry => {
+        entries?.forEach((entry: any) => {
           const dateKey = format(new Date(entry.created_at), 'yyyy-MM-dd');
+          const mood = (entry.mood as Mood) || "fine";
+          const score = entry.mood_score ?? moodToScore(mood);
           
           if (!dataMap[dateKey]) {
             dataMap[dateKey] = {
-              mood: (entry.mood as Mood) || "fine",
+              mood,
+              moodScore: score,
               entryId: entry.id,
               title: entry.title || t("record.title"),
               preview: entry.enhanced_text || entry.original_transcription || "",
@@ -107,11 +110,13 @@ const CalendarPage = () => {
           dataMap[dateKey].entries.push({
             id: entry.id,
             title: entry.title || t("record.title"),
-            mood: (entry.mood as Mood) || "fine",
+            mood,
+            moodScore: score,
           });
           
           if (dataMap[dateKey].entries.length === 1) {
-            dataMap[dateKey].mood = (entry.mood as Mood) || "fine";
+            dataMap[dateKey].mood = mood;
+            dataMap[dateKey].moodScore = score;
             dataMap[dateKey].title = entry.title || t("record.title");
             dataMap[dateKey].preview = entry.enhanced_text || entry.original_transcription || "";
           }
