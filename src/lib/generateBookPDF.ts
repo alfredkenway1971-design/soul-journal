@@ -528,7 +528,7 @@ export const generatePreviewDataURL = async (
   // Pre-load images to base64
   const [processedEntry] = await preloadEntryImages([sampleEntry]);
 
-  const html = buildSingleEntryHTML(processedEntry, config, fontConfig.css, fontConfig.importUrl);
+  const html = buildEntryByLayout(processedEntry, config, fontConfig.css, fontConfig.importUrl);
   const canvas = await renderHTMLToCanvas(html);
   return canvas.toDataURL("image/png");
 };
@@ -563,10 +563,10 @@ export const generateAndDownloadPDF = async (
   const coverCanvas = await renderHTMLToCanvas(coverHTML);
   addCanvasToPDF(pdf, coverCanvas, false);
 
-  if (processedConfig.layout === "one-per-page") {
+  if (processedConfig.layout === "one-per-page" || processedConfig.layout === "magazine" || processedConfig.layout === "photo-forward") {
     for (let i = 0; i < processedEntries.length; i++) {
       onProgress?.(`Rendering entry ${i + 1} of ${processedEntries.length}...`);
-      const html = buildSingleEntryHTML(processedEntries[i], processedConfig, fontConfig.css, fontConfig.importUrl);
+      const html = buildEntryByLayout(processedEntries[i], processedConfig, fontConfig.css, fontConfig.importUrl);
       const canvas = await renderHTMLToCanvas(html);
       addCanvasToPDF(pdf, canvas, true);
     }
