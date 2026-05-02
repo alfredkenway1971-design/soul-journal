@@ -1,17 +1,20 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Bell, Clock, Calendar } from "lucide-react";
+import { ArrowLeft, Bell, Clock, Calendar, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ReminderSettings {
   enabled: boolean;
   time: string;
   days: string[];
+  contextual: boolean;
 }
 
 const DAYS_OF_WEEK = [
@@ -33,11 +36,13 @@ const TIME_OPTIONS = [
 const RemindersSettingsPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   
   const [settings, setSettings] = useState<ReminderSettings>({
     enabled: false,
     time: '20:00',
     days: ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'],
+    contextual: true,
   });
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
 
