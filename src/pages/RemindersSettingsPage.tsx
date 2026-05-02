@@ -288,6 +288,32 @@ const RemindersSettingsPage = () => {
           </motion.div>
         )}
 
+        {/* Contextual Toggle */}
+        {settings.enabled && (
+          <motion.div
+            className="glass-card rounded-2xl p-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25 }}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                  <Sparkles className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <Label className="text-base font-medium">Contextual reminders</Label>
+                  <p className="text-sm text-muted-foreground">Personalize messages with your last mood</p>
+                </div>
+              </div>
+              <Switch
+                checked={settings.contextual}
+                onCheckedChange={(checked) => setSettings(prev => ({ ...prev, contextual: checked }))}
+              />
+            </div>
+          </motion.div>
+        )}
+
         {/* Save Button */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
