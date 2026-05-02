@@ -677,11 +677,39 @@ const RecordPage = () => {
                   </Button>
                 </div>
                 
-                <Textarea
+                <RichTextEditor
                   value={enhancedText}
-                  onChange={(e) => setEnhancedText(e.target.value)}
-                  className="min-h-[200px] font-journal text-lg border-0 bg-transparent resize-none focus-visible:ring-0"
+                  placeholder={t("record.aiEnhanced")}
+                  onChange={(html, _plain) => setEnhancedText(html)}
+                  minHeight={200}
                 />
+                <div className="flex gap-2 mt-3">
+                  <Button
+                    variant="outline"
+                    className="flex-1 gap-2 h-11 rounded-xl"
+                    onClick={async () => {
+                      if (!enhancedText) return;
+                      setIsProcessing(true);
+                      try {
+                        const expanded = await api.expandText(enhancedText.replace(/<[^>]+>/g, ' '));
+                        setEnhancedText(expanded);
+                        toast({ title: "Expanded ✨", description: "Notes expanded into a paragraph." });
+                      } catch (err) {
+                        toast({
+                          title: "Expand Failed",
+                          description: err instanceof Error ? err.message : "Could not expand",
+                          variant: "destructive",
+                        });
+                      } finally {
+                        setIsProcessing(false);
+                      }
+                    }}
+                    disabled={isProcessing || !enhancedText}
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    Expand bullets
+                  </Button>
+                </div>
                 <Button
                   className="w-full mt-4 gap-2 h-12 rounded-xl gradient-primary"
                   onClick={() => setStep("language")}

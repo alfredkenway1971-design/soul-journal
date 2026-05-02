@@ -10,6 +10,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useJournalAPI } from "@/hooks/useJournalAPI";
 import { supabase } from "@/integrations/supabase/client";
 import BottomNav from "@/components/BottomNav";
+import RelatedEntriesCard from "@/components/RelatedEntriesCard";
 import type { Mood } from "@/components/MoodSelector";
 import {
   AlertDialog,
@@ -581,6 +582,15 @@ const EntryDetailPage = () => {
             </motion.div>
           )}
         </motion.div>
+
+        {/* Related Entries */}
+        {entry.enhanced_text && user && (
+          <RelatedEntriesCard
+            userId={user.id}
+            entryId={entry.id}
+            text={entry.enhanced_text}
+          />
+        )}
 
         {/* Photo Gallery */}
         {photoUrls.length > 0 && (

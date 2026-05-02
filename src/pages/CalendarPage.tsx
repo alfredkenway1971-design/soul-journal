@@ -9,29 +9,38 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isToday, isFuture } from "date-fns";
 import type { Mood } from "@/components/MoodSelector";
+import { moodToScore } from "@/components/MoodSlider";
 
-// Enhanced sentiment color mapping with intensity
-const getMoodColor = (mood: Mood, entryCount: number = 1) => {
-  const colorMap: Record<Mood, string> = {
-    happy: "bg-amber-400",
-    good: "bg-amber-300",
-    fine: "bg-sky-400",
-    sad: "bg-rose-300",
-    unhappy: "bg-rose-400",
-  };
-  
-  return colorMap[mood] || "bg-muted";
+// Granular mood_score (1–10) → gradient color.
+// Lower = cool/sad (rose), middle = neutral (sky), higher = warm/happy (amber).
+const getScoreColor = (score: number): string => {
+  if (score <= 1) return "bg-rose-500";
+  if (score <= 2) return "bg-rose-400";
+  if (score <= 3) return "bg-rose-300";
+  if (score <= 4) return "bg-rose-200";
+  if (score <= 5) return "bg-sky-300";
+  if (score <= 6) return "bg-sky-400";
+  if (score <= 7) return "bg-amber-200";
+  if (score <= 8) return "bg-amber-300";
+  if (score <= 9) return "bg-amber-400";
+  return "bg-amber-500";
+};
+
+const getMoodColor = (mood: Mood, score?: number | null) => {
+  const s = score ?? moodToScore(mood);
+  return getScoreColor(s);
 };
 
 interface CalendarEntry {
   mood: Mood;
+  moodScore: number;
   entryId: string;
   title?: string;
   preview?: string;
   tags?: string[];
   entryCount: number;
   photoCount: number;
-  entries: Array<{ id: string; title: string; mood: Mood }>;
+  entries: Array<{ id: string; title: string; mood: Mood; moodScore: number }>;
 }
 
 const CalendarPage = () => {
@@ -55,7 +64,7 @@ const CalendarPage = () => {
         
         const { data: entries, error } = await supabase
           .from('journal_entries')
-          .select('id, mood, created_at, title, enhanced_text, original_transcription')
+          .select('id, mood, mood_score, created_at, title, enhanced_text, original_transcription')
           .eq('user_id', user.id)
           .gte('created_at', monthStart.toISOString())
           .lte('created_at', monthEnd.toISOString())
@@ -78,12 +87,15 @@ const CalendarPage = () => {
         }
         
         const dataMap: Record<string, CalendarEntry> = {};
-        entries?.forEach(entry => {
+        entries?.forEach((entry: any) => {
           const dateKey = format(new Date(entry.created_at), 'yyyy-MM-dd');
+          const mood = (entry.mood as Mood) || "fine";
+          const score = entry.mood_score ?? moodToScore(mood);
           
           if (!dataMap[dateKey]) {
             dataMap[dateKey] = {
-              mood: (entry.mood as Mood) || "fine",
+              mood,
+              moodScore: score,
               entryId: entry.id,
               title: entry.title || t("record.title"),
               preview: entry.enhanced_text || entry.original_transcription || "",
@@ -98,11 +110,13 @@ const CalendarPage = () => {
           dataMap[dateKey].entries.push({
             id: entry.id,
             title: entry.title || t("record.title"),
-            mood: (entry.mood as Mood) || "fine",
+            mood,
+            moodScore: score,
           });
           
           if (dataMap[dateKey].entries.length === 1) {
-            dataMap[dateKey].mood = (entry.mood as Mood) || "fine";
+            dataMap[dateKey].mood = mood;
+            dataMap[dateKey].moodScore = score;
             dataMap[dateKey].title = entry.title || t("record.title");
             dataMap[dateKey].preview = entry.enhanced_text || entry.original_transcription || "";
           }
@@ -156,9 +170,9 @@ const CalendarPage = () => {
   const totalEntries = Object.values(calendarData).reduce((sum, e) => sum + e.entryCount, 0);
 
   const sentimentLabels = [
-    { key: "happy", label: t("calendar.happy"), color: "bg-amber-400" },
-    { key: "fine", label: t("calendar.fine"), color: "bg-sky-400" },
-    { key: "sad", label: t("calendar.sad"), color: "bg-rose-300" },
+    { key: "low", label: t("calendar.sad"), color: "bg-rose-400" },
+    { key: "mid", label: t("calendar.fine"), color: "bg-sky-400" },
+    { key: "high", label: t("calendar.happy"), color: "bg-amber-400" },
   ];
 
   return (
@@ -263,7 +277,7 @@ const CalendarPage = () => {
                       isSelected
                         ? "bg-charcoal dark:bg-primary text-white ring-2 ring-offset-2 ring-primary"
                         : entry
-                        ? `${getMoodColor(entry.mood, entry.entryCount)} text-charcoal font-medium`
+                        ? `${getMoodColor(entry.mood, entry.moodScore)} text-charcoal font-medium`
                         : isFutureDate
                         ? "text-muted-foreground/40"
                         : "text-muted-foreground hover:bg-muted"
@@ -313,7 +327,7 @@ const CalendarPage = () => {
                 <>
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
-                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${getMoodColor(selectedEntry.mood)}`}>
+                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${getMoodColor(selectedEntry.mood, selectedEntry.moodScore)}`}>
                         <span className="text-2xl">
                           {selectedEntry.mood === "happy" ? "😊" :
                            selectedEntry.mood === "good" ? "🙂" :
@@ -346,7 +360,7 @@ const CalendarPage = () => {
                           className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-muted/50 transition-colors text-left"
                           onClick={() => navigate(`/entry/${e.id}`)}
                         >
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${getMoodColor(e.mood)}`}>
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${getMoodColor(e.mood, e.moodScore)}`}>
                             <span className="text-sm">
                               {e.mood === "happy" ? "😊" :
                                e.mood === "good" ? "🙂" :

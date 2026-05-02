@@ -14,32 +14,43 @@ serve(async (req) => {
   }
 
   try {
-    const { text, tone = 'natural', customPrompt, language = 'English' } = await req.json();
+    const { text, tone = 'natural', customPrompt, language = 'English', styleSamples = [] } = await req.json();
 
     if (!text) {
       throw new Error('No text provided');
     }
 
-    console.log('Enhancing text with tone:', tone, 'custom prompt:', !!customPrompt);
+    console.log('Enhancing text with tone:', tone, 'styleSamples:', styleSamples.length);
 
     let systemPrompt: string;
     let userMessage: string;
 
+    // Style fingerprint from user's recent entries (mirror voice without copying)
+    const styleBlock = styleSamples.length > 0
+      ? `\n\nThe writer's natural voice samples (mirror their rhythm, vocabulary, sentence length, and tone — do NOT copy phrases verbatim):\n---\n${styleSamples.slice(0, 3).map((s: string, i: number) => `Sample ${i + 1}: ${String(s).substring(0, 400)}`).join('\n\n')}\n---`
+      : '';
+
     if (customPrompt) {
-      // Use custom prompt for title generation or other specialized tasks
       systemPrompt = 'You are a helpful assistant that follows instructions precisely.';
       userMessage = `${customPrompt}\n\n${text}`;
+    } else if (tone === 'expand') {
+      systemPrompt = `You are a journaling companion who expands short notes or bullet points into a flowing, first-person journal paragraph in ${language}.
+Rules:
+1. Keep the writer's voice — do not invent facts or feelings beyond what's hinted at.
+2. Turn bullets/fragments into 2–4 connected sentences per bullet, naturally.
+3. Maintain authenticity; never sound generic or coachy.
+4. Output plain prose only (no bullets, no headings).${styleBlock}`;
+      userMessage = `Expand these notes into a journal paragraph:\n\n${text}`;
     } else {
-      systemPrompt = `You are a skilled editor that enhances journal entries. Your task is to:
+      systemPrompt = `You are a skilled editor that enhances journal entries while mirroring the writer's authentic voice.
+Your task:
 1. Fix grammar and spelling errors
 2. Improve clarity and flow
-3. Maintain the original meaning and personal voice
-4. Keep the tone ${tone} (options: formal, casual, natural, humorous)
-5. Add appropriate paragraph breaks for readability
-6. Keep the entry personal and authentic
-
-Do not add content that wasn't in the original. Just polish and enhance what's there.
-IMPORTANT: The enhanced output must be in ${language}. Maintain the same language throughout.`;
+3. Preserve the writer's personal voice, cadence, and word choices
+4. Keep tone ${tone} (options: formal, casual, natural, humorous)
+5. Add paragraph breaks for readability
+6. Do NOT add content that wasn't in the original
+Output language: ${language}.${styleBlock}`;
       userMessage = `Please enhance this journal entry:\n\n${text}`;
     }
 

@@ -387,7 +387,105 @@ const buildSingleEntryHTML = (
   return buildPageHTML(inner, fontCSS, fontImportUrl);
 };
 
-// ── Build back cover HTML ──
+// ── Magazine layout: drop cap, two-column body ──
+const buildMagazineEntryHTML = (
+  entry: JournalEntry,
+  config: BookConfig,
+  fontCSS: string,
+  fontImportUrl: string
+): string => {
+  const bgSVG = getPageBackgroundHTML(config.background, PAGE_W_PX, PAGE_H_PX);
+  const watermarkHTML = config.watermark
+    ? `<div style="position:absolute;bottom:30px;right:36px;font-size:24px;opacity:0.06;font-family:Georgia,serif;z-index:2;">✦</div>`
+    : "";
+  const fs = getFontSizePx(config.fontSize || "medium");
+  const date = format(new Date(entry.created_at), "EEEE, MMMM d, yyyy").toUpperCase();
+  const mood = entry.mood ? entry.mood.charAt(0).toUpperCase() + entry.mood.slice(1) : "";
+  const content = (entry.enhanced_text || entry.original_transcription || "No content");
+  const rtl = isRTLText(content);
+  const dirAttr = rtl ? 'direction:rtl;text-align:right;' : '';
+  const first = content.charAt(0);
+  const rest = content.slice(1).replace(/\n/g, "<br>");
+
+  const photoHTML = buildImageGalleryHTML(entry.photoUrls || [], config.photoSize || "medium", rtl);
+  const reflectionHTML = buildSoulReflectionHTML(entry.soul_reflection || "", fs.body);
+
+  const inner = `
+    <div style="width:100%;height:100%;background-color:white;padding:60px 56px;position:relative;overflow:hidden;${dirAttr}">
+      ${bgSVG}
+      ${watermarkHTML}
+      <div style="position:relative;z-index:1;">
+        <div style="font-size:${fs.meta}px;color:#9ca3af;letter-spacing:0.25em;margin-bottom:6px;">${date}${mood ? ` · ${mood.toUpperCase()}` : ""}</div>
+        <div style="font-size:${fs.title + 6}px;font-weight:700;color:#0a0a0a;line-height:1.1;margin-bottom:8px;font-style:italic;">${entry.title || "Untitled Entry"}</div>
+        <div style="width:48px;height:2px;background:#0a0a0a;margin:14px 0 22px;"></div>
+        <div style="font-size:${fs.body}px;line-height:1.85;color:#374151;column-count:2;column-gap:24px;">
+          <span style="float:left;font-size:${fs.body * 3.4}px;line-height:0.85;font-weight:700;padding:6px 8px 0 0;color:#0a0a0a;">${first}</span>${rest}
+        </div>
+        ${photoHTML}
+        ${reflectionHTML}
+      </div>
+    </div>`;
+  return buildPageHTML(inner, fontCSS, fontImportUrl);
+};
+
+// ── Photo-Forward layout: hero photo top, text below ──
+const buildPhotoForwardEntryHTML = (
+  entry: JournalEntry,
+  config: BookConfig,
+  fontCSS: string,
+  fontImportUrl: string
+): string => {
+  const bgSVG = getPageBackgroundHTML(config.background, PAGE_W_PX, PAGE_H_PX);
+  const watermarkHTML = config.watermark
+    ? `<div style="position:absolute;bottom:30px;right:36px;font-size:24px;opacity:0.06;font-family:Georgia,serif;z-index:2;">✦</div>`
+    : "";
+  const fs = getFontSizePx(config.fontSize || "medium");
+  const date = format(new Date(entry.created_at), "EEEE, MMMM d, yyyy");
+  const mood = entry.mood ? entry.mood.charAt(0).toUpperCase() + entry.mood.slice(1) : "";
+  const content = (entry.enhanced_text || entry.original_transcription || "No content");
+  const rtl = isRTLText(content);
+  const dirAttr = rtl ? 'direction:rtl;text-align:right;' : '';
+  const displayContent = content.replace(/\n/g, "<br>");
+
+  const heroPhoto = entry.photoUrls && entry.photoUrls.length > 0
+    ? `<div style="width:100%;height:${Math.round(PAGE_H_PX * 0.42)}px;margin-bottom:28px;border-radius:0;overflow:hidden;">
+        <img src="${entry.photoUrls[0]}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous" />
+      </div>`
+    : `<div style="width:100%;height:${Math.round(PAGE_H_PX * 0.18)}px;margin-bottom:28px;background:linear-gradient(135deg,#fef3c7,#fde68a);border-radius:0;"></div>`;
+
+  const extraPhotos = (entry.photoUrls && entry.photoUrls.length > 1)
+    ? buildImageGalleryHTML(entry.photoUrls.slice(1), config.photoSize || "small", rtl)
+    : "";
+  const reflectionHTML = buildSoulReflectionHTML(entry.soul_reflection || "", fs.body);
+
+  const inner = `
+    <div style="width:100%;height:100%;background-color:white;position:relative;overflow:hidden;${dirAttr}">
+      ${bgSVG}
+      ${watermarkHTML}
+      <div style="position:relative;z-index:1;">
+        ${heroPhoto}
+        <div style="padding:0 56px 60px;">
+          <div style="font-size:${fs.meta}px;color:#9ca3af;text-transform:uppercase;letter-spacing:0.2em;margin-bottom:8px;">${date}${mood ? ` · ${mood}` : ""}</div>
+          <div style="font-size:${fs.title + 4}px;font-weight:600;color:#0a0a0a;margin-bottom:18px;">${entry.title || "Untitled Entry"}</div>
+          <div style="font-size:${fs.body}px;line-height:1.95;color:#374151;">${displayContent}</div>
+          ${extraPhotos}
+          ${reflectionHTML}
+        </div>
+      </div>
+    </div>`;
+  return buildPageHTML(inner, fontCSS, fontImportUrl);
+};
+
+const buildEntryByLayout = (
+  entry: JournalEntry,
+  config: BookConfig,
+  fontCSS: string,
+  fontImportUrl: string
+): string => {
+  if (config.layout === "magazine") return buildMagazineEntryHTML(entry, config, fontCSS, fontImportUrl);
+  if (config.layout === "photo-forward") return buildPhotoForwardEntryHTML(entry, config, fontCSS, fontImportUrl);
+  return buildSingleEntryHTML(entry, config, fontCSS, fontImportUrl);
+};
 const buildBackCoverHTML = (fontCSS: string, fontImportUrl: string): string => {
   const inner = `
     <div style="width:100%;height:100%;background:#f5f5f4;display:flex;flex-direction:column;align-items:center;justify-content:center;">
@@ -430,7 +528,7 @@ export const generatePreviewDataURL = async (
   // Pre-load images to base64
   const [processedEntry] = await preloadEntryImages([sampleEntry]);
 
-  const html = buildSingleEntryHTML(processedEntry, config, fontConfig.css, fontConfig.importUrl);
+  const html = buildEntryByLayout(processedEntry, config, fontConfig.css, fontConfig.importUrl);
   const canvas = await renderHTMLToCanvas(html);
   return canvas.toDataURL("image/png");
 };
@@ -465,10 +563,10 @@ export const generateAndDownloadPDF = async (
   const coverCanvas = await renderHTMLToCanvas(coverHTML);
   addCanvasToPDF(pdf, coverCanvas, false);
 
-  if (processedConfig.layout === "one-per-page") {
+  if (processedConfig.layout === "one-per-page" || processedConfig.layout === "magazine" || processedConfig.layout === "photo-forward") {
     for (let i = 0; i < processedEntries.length; i++) {
       onProgress?.(`Rendering entry ${i + 1} of ${processedEntries.length}...`);
-      const html = buildSingleEntryHTML(processedEntries[i], processedConfig, fontConfig.css, fontConfig.importUrl);
+      const html = buildEntryByLayout(processedEntries[i], processedConfig, fontConfig.css, fontConfig.importUrl);
       const canvas = await renderHTMLToCanvas(html);
       addCanvasToPDF(pdf, canvas, true);
     }
