@@ -9,29 +9,38 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isToday, isFuture } from "date-fns";
 import type { Mood } from "@/components/MoodSelector";
+import { moodToScore } from "@/components/MoodSlider";
 
-// Enhanced sentiment color mapping with intensity
-const getMoodColor = (mood: Mood, entryCount: number = 1) => {
-  const colorMap: Record<Mood, string> = {
-    happy: "bg-amber-400",
-    good: "bg-amber-300",
-    fine: "bg-sky-400",
-    sad: "bg-rose-300",
-    unhappy: "bg-rose-400",
-  };
-  
-  return colorMap[mood] || "bg-muted";
+// Granular mood_score (1–10) → gradient color.
+// Lower = cool/sad (rose), middle = neutral (sky), higher = warm/happy (amber).
+const getScoreColor = (score: number): string => {
+  if (score <= 1) return "bg-rose-500";
+  if (score <= 2) return "bg-rose-400";
+  if (score <= 3) return "bg-rose-300";
+  if (score <= 4) return "bg-rose-200";
+  if (score <= 5) return "bg-sky-300";
+  if (score <= 6) return "bg-sky-400";
+  if (score <= 7) return "bg-amber-200";
+  if (score <= 8) return "bg-amber-300";
+  if (score <= 9) return "bg-amber-400";
+  return "bg-amber-500";
+};
+
+const getMoodColor = (mood: Mood, score?: number | null) => {
+  const s = score ?? moodToScore(mood);
+  return getScoreColor(s);
 };
 
 interface CalendarEntry {
   mood: Mood;
+  moodScore: number;
   entryId: string;
   title?: string;
   preview?: string;
   tags?: string[];
   entryCount: number;
   photoCount: number;
-  entries: Array<{ id: string; title: string; mood: Mood }>;
+  entries: Array<{ id: string; title: string; mood: Mood; moodScore: number }>;
 }
 
 const CalendarPage = () => {
