@@ -26,14 +26,44 @@ export const useJournalAPI = (appLanguage?: AppLanguage) => {
     return data.text;
   };
 
+  const fetchStyleSamples = async (): Promise<string[]> => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
+      const { data } = await supabase
+        .from('journal_entries')
+        .select('enhanced_text, original_transcription')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(3);
+      return (data || [])
+        .map((r: any) => r.enhanced_text || r.original_transcription || '')
+        .filter(Boolean);
+    } catch (err) {
+      console.error('fetchStyleSamples error:', err);
+      return [];
+    }
+  };
+
   const enhanceText = async (text: string, tone: string = 'natural'): Promise<string> => {
+    const styleSamples = await fetchStyleSamples();
     const { data, error } = await supabase.functions.invoke('enhance-text', {
-      body: { text, tone, language: langName },
+      body: { text, tone, language: langName, styleSamples },
     });
 
     if (error) throw new Error(error.message);
     if (data.error) throw new Error(data.error);
     
+    return data.enhancedText;
+  };
+
+  const expandText = async (text: string): Promise<string> => {
+    const styleSamples = await fetchStyleSamples();
+    const { data, error } = await supabase.functions.invoke('enhance-text', {
+      body: { text, tone: 'expand', language: langName, styleSamples },
+    });
+    if (error) throw new Error(error.message);
+    if (data.error) throw new Error(data.error);
     return data.enhancedText;
   };
 
