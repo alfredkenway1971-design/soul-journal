@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { Check } from "lucide-react";
 
 export type PageBackground = "blank" | "lined" | "dotted";
-export type EntryLayout = "one-per-page" | "continuous";
+export type EntryLayout = "one-per-page" | "continuous" | "magazine" | "photo-forward";
 
 interface PageStyleSelectorProps {
   background: PageBackground;
@@ -109,6 +109,26 @@ const PageStyleSelector = ({
           >
             <p className="text-sm font-medium text-foreground">Continuous</p>
             <p className="text-xs text-muted-foreground mt-0.5">Save paper, flow entries</p>
+          </motion.button>
+          <motion.button
+            className={`p-4 rounded-xl border-2 text-left transition-all ${
+              layout === "magazine" ? "border-primary bg-primary/5" : "border-border"
+            }`}
+            onClick={() => onLayoutChange("magazine")}
+            whileTap={{ scale: 0.98 }}
+          >
+            <p className="text-sm font-medium text-foreground">Magazine</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Editorial layout, drop caps</p>
+          </motion.button>
+          <motion.button
+            className={`p-4 rounded-xl border-2 text-left transition-all ${
+              layout === "photo-forward" ? "border-primary bg-primary/5" : "border-border"
+            }`}
+            onClick={() => onLayoutChange("photo-forward")}
+            whileTap={{ scale: 0.98 }}
+          >
+            <p className="text-sm font-medium text-foreground">Photo-Forward</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Hero photo, text below</p>
           </motion.button>
         </div>
       </div>
