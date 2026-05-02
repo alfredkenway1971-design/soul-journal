@@ -111,32 +111,62 @@ const RemindersSettingsPage = () => {
     }));
   };
 
-  const scheduleReminder = () => {
-    // For web, we use a simple approach with service workers or localStorage-based check
-    // In a real app, you'd want to use a service worker for background notifications
+  const buildContextualMessage = async (): Promise<{ title: string; body: string }> => {
+    const fallback = { title: 'Time to Journal 📝', body: 'Take a moment to reflect on your day.' };
+    if (!settings.contextual || !user) return fallback;
+
+    try {
+      const { data } = await supabase
+        .from('journal_entries')
+        .select('mood, mood_score, created_at, title')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      const last = data?.[0] as any;
+      if (!last) return { title: 'Welcome to your journal ✨', body: 'Start your first reflection today.' };
+
+      const daysSince = Math.floor((Date.now() - new Date(last.created_at).getTime()) / (1000 * 60 * 60 * 24));
+      const mood = last.mood as string | null;
+
+      if (daysSince >= 3) {
+        return { title: `It's been a while 💭`, body: `Last time you felt ${mood || 'reflective'}. How are things now?` };
+      }
+      if (mood === 'sad' || mood === 'unhappy') {
+        return { title: 'Checking in with you 💙', body: 'Yesterday felt heavy — how is today landing?' };
+      }
+      if (mood === 'happy' || mood === 'good') {
+        return { title: 'Keep the momentum going ✨', body: `You felt ${mood} recently. What's flowing today?` };
+      }
+      return { title: 'Time to reflect 📝', body: `Pick up where you left off — "${last.title || 'your last entry'}".` };
+    } catch (err) {
+      console.error('contextual reminder error:', err);
+      return fallback;
+    }
+  };
+
+  const scheduleReminder = async () => {
     const now = new Date();
     const [hours, minutes] = settings.time.split(':').map(Number);
     const scheduledTime = new Date();
     scheduledTime.setHours(hours, minutes, 0, 0);
-    
+
     if (scheduledTime <= now) {
       scheduledTime.setDate(scheduledTime.getDate() + 1);
     }
-    
+
     const timeout = scheduledTime.getTime() - now.getTime();
-    
-    // Store the scheduled time
     localStorage.setItem('next-reminder', scheduledTime.toISOString());
-    
-    // Show a test notification
+
     if (Notification.permission === 'granted') {
+      const { title, body } = await buildContextualMessage();
       setTimeout(() => {
-        new Notification('Time to Journal 📝', {
-          body: 'Take a moment to reflect on your day.',
+        new Notification(title, {
+          body,
           icon: '/favicon.ico',
           tag: 'journal-reminder'
         });
-      }, Math.min(timeout, 5000)); // For demo, show in 5 seconds if scheduled time is far
+      }, Math.min(timeout, 5000));
     }
   };
 
