@@ -170,9 +170,9 @@ const CalendarPage = () => {
   const totalEntries = Object.values(calendarData).reduce((sum, e) => sum + e.entryCount, 0);
 
   const sentimentLabels = [
-    { key: "happy", label: t("calendar.happy"), color: "bg-amber-400" },
-    { key: "fine", label: t("calendar.fine"), color: "bg-sky-400" },
-    { key: "sad", label: t("calendar.sad"), color: "bg-rose-300" },
+    { key: "low", label: t("calendar.sad"), color: "bg-rose-400" },
+    { key: "mid", label: t("calendar.fine"), color: "bg-sky-400" },
+    { key: "high", label: t("calendar.happy"), color: "bg-amber-400" },
   ];
 
   return (
@@ -277,7 +277,7 @@ const CalendarPage = () => {
                       isSelected
                         ? "bg-charcoal dark:bg-primary text-white ring-2 ring-offset-2 ring-primary"
                         : entry
-                        ? `${getMoodColor(entry.mood, entry.entryCount)} text-charcoal font-medium`
+                        ? `${getMoodColor(entry.mood, entry.moodScore)} text-charcoal font-medium`
                         : isFutureDate
                         ? "text-muted-foreground/40"
                         : "text-muted-foreground hover:bg-muted"
@@ -327,7 +327,7 @@ const CalendarPage = () => {
                 <>
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
-                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${getMoodColor(selectedEntry.mood)}`}>
+                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${getMoodColor(selectedEntry.mood, selectedEntry.moodScore)}`}>
                         <span className="text-2xl">
                           {selectedEntry.mood === "happy" ? "😊" :
                            selectedEntry.mood === "good" ? "🙂" :
@@ -360,7 +360,7 @@ const CalendarPage = () => {
                           className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-muted/50 transition-colors text-left"
                           onClick={() => navigate(`/entry/${e.id}`)}
                         >
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${getMoodColor(e.mood)}`}>
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${getMoodColor(e.mood, e.moodScore)}`}>
                             <span className="text-sm">
                               {e.mood === "happy" ? "😊" :
                                e.mood === "good" ? "🙂" :
