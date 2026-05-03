@@ -118,6 +118,7 @@ const HomePage = () => {
                 <span className="font-normal">{getGreeting()}, </span>
                 <span className="font-display italic">{firstName}</span>
               </h1>
+              <WeatherBadge />
             </motion.div>
             <div className="flex items-center gap-1">
               <AppLanguageSwitcher />
@@ -165,30 +166,53 @@ const HomePage = () => {
             </button>
           </div>
 
+          <div className="mb-3">
+            <MoodFilterBar value={moodFilter} onChange={setMoodFilter} />
+          </div>
+
           {isLoading ? (
             <div className="flex justify-center py-12">
               <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
             </div>
-          ) : entries.length > 0 ? (
-            <div className="space-y-3">
-              {entries.slice(0, 3).map((entry, index) => (
-                <motion.div
-                  key={entry.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 + index * 0.1 }}
-                >
-                  <RecentEntryCard
-                    id={entry.id}
-                    title={entry.title}
-                    preview={entry.preview.substring(0, 50) + "..."}
-                    date={entry.date}
-                    mood={entry.mood}
-                    onClick={() => navigate(`/entry/${entry.id}`)}
-                  />
-                </motion.div>
-              ))}
-            </div>
+          ) : (() => {
+            const filtered = moodFilter === "all"
+              ? entries
+              : entries.filter((e) => e.mood === moodFilter);
+            if (filtered.length === 0 && entries.length > 0) {
+              const labelMap: Record<string, string> = {
+                happy: "happy", good: "grateful", fine: "peaceful", sad: "sad", unhappy: "anxious",
+              };
+              return (
+                <div className="glass-premium p-8 text-center">
+                  <span className="text-3xl mb-3 block">🌱</span>
+                  <p className="text-muted-foreground">No {labelMap[moodFilter] || moodFilter} memories yet</p>
+                </div>
+              );
+            }
+            if (filtered.length === 0) return null;
+            return (
+              <div className="space-y-3">
+                {filtered.slice(0, 5).map((entry, index) => (
+                  <motion.div
+                    key={entry.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 + index * 0.1 }}
+                  >
+                    <RecentEntryCard
+                      id={entry.id}
+                      title={entry.title}
+                      preview={entry.preview.substring(0, 50) + "..."}
+                      date={entry.date}
+                      mood={entry.mood}
+                      duration={entry.duration}
+                      onClick={() => navigate(`/entry/${entry.id}`)}
+                    />
+                  </motion.div>
+                ))}
+              </div>
+            );
+          })()}
           ) : (
             <motion.div
               className="glass-premium p-8 text-center"
