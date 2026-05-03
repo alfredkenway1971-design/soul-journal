@@ -323,6 +323,7 @@ const RecordPage = () => {
         weather: ctx.weather,
         location: ctx.location,
         timeOfDay: ctx.time_of_day,
+        durationSeconds: recordingDuration > 0 ? recordingDuration : null,
       });
 
       // Upload photos and save media references

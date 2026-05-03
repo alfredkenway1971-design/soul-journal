@@ -142,6 +142,7 @@ export type Database = {
         Row: {
           audio_url: string | null
           created_at: string
+          duration_seconds: number | null
           enhanced_text: string | null
           id: string
           location: Json | null
@@ -161,6 +162,7 @@ export type Database = {
         Insert: {
           audio_url?: string | null
           created_at?: string
+          duration_seconds?: number | null
           enhanced_text?: string | null
           id?: string
           location?: Json | null
@@ -180,6 +182,7 @@ export type Database = {
         Update: {
           audio_url?: string | null
           created_at?: string
+          duration_seconds?: number | null
           enhanced_text?: string | null
           id?: string
           location?: Json | null

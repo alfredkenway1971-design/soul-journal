@@ -237,6 +237,7 @@ export const useJournalAPI = (appLanguage?: AppLanguage) => {
     weather?: any;
     location?: any;
     timeOfDay?: string | null;
+    durationSeconds?: number | null;
   }) => {
     const { data, error } = await supabase
       .from('journal_entries')
@@ -253,6 +254,7 @@ export const useJournalAPI = (appLanguage?: AppLanguage) => {
         weather: entry.weather ?? null,
         location: entry.location ?? null,
         time_of_day: entry.timeOfDay ?? null,
+        duration_seconds: entry.durationSeconds ?? null,
       } as any)
       .select()
       .single();

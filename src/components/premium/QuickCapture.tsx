@@ -1,43 +1,27 @@
 import { motion } from "framer-motion";
-import { Mic, PenLine } from "lucide-react";
+import { Mic } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const QuickCapture = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="grid grid-cols-2 gap-3">
-      {/* Voice Note */}
-      <motion.button
-        className="vitality-card p-5 flex flex-col items-start min-h-[100px] text-left"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
-        onClick={() => navigate("/record")}
-      >
-        <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center mb-3">
-          <Mic className="w-5 h-5 text-orange-500" />
-        </div>
-        <p className="font-medium text-foreground">Voice Note</p>
-      </motion.button>
-
-      {/* New Entry */}
-      <div className="flex flex-col gap-3">
-        <motion.button
-          className="gradient-primary p-4 flex items-center gap-3 text-left rounded-[1.25rem]"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={() => navigate("/record")}
-        >
-          <PenLine className="w-5 h-5 text-white" />
-          <p className="font-medium text-white">New Entry</p>
-        </motion.button>
+    <motion.button
+      className="vitality-card w-full p-5 flex items-center gap-4 text-left"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ scale: 1.01 }}
+      whileTap={{ scale: 0.99 }}
+      onClick={() => navigate("/record")}
+    >
+      <div className="w-12 h-12 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
+        <Mic className="w-6 h-6 text-orange-500" />
       </div>
-    </div>
+      <div className="flex flex-col">
+        <p className="font-medium text-foreground">Voice Note</p>
+        <p className="text-xs text-muted-foreground">Tap to record your thoughts</p>
+      </div>
+    </motion.button>
   );
 };
 
