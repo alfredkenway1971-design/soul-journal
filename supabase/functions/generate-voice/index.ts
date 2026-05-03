@@ -184,6 +184,7 @@ serve(async (req) => {
             .eq('id', entryId);
           console.log('Audio cached to storage:', storagePath);
         }
+        }
       } catch (cacheError) {
         console.error('Caching error (non-fatal):', cacheError);
       }
