@@ -114,6 +114,11 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const user = await requireUser(req);
+  if (!user) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  }
+
   try {
     const { audio, language } = await req.json();
     if (!audio) throw new Error('No audio data provided');
