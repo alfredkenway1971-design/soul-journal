@@ -189,6 +189,24 @@ const HomePage = () => {
                 </div>
               );
             }
+            if (filtered.length === 0 && entries.length === 0) {
+              return (
+                <motion.div
+                  className="glass-premium p-8 text-center"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                >
+                  <span className="text-4xl mb-4 block">📝</span>
+                  <p className="text-muted-foreground mb-4">{t("home.noEntries")}</p>
+                  <button
+                    className="gradient-primary text-white px-6 py-2.5 rounded-full font-medium"
+                    onClick={() => navigate("/record")}
+                  >
+                    {t("home.createFirst")}
+                  </button>
+                </motion.div>
+              );
+            }
             if (filtered.length === 0) return null;
             return (
               <div className="space-y-3">
@@ -213,22 +231,6 @@ const HomePage = () => {
               </div>
             );
           })()}
-          ) : (
-            <motion.div
-              className="glass-premium p-8 text-center"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-            >
-              <span className="text-4xl mb-4 block">📝</span>
-              <p className="text-muted-foreground mb-4">{t("home.noEntries")}</p>
-              <button 
-                className="gradient-primary text-white px-6 py-2.5 rounded-full font-medium"
-                onClick={() => navigate("/record")}
-              >
-                {t("home.createFirst")}
-              </button>
-            </motion.div>
-          )}
         </section>
       </main>
 
