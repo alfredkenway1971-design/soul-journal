@@ -37,6 +37,16 @@ serve(async (req) => {
 
     const { priceId } = await req.json();
     if (!priceId) throw new Error("priceId is required");
+    const VALID_PRICE_IDS = new Set([
+      "price_1T8kWjCkL5ed5EgT3vQutx72", // monthly
+      "price_1T8kXACkL5ed5EgTzKtnTnEz", // yearly
+    ]);
+    if (!VALID_PRICE_IDS.has(priceId)) {
+      return new Response(JSON.stringify({ error: "Invalid price ID" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
     logStep("Price ID received", { priceId });
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
