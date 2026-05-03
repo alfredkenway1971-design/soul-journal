@@ -10,6 +10,8 @@ import BottomNav from "@/components/BottomNav";
 import AppLanguageSwitcher from "@/components/AppLanguageSwitcher";
 import QuickCapture from "@/components/premium/QuickCapture";
 import RecentEntryCard from "@/components/premium/RecentEntryCard";
+import WeatherBadge from "@/components/WeatherBadge";
+import MoodFilterBar, { type MoodFilterValue } from "@/components/MoodFilterBar";
 import OnThisDayCard from "@/components/OnThisDayCard";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
@@ -22,6 +24,7 @@ interface Entry {
   preview: string;
   mood: Mood;
   hasAudio: boolean;
+  duration?: string;
 }
 
 const HomePage = () => {
@@ -35,6 +38,7 @@ const HomePage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [displayName, setDisplayName] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [moodFilter, setMoodFilter] = useState<MoodFilterValue>("all");
   
   
   const currentDate = new Date();
@@ -70,13 +74,20 @@ const HomePage = () => {
         // Fetch entries
         const data = await api.getEntries(user.id);
         
-        const formattedEntries: Entry[] = data.slice(0, 5).map((entry) => ({
+        const fmtDur = (s?: number | null) => {
+          if (!s || s <= 0) return undefined;
+          const m = Math.floor(s / 60);
+          const sec = s % 60;
+          return `${m}:${sec.toString().padStart(2, "0")}`;
+        };
+        const formattedEntries: Entry[] = data.slice(0, 20).map((entry: any) => ({
           id: entry.id,
           date: new Date(entry.created_at),
           title: entry.title || "Untitled Entry",
           preview: entry.enhanced_text || entry.original_transcription || "",
           mood: (entry.mood as Mood) || "fine",
           hasAudio: !!entry.audio_url,
+          duration: fmtDur(entry.duration_seconds),
         }));
         
         setEntries(formattedEntries);
