@@ -26,10 +26,14 @@ const RecentEntryCard = ({
   title,
   preview,
   date,
-  duration = "0:45",
+  duration,
   mood = "fine",
   onClick,
 }: RecentEntryCardProps) => {
+  const formatDuration = (d?: string) => {
+    if (!d) return null;
+    return d;
+  };
   return (
     <motion.button
       className="w-full vitality-card p-4 flex items-center gap-4 text-left"
@@ -57,10 +61,12 @@ const RecentEntryCard = ({
       </div>
 
       {/* Audio indicator */}
-      <div className="flex-shrink-0 flex items-center gap-2 text-muted-foreground">
-        <BarChart3 className="w-5 h-5" />
-        <span className="text-sm">{duration}</span>
-      </div>
+      {duration && (
+        <div className="flex-shrink-0 flex items-center gap-2 text-muted-foreground">
+          <BarChart3 className="w-5 h-5" />
+          <span className="text-sm">{formatDuration(duration)}</span>
+        </div>
+      )}
     </motion.button>
   );
 };
