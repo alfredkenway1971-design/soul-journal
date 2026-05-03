@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Home, Calendar, FileText, User, Plus } from "lucide-react";
+import { Home, Calendar, FileText, User, Mic } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -32,8 +32,8 @@ const BottomNav = () => {
                   onClick={() => navigate(item.path)}
                   whileTap={{ scale: 0.95 }}
                 >
-                  <div className="fab-button w-14 h-14 flex items-center justify-center">
-                    <Plus className="w-6 h-6" />
+                  <div className="fab-button w-16 h-16 flex items-center justify-center shadow-lg">
+                    <Mic className="w-7 h-7" strokeWidth={2.25} />
                   </div>
                 </motion.button>
               );
