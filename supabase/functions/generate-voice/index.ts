@@ -6,6 +6,15 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+async function requireUser(req: Request) {
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader?.startsWith('Bearer ')) return null;
+  const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!);
+  const { data, error } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
+  if (error || !data?.user) return null;
+  return data.user;
+}
+
 // Gender-based voice IDs for ElevenLabs
 const VOICE_IDS = {
   en: {
@@ -111,6 +120,11 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const user = await requireUser(req);
+  if (!user) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  }
+
   try {
     const { text, voiceId, entryId, textType, language, gender } = await req.json();
     if (!text) throw new Error('No text provided');
@@ -129,12 +143,23 @@ serve(async (req) => {
       audioBytes = await generateWithCartesia(text, language || 'en');
     }
 
-    // If entryId provided, cache to storage and update DB
+    // If entryId provided, cache to storage and update DB (verify ownership first)
     if (entryId) {
       try {
         const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
         const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
         const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+        // Ownership check
+        const { data: entryRow, error: ownErr } = await supabase
+          .from('journal_entries')
+          .select('id,user_id')
+          .eq('id', entryId)
+          .maybeSingle();
+
+        if (ownErr || !entryRow || entryRow.user_id !== user.id) {
+          console.warn('Skipping cache: entry not owned by caller');
+        } else {
 
         const suffix = textType === 'reflection' ? '_reflection' : '';
         const storagePath = `voice-cache/${entryId}${suffix}.mp3`;
