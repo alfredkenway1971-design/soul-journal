@@ -116,18 +116,23 @@ const LibraryPage = () => {
   return (
     <div className="min-h-screen gradient-warm pb-24">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border/50">
+      <header className="sticky top-0 z-40 backdrop-blur-2xl bg-white/40 dark:bg-background/60 border-b border-white/40 dark:border-white/10">
         <div className="max-w-lg mx-auto px-4 py-4">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-2xl bg-primary/15 backdrop-blur-md border border-white/40 flex items-center justify-center">
               <BookOpen className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <h1 className="text-lg font-semibold text-foreground">Library</h1>
+              <h1 className="text-lg font-semibold text-foreground">Soul Journal Library</h1>
               <p className="text-sm text-muted-foreground">
                 {entries.length} {entries.length === 1 ? "entry" : "entries"} total
               </p>
             </div>
+          </div>
+
+          {/* Mood filter — above search per user request */}
+          <div className="mb-3">
+            <MoodFilterBar value={moodFilter} onChange={setMoodFilter} />
           </div>
 
           {/* Search + Date Filter */}
