@@ -36,7 +36,7 @@ const RecentEntryCard = ({
   };
   return (
     <motion.button
-      className="w-full vitality-card p-4 flex items-center gap-4 text-left"
+      className="w-full glass-premium p-4 flex items-center gap-4 text-left"
       whileHover={{ scale: 1.01 }}
       whileTap={{ scale: 0.99 }}
       onClick={onClick}
