@@ -13,6 +13,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import BottomNav from "@/components/BottomNav";
+import MoodFilterBar, { type MoodFilterValue } from "@/components/MoodFilterBar";
 import type { Mood } from "@/components/MoodSelector";
 
 interface JournalEntry {
@@ -44,6 +45,7 @@ const LibraryPage = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [moodFilter, setMoodFilter] = useState<MoodFilterValue>("all");
 
   useEffect(() => {
     if (user) fetchEntries();
@@ -70,6 +72,10 @@ const LibraryPage = () => {
   const filteredEntries = useMemo(() => {
     let result = entries;
 
+    if (moodFilter !== "all") {
+      result = result.filter((e) => (e.mood || "").toLowerCase() === moodFilter);
+    }
+
     if (selectedDate) {
       result = result.filter((e) =>
         isSameDay(new Date(e.created_at), selectedDate)
@@ -87,7 +93,7 @@ const LibraryPage = () => {
     }
 
     return result;
-  }, [entries, selectedDate, searchQuery]);
+  }, [entries, selectedDate, searchQuery, moodFilter]);
 
   // Group entries by date
   const groupedEntries = useMemo(() => {
