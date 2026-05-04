@@ -143,7 +143,7 @@ const LibraryPage = () => {
                 placeholder="Search entries..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 h-10 bg-muted/50 border-border/50"
+                className="pl-9 h-11 bg-white/50 dark:bg-white/10 backdrop-blur-md border-white/50 dark:border-white/15 rounded-2xl"
               />
             </div>
             <Popover>
