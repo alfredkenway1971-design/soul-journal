@@ -13,6 +13,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import BottomNav from "@/components/BottomNav";
+import MoodFilterBar, { type MoodFilterValue } from "@/components/MoodFilterBar";
 import type { Mood } from "@/components/MoodSelector";
 
 interface JournalEntry {
@@ -44,6 +45,7 @@ const LibraryPage = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [moodFilter, setMoodFilter] = useState<MoodFilterValue>("all");
 
   useEffect(() => {
     if (user) fetchEntries();
@@ -70,6 +72,10 @@ const LibraryPage = () => {
   const filteredEntries = useMemo(() => {
     let result = entries;
 
+    if (moodFilter !== "all") {
+      result = result.filter((e) => (e.mood || "").toLowerCase() === moodFilter);
+    }
+
     if (selectedDate) {
       result = result.filter((e) =>
         isSameDay(new Date(e.created_at), selectedDate)
@@ -87,7 +93,7 @@ const LibraryPage = () => {
     }
 
     return result;
-  }, [entries, selectedDate, searchQuery]);
+  }, [entries, selectedDate, searchQuery, moodFilter]);
 
   // Group entries by date
   const groupedEntries = useMemo(() => {
@@ -110,18 +116,23 @@ const LibraryPage = () => {
   return (
     <div className="min-h-screen gradient-warm pb-24">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border/50">
+      <header className="sticky top-0 z-40 backdrop-blur-2xl bg-white/40 dark:bg-background/60 border-b border-white/40 dark:border-white/10">
         <div className="max-w-lg mx-auto px-4 py-4">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-2xl bg-primary/15 backdrop-blur-md border border-white/40 flex items-center justify-center">
               <BookOpen className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <h1 className="text-lg font-semibold text-foreground">Library</h1>
+              <h1 className="text-lg font-semibold text-foreground">Soul Journal Library</h1>
               <p className="text-sm text-muted-foreground">
                 {entries.length} {entries.length === 1 ? "entry" : "entries"} total
               </p>
             </div>
+          </div>
+
+          {/* Mood filter — above search per user request */}
+          <div className="mb-3">
+            <MoodFilterBar value={moodFilter} onChange={setMoodFilter} />
           </div>
 
           {/* Search + Date Filter */}
@@ -132,7 +143,7 @@ const LibraryPage = () => {
                 placeholder="Search entries..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 h-10 bg-muted/50 border-border/50"
+                className="pl-9 h-11 bg-white/50 dark:bg-white/10 backdrop-blur-md border-white/50 dark:border-white/15 rounded-2xl"
               />
             </div>
             <Popover>
