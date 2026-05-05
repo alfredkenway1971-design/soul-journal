@@ -97,7 +97,7 @@ const Row = ({
         border: "1px solid rgba(255,255,255,0.6)",
       }}
     >
-      <Icon className="w-4.5 h-4.5 text-primary" strokeWidth={2} />
+      <Icon className="w-[18px] h-[18px] text-primary" strokeWidth={2} />
     </div>
     <span className="flex-1 text-left text-base font-medium text-foreground">
       {label}
@@ -223,7 +223,7 @@ const SettingsPage = () => {
                 className="flex items-center gap-3 py-2"
               >
                 <div className="w-9 h-9 rounded-xl glass-premium flex items-center justify-center">
-                  <Palette className="w-4.5 h-4.5 text-primary" />
+                  <Palette className="w-[18px] h-[18px] text-primary" />
                 </div>
                 <span className="text-base font-medium text-foreground">Themes</span>
               </button>
@@ -232,7 +232,7 @@ const SettingsPage = () => {
                 className="flex items-center gap-3 py-2"
               >
                 <div className="w-9 h-9 rounded-xl glass-premium flex items-center justify-center">
-                  <Type className="w-4.5 h-4.5 text-primary" />
+                  <Type className="w-[18px] h-[18px] text-primary" />
                 </div>
                 <span className="text-base font-medium text-foreground">Fonts</span>
               </button>
@@ -248,13 +248,13 @@ const SettingsPage = () => {
                 className="flex items-center gap-3 py-2"
               >
                 <div className="w-9 h-9 rounded-xl glass-premium flex items-center justify-center">
-                  <Download className="w-4.5 h-4.5 text-primary" />
+                  <Download className="w-[18px] h-[18px] text-primary" />
                 </div>
                 <span className="text-base font-medium text-foreground">Export Journal</span>
               </button>
               <button className="flex items-center gap-3 py-2">
                 <div className="w-9 h-9 rounded-xl glass-premium flex items-center justify-center">
-                  <FileText className="w-4.5 h-4.5 text-primary" />
+                  <FileText className="w-[18px] h-[18px] text-primary" />
                 </div>
                 <span className="text-base font-medium text-foreground">Privacy Policy</span>
               </button>
