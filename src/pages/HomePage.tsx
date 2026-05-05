@@ -104,39 +104,38 @@ const HomePage = () => {
   const firstName = displayName?.split(' ')[0] || user?.user_metadata?.display_name?.split(' ')[0] || user?.email?.split('@')[0] || t("home.friend");
 
   return (
-    <div className="min-h-screen gradient-warm pb-28">
+    <div className="min-h-screen gradient-warm pb-32">
       {/* Header */}
-      <header className="pt-12 pb-4 px-5">
+      <header className="pt-12 pb-3 px-5">
         <div className="max-w-lg mx-auto">
-          <div className="flex items-center justify-between">
+          <div className="flex items-start justify-between">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
+              className="flex-1 min-w-0"
             >
-              <p className="section-label mb-1">{formattedDate}</p>
-              <h1 className="text-2xl text-foreground">
-                <span className="font-normal">{getGreeting()}, </span>
-                <span className="font-display italic">{firstName}</span>
+              <h1 className="text-[34px] leading-tight font-bold text-foreground tracking-tight">
+                {getGreeting()}, {firstName}
               </h1>
-              <WeatherBadge />
+              <div className="mt-1">
+                <WeatherBadge />
+              </div>
             </motion.div>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 pt-1">
               <AppLanguageSwitcher />
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="relative"
               >
-                <Avatar 
-                  className="w-12 h-12 border-2 border-primary/30 cursor-pointer"
+                <Avatar
+                  className="w-12 h-12 cursor-pointer ring-2 ring-white/60 shadow-md"
                   onClick={() => navigate("/settings/profile")}
                 >
                   <AvatarImage src={avatarUrl || undefined} />
-                  <AvatarFallback className="bg-primary/20 text-primary font-medium">
-                    {firstName.charAt(0)}
+                  <AvatarFallback className="bg-gradient-to-br from-slate-700 to-slate-900 text-white font-display font-bold text-lg">
+                    {firstName.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-                <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-400 rounded-full border-2 border-background" />
               </motion.div>
             </div>
           </div>
@@ -144,11 +143,14 @@ const HomePage = () => {
       </header>
 
       {/* Content */}
-      <main className="max-w-lg mx-auto px-5 space-y-6">
+      <main className="max-w-lg mx-auto px-5 space-y-5">
         {/* Quick Capture */}
+        <QuickCapture />
+
+        {/* Mood Filter Bar */}
         <section>
-          <h2 className="font-semibold text-foreground mb-3">{t("home.quickCapture")}</h2>
-          <QuickCapture />
+          <h2 className="text-xl font-bold text-foreground mb-2.5">Mood Filter Bar</h2>
+          <MoodFilterBar value={moodFilter} onChange={setMoodFilter} />
         </section>
 
         {/* On This Day memories */}
@@ -157,17 +159,13 @@ const HomePage = () => {
         {/* Recent Entries */}
         <section>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="section-label">{t("home.recentEntries")}</h2>
-            <button 
-              className="text-sm font-medium text-foreground hover:text-primary transition-colors"
+            <h2 className="text-xl font-bold text-foreground">Recent Entries</h2>
+            <button
+              className="text-sm font-medium text-primary hover:underline"
               onClick={() => navigate("/calendar")}
             >
               {t("home.viewAll")}
             </button>
-          </div>
-
-          <div className="mb-3">
-            <MoodFilterBar value={moodFilter} onChange={setMoodFilter} />
           </div>
 
           {isLoading ? (
