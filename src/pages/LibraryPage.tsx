@@ -224,10 +224,10 @@ const LibraryPage = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: groupIndex * 0.05 }}
                 >
-                  <h3 className="text-xs font-medium text-muted-foreground mb-2 px-1 uppercase tracking-wider">
+                  <h3 className="text-base font-semibold text-foreground mb-3 px-1">
                     {format(new Date(dateKey), "EEEE, MMMM d, yyyy")}
                   </h3>
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {dayEntries.map((entry, i) => {
                       const preview =
                         entry.enhanced_text ||
@@ -240,41 +240,51 @@ const LibraryPage = () => {
                       return (
                         <motion.button
                           key={entry.id}
-                          className="w-full glass-card rounded-xl p-4 text-left hover:ring-2 hover:ring-primary/20 transition-all"
+                          className="w-full glass-premium p-4 text-left"
                           onClick={() => navigate(`/entry/${entry.id}`)}
-                          whileTap={{ scale: 0.98 }}
+                          whileTap={{ scale: 0.99 }}
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: groupIndex * 0.05 + i * 0.03 }}
                         >
-                          <div className="flex items-start gap-3">
-                            <span className="text-2xl mt-0.5">{emoji}</span>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center justify-between gap-2">
-                                <h4 className="font-medium text-foreground truncate">
-                                  {entry.title || "Untitled Entry"}
-                                </h4>
-                                <span className="text-xs text-muted-foreground shrink-0">
-                                  {format(new Date(entry.created_at), "h:mm a")}
-                                </span>
-                              </div>
-                              <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                                {preview.substring(0, 120)}
-                                {preview.length > 120 ? "..." : ""}
-                              </p>
-                              <div className="flex items-center gap-2 mt-2">
-                                {entry.mood && (
-                                  <Badge variant="secondary" className="text-xs capitalize">
-                                    {entry.mood}
-                                  </Badge>
-                                )}
-                                {entry.audio_url && (
-                                  <Badge variant="outline" className="text-xs">
-                                    🎙 Audio
-                                  </Badge>
-                                )}
-                              </div>
+                          <div className="flex items-center justify-between gap-2 mb-1.5">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className="text-xl">{emoji}</span>
+                              <h4 className="font-bold text-foreground truncate text-base">
+                                {entry.title || "Untitled Entry"}
+                              </h4>
                             </div>
+                            <span className="text-xs text-muted-foreground shrink-0 font-medium">
+                              {format(new Date(entry.created_at), "h:mm a")}
+                            </span>
+                          </div>
+                          <p className="text-sm text-foreground/80 line-clamp-2 mb-3">
+                            {preview.substring(0, 120)}
+                            {preview.length > 120 ? "..." : ""}
+                          </p>
+                          <div className="flex items-center gap-2">
+                            {entry.mood && (
+                              <span
+                                className="text-xs font-medium capitalize px-3 py-1 rounded-full text-white"
+                                style={{
+                                  background:
+                                    "linear-gradient(135deg, hsl(211 90% 55%), hsl(220 85% 45%))",
+                                }}
+                              >
+                                {entry.mood}
+                              </span>
+                            )}
+                            {entry.audio_url && (
+                              <span
+                                className="text-xs font-medium px-3 py-1 rounded-full text-white inline-flex items-center gap-1"
+                                style={{
+                                  background:
+                                    "linear-gradient(135deg, hsl(211 90% 55%), hsl(220 85% 45%))",
+                                }}
+                              >
+                                🎙 Audio
+                              </span>
+                            )}
                           </div>
                         </motion.button>
                       );
