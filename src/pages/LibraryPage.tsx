@@ -114,47 +114,38 @@ const LibraryPage = () => {
   const hasFilters = !!selectedDate || !!searchQuery.trim();
 
   return (
-    <div className="min-h-screen gradient-warm pb-24">
+    <div className="min-h-screen gradient-warm pb-28">
       {/* Header */}
-      <header className="sticky top-0 z-40 backdrop-blur-2xl bg-white/40 dark:bg-background/60 border-b border-white/40 dark:border-white/10">
-        <div className="max-w-lg mx-auto px-4 py-4">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-2xl bg-primary/15 backdrop-blur-md border border-white/40 flex items-center justify-center">
-              <BookOpen className="w-5 h-5 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-lg font-semibold text-foreground">Soul Journal Library</h1>
-              <p className="text-sm text-muted-foreground">
-                {entries.length} {entries.length === 1 ? "entry" : "entries"} total
-              </p>
-            </div>
+      <header className="pt-12 pb-3 px-5">
+        <div className="max-w-lg mx-auto">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-10" />
+            <h1 className="text-xl font-bold text-foreground">Soul Journal Library</h1>
+            <div
+              className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-white/60 shadow-md cursor-pointer bg-gradient-to-br from-slate-700 to-slate-900"
+              onClick={() => navigate("/settings/profile")}
+            />
           </div>
 
-          {/* Mood filter — above search per user request */}
+          {/* Mood filter — above search */}
           <div className="mb-3">
             <MoodFilterBar value={moodFilter} onChange={setMoodFilter} />
           </div>
 
-          {/* Search + Date Filter */}
-          <div className="flex gap-2">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Search entries..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 h-11 bg-white/50 dark:bg-white/10 backdrop-blur-md border-white/50 dark:border-white/15 rounded-2xl"
-              />
-            </div>
+          {/* Glass search pill */}
+          <div className="glass-premium px-4 py-3 flex items-center gap-3">
+            <Search className="w-5 h-5 text-muted-foreground" />
+            <input
+              placeholder="Search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="flex-1 bg-transparent outline-none text-base placeholder:text-muted-foreground"
+            />
             <Popover>
               <PopoverTrigger asChild>
-                <Button
-                  variant={selectedDate ? "default" : "outline"}
-                  size="icon"
-                  className="h-10 w-10 shrink-0"
-                >
-                  <CalendarIcon className="w-4 h-4" />
-                </Button>
+                <button className="text-muted-foreground hover:text-primary">
+                  <CalendarIcon className="w-5 h-5" />
+                </button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="end">
                 <Calendar
@@ -168,7 +159,6 @@ const LibraryPage = () => {
             </Popover>
           </div>
 
-          {/* Active Filters */}
           {hasFilters && (
             <div className="flex items-center gap-2 mt-2">
               {selectedDate && (
@@ -177,15 +167,6 @@ const LibraryPage = () => {
                   <X
                     className="w-3 h-3 cursor-pointer"
                     onClick={() => setSelectedDate(undefined)}
-                  />
-                </Badge>
-              )}
-              {searchQuery.trim() && (
-                <Badge variant="secondary" className="text-xs gap-1">
-                  "{searchQuery}"
-                  <X
-                    className="w-3 h-3 cursor-pointer"
-                    onClick={() => setSearchQuery("")}
                   />
                 </Badge>
               )}
