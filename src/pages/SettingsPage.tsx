@@ -3,13 +3,9 @@ import { motion } from "framer-motion";
 import {
   User,
   Palette,
-  Bell,
-  Lock,
   Moon,
   Type,
   Mic,
-  Target,
-  Brain,
   Download,
   LogOut,
   Crown,
