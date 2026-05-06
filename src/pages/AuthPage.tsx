@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Eye, EyeOff, Mail, Lock, User, ArrowRight, ChevronDown } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User, ArrowRight, ChevronDown, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,11 +24,11 @@ const AuthPage = () => {
   const { toast } = useToast();
   const { signIn, signUp } = useAuth();
   const { language, setLanguage, t } = useLanguage();
-  
+
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
@@ -38,51 +38,29 @@ const AuthPage = () => {
 
   const validateForm = () => {
     const newErrors: { email?: string; password?: string } = {};
-    
     const emailResult = emailSchema.safeParse(email);
-    if (!emailResult.success) {
-      newErrors.email = emailResult.error.errors[0].message;
-    }
-    
+    if (!emailResult.success) newErrors.email = emailResult.error.errors[0].message;
     const passwordResult = passwordSchema.safeParse(password);
-    if (!passwordResult.success) {
-      newErrors.password = passwordResult.error.errors[0].message;
-    }
-    
+    if (!passwordResult.success) newErrors.password = passwordResult.error.errors[0].message;
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!validateForm()) return;
-    
     setIsLoading(true);
-    
     try {
       if (isLogin) {
         const { error } = await signIn(email, password);
         if (error) {
-          toast({
-            title: t("auth.signIn"),
-            description: error.message,
-            variant: "destructive",
-          });
-        } else {
-          navigate("/");
-        }
+          toast({ title: t("auth.signIn"), description: error.message, variant: "destructive" });
+        } else navigate("/");
       } else {
         const { error } = await signUp(email, password, displayName);
         if (error) {
-          toast({
-            title: t("auth.signUp"),
-            description: error.message,
-            variant: "destructive",
-          });
-        } else {
-          navigate("/");
-        }
+          toast({ title: t("auth.signUp"), description: error.message, variant: "destructive" });
+        } else navigate("/");
       }
     } finally {
       setIsLoading(false);
@@ -90,20 +68,36 @@ const AuthPage = () => {
   };
 
   return (
-    <div className="min-h-screen gradient-warm flex items-center justify-center px-4">
+    <div className="relative min-h-screen overflow-hidden flex items-center justify-center px-4">
+      {/* Underwater gradient backdrop */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(ellipse at 20% 0%, hsl(195 85% 75%) 0%, transparent 55%), radial-gradient(ellipse at 80% 100%, hsl(220 80% 55%) 0%, transparent 60%), linear-gradient(180deg, hsl(200 80% 80%) 0%, hsl(210 75% 60%) 50%, hsl(220 70% 40%) 100%)",
+        }}
+      />
+      {/* Caustic light orbs */}
+      <div className="absolute top-10 -left-20 w-80 h-80 rounded-full bg-white/30 blur-3xl" />
+      <div className="absolute bottom-10 -right-20 w-96 h-96 rounded-full bg-cyan-200/40 blur-3xl" />
+      <div className="absolute top-1/3 right-10 w-40 h-40 rounded-full bg-white/20 blur-2xl" />
+
       <motion.div
-        className="w-full max-w-md"
+        className="relative w-full max-w-md z-10"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
       >
         {/* Language Dropdown */}
-        <div className="flex justify-end mb-4">
+        <div className="flex justify-end mb-6">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="rounded-2xl gap-2 px-4 py-2 bg-background/50 border-border/50">
+              <Button
+                variant="outline"
+                className="rounded-full gap-2 px-4 py-2 bg-white/20 border-white/40 backdrop-blur-xl text-white hover:bg-white/30"
+              >
                 <span className="text-lg">{currentLang?.flag}</span>
                 <span className="text-sm font-medium">{currentLang?.native}</span>
-                <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                <ChevronDown className="w-4 h-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="min-w-[200px]">
@@ -126,37 +120,46 @@ const AuthPage = () => {
         {/* Logo & Title */}
         <div className="text-center mb-8">
           <motion.div
-            className="w-20 h-20 rounded-3xl gradient-amber flex items-center justify-center mx-auto mb-4 shadow-glow"
-            animate={{ scale: [1, 1.05, 1] }}
-            transition={{ duration: 2, repeat: Infinity }}
+            className="w-24 h-24 rounded-full mx-auto mb-5 flex items-center justify-center backdrop-blur-2xl border border-white/50"
+            style={{
+              background:
+                "radial-gradient(circle at 30% 30%, rgba(255,255,255,0.7), rgba(255,255,255,0.2))",
+              boxShadow: "0 20px 50px -10px hsl(220 80% 30% / 0.5), inset 0 1px 0 rgba(255,255,255,0.6)",
+            }}
+            animate={{ scale: [1, 1.04, 1] }}
+            transition={{ duration: 3, repeat: Infinity }}
           >
-            <span className="text-3xl">✨</span>
+            <Sparkles className="w-10 h-10 text-white drop-shadow-lg" />
           </motion.div>
-          <h1 className="text-3xl font-bold font-journal text-foreground mb-2">
+          <h1 className="text-4xl font-display font-semibold text-white drop-shadow-md mb-2">
             Soul Journal
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-white/80">
             {isLogin ? t("auth.welcomeBack") : t("auth.createAccount")}
           </p>
         </div>
 
-        {/* Auth Form */}
-        <div className="glass-card rounded-3xl p-8">
-          <form onSubmit={handleSubmit} className="space-y-5">
+        {/* Glass Auth Card */}
+        <div
+          className="rounded-3xl p-7 backdrop-blur-2xl border border-white/40"
+          style={{
+            background:
+              "linear-gradient(135deg, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0.18) 100%)",
+            boxShadow:
+              "0 25px 60px -15px hsl(220 80% 25% / 0.5), inset 0 1px 0 rgba(255,255,255,0.55)",
+          }}
+        >
+          <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-              >
+              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}>
                 <div className="relative">
-                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/70" />
                   <Input
                     type="text"
                     placeholder={t("auth.yourName")}
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
-                    className="pl-12 h-14 rounded-2xl bg-background/50 border-border/50"
+                    className="pl-12 h-14 rounded-2xl bg-white/20 border-white/40 text-white placeholder:text-white/60 backdrop-blur-md"
                   />
                 </div>
               </motion.div>
@@ -164,7 +167,7 @@ const AuthPage = () => {
 
             <div>
               <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/70" />
                 <Input
                   type="email"
                   placeholder={t("auth.email")}
@@ -173,19 +176,17 @@ const AuthPage = () => {
                     setEmail(e.target.value);
                     setErrors((prev) => ({ ...prev, email: undefined }));
                   }}
-                  className={`pl-12 h-14 rounded-2xl bg-background/50 border-border/50 ${
+                  className={`pl-12 h-14 rounded-2xl bg-white/20 border-white/40 text-white placeholder:text-white/60 backdrop-blur-md ${
                     errors.email ? "border-destructive" : ""
                   }`}
                 />
               </div>
-              {errors.email && (
-                <p className="text-destructive text-sm mt-1 ml-1">{errors.email}</p>
-              )}
+              {errors.email && <p className="text-red-100 text-sm mt-1 ml-1">{errors.email}</p>}
             </div>
 
             <div>
               <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/70" />
                 <Input
                   type={showPassword ? "text" : "password"}
                   placeholder={t("auth.password")}
@@ -194,31 +195,34 @@ const AuthPage = () => {
                     setPassword(e.target.value);
                     setErrors((prev) => ({ ...prev, password: undefined }));
                   }}
-                  className={`pl-12 pr-12 h-14 rounded-2xl bg-background/50 border-border/50 ${
+                  className={`pl-12 pr-12 h-14 rounded-2xl bg-white/20 border-white/40 text-white placeholder:text-white/60 backdrop-blur-md ${
                     errors.password ? "border-destructive" : ""
                   }`}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white"
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
-              {errors.password && (
-                <p className="text-destructive text-sm mt-1 ml-1">{errors.password}</p>
-              )}
+              {errors.password && <p className="text-red-100 text-sm mt-1 ml-1">{errors.password}</p>}
             </div>
 
             <Button
               type="submit"
-              className="w-full h-14 rounded-2xl gradient-amber shadow-glow text-lg font-medium"
+              className="w-full h-14 rounded-2xl text-lg font-medium text-white border border-white/30"
+              style={{
+                background:
+                  "linear-gradient(135deg, hsl(211 90% 58%) 0%, hsl(220 85% 45%) 100%)",
+                boxShadow: "0 10px 30px -8px hsl(220 80% 30% / 0.6)",
+              }}
               disabled={isLoading}
             >
               {isLoading ? (
                 <motion.div
-                  className="w-6 h-6 border-2 border-primary-foreground border-t-transparent rounded-full"
+                  className="w-6 h-6 border-2 border-white border-t-transparent rounded-full"
                   animate={{ rotate: 360 }}
                   transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                 />
@@ -232,15 +236,15 @@ const AuthPage = () => {
           </form>
 
           <div className="flex items-center gap-3 my-5">
-            <div className="flex-1 h-px bg-border" />
-            <span className="text-xs text-muted-foreground">{t("auth.or")}</span>
-            <div className="flex-1 h-px bg-border" />
+            <div className="flex-1 h-px bg-white/30" />
+            <span className="text-xs text-white/70">{t("auth.or")}</span>
+            <div className="flex-1 h-px bg-white/30" />
           </div>
 
           <Button
             type="button"
             variant="outline"
-            className="w-full h-14 rounded-2xl gap-3 text-base"
+            className="w-full h-14 rounded-2xl gap-3 text-base bg-white/30 border-white/40 text-white hover:bg-white/40 backdrop-blur-md"
             onClick={async () => {
               const { error } = await lovable.auth.signInWithOAuth("google", {
                 redirect_uri: window.location.origin,
@@ -270,17 +274,17 @@ const AuthPage = () => {
                 setIsLogin(!isLogin);
                 setErrors({});
               }}
-              className="text-muted-foreground hover:text-foreground transition-colors"
+              className="text-white/80 hover:text-white transition-colors"
             >
               {isLogin ? (
                 <>
                   {t("auth.noAccount")}{" "}
-                  <span className="text-primary font-medium">{t("auth.signUpLink")}</span>
+                  <span className="text-white font-semibold underline">{t("auth.signUpLink")}</span>
                 </>
               ) : (
                 <>
                   {t("auth.hasAccount")}{" "}
-                  <span className="text-primary font-medium">{t("auth.signInLink")}</span>
+                  <span className="text-white font-semibold underline">{t("auth.signInLink")}</span>
                 </>
               )}
             </button>
