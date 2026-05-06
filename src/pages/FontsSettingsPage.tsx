@@ -62,8 +62,11 @@ const FontsSettingsPage = () => {
 
   const selectedFontData = FONT_OPTIONS.find(f => f.id === selectedFont);
 
+  const allImportUrls = Array.from(new Set(FONT_OPTIONS.map(f => f.importUrl).filter(Boolean)));
+
   return (
     <div className="min-h-screen gradient-warm pb-24">
+      {allImportUrls.map(url => <link key={url} href={url} rel="stylesheet" />)}
       {/* Header */}
       <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border/50">
         <div className="max-w-lg mx-auto px-4 py-4">
