@@ -241,7 +241,7 @@ const buildSoulReflectionHTML = (reflection: string, fontSize: number): string =
     <div style="margin-top:28px;padding:16px 20px;border-radius:14px;background:linear-gradient(135deg, rgba(139,92,246,0.08), rgba(236,72,153,0.06));border:1px solid rgba(139,92,246,0.15);">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
         <span style="font-size:14px;">✨</span>
-        <span style="font-size:${fontSize - 4}px;font-weight:600;color:#7c3aed;text-transform:uppercase;letter-spacing:0.08em;">Message from your Soul</span>
+        <span style="font-size:${fontSize - 4}px;font-weight:600;color:#7c3aed;letter-spacing:0.04em;">Message from your Soul</span>
       </div>
       <p style="font-size:${fontSize - 1}px;line-height:1.7;color:#4b5563;font-style:italic;">"${reflection}"</p>
     </div>`;
