@@ -326,8 +326,8 @@ const buildEntryPageHTML = (
       <div style="margin-bottom:0;${dirAttr}">
         <div style="font-size:${fs.title}px;font-weight:600;color:#0a0a0a;margin-bottom:8px;">${entry.title || "Untitled Entry"}</div>
         <div style="font-size:${fs.meta}px;color:#9ca3af;margin-bottom:20px;font-style:italic;">${date}${moodBadge}</div>
-        <div style="font-size:${fs.body}px;line-height:2;color:#374151;">${displayContent}</div>
         ${photoHTML}
+        <div style="font-size:${fs.body}px;line-height:2;color:#374151;">${displayContent}</div>
         ${reflectionHTML}
       </div>`;
     if (idx < entries.length - 1) {
