@@ -6,10 +6,24 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
 
+// Mirror Soul Book Builder fonts so users can preview the same options
 const FONT_OPTIONS = [
-  { id: "inter", name: "Inter", family: "Inter, sans-serif", sample: "The quick brown fox jumps over the lazy dog." },
-  { id: "crimson", name: "Crimson Pro", family: "'Crimson Pro', serif", sample: "The quick brown fox jumps over the lazy dog." },
-  { id: "system", name: "System Default", family: "system-ui, sans-serif", sample: "The quick brown fox jumps over the lazy dog." },
+  { id: "inter", name: "Inter (Modern)", family: "'Inter', sans-serif", importUrl: "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap", sample: "The quick brown fox jumps over the lazy dog." },
+  { id: "playfair", name: "Playfair (Classic)", family: "'Playfair Display', Georgia, serif", importUrl: "https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&display=swap", sample: "The quick brown fox jumps over the lazy dog." },
+  { id: "dancing", name: "Dancing Script", family: "'Dancing Script', cursive", importUrl: "https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;600;700&display=swap", sample: "The quick brown fox jumps over the lazy dog." },
+  { id: "caveat", name: "Caveat (Phitradesign)", family: "'Caveat', cursive", importUrl: "https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&display=swap", sample: "The quick brown fox jumps over the lazy dog." },
+  { id: "shadows", name: "Shadows Into Light", family: "'Shadows Into Light', cursive", importUrl: "https://fonts.googleapis.com/css2?family=Shadows+Into+Light&display=swap", sample: "The quick brown fox jumps over the lazy dog." },
+  { id: "sacramento", name: "Sacramento (Agata)", family: "'Sacramento', cursive", importUrl: "https://fonts.googleapis.com/css2?family=Sacramento&display=swap", sample: "The quick brown fox jumps over the lazy dog." },
+  { id: "kalam", name: "Kalam (Alanis)", family: "'Kalam', cursive", importUrl: "https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&display=swap", sample: "The quick brown fox jumps over the lazy dog." },
+  { id: "alex-brush", name: "Alex Brush (Honey Script)", family: "'Alex Brush', cursive", importUrl: "https://fonts.googleapis.com/css2?family=Alex+Brush&display=swap", sample: "The quick brown fox jumps over the lazy dog." },
+  { id: "euphoria", name: "Euphoria Script", family: "'Euphoria Script', cursive", importUrl: "https://fonts.googleapis.com/css2?family=Euphoria+Script&display=swap", sample: "The quick brown fox jumps over the lazy dog." },
+  { id: "great-vibes", name: "Great Vibes (Scriptina)", family: "'Great Vibes', cursive", importUrl: "https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap", sample: "The quick brown fox jumps over the lazy dog." },
+  { id: "tangerine", name: "Tangerine (Anke)", family: "'Tangerine', cursive", importUrl: "https://fonts.googleapis.com/css2?family=Tangerine:wght@400;700&display=swap", sample: "The quick brown fox jumps over the lazy dog." },
+  { id: "patrick", name: "Patrick Hand (Gravity)", family: "'Patrick Hand', cursive", importUrl: "https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap", sample: "The quick brown fox jumps over the lazy dog." },
+  { id: "petit-formal", name: "Petit Formal (Quilline)", family: "'Petit Formal Script', cursive", importUrl: "https://fonts.googleapis.com/css2?family=Petit+Formal+Script&display=swap", sample: "The quick brown fox jumps over the lazy dog." },
+  { id: "satisfy", name: "Satisfy (Farewell)", family: "'Satisfy', cursive", importUrl: "https://fonts.googleapis.com/css2?family=Satisfy&display=swap", sample: "The quick brown fox jumps over the lazy dog." },
+  { id: "arizonia", name: "Arizonia", family: "'Arizonia', cursive", importUrl: "https://fonts.googleapis.com/css2?family=Arizonia&display=swap", sample: "The quick brown fox jumps over the lazy dog." },
+  { id: "system", name: "System Default", family: "system-ui, sans-serif", importUrl: "", sample: "The quick brown fox jumps over the lazy dog." },
 ];
 
 const FontsSettingsPage = () => {
@@ -48,8 +62,11 @@ const FontsSettingsPage = () => {
 
   const selectedFontData = FONT_OPTIONS.find(f => f.id === selectedFont);
 
+  const allImportUrls = Array.from(new Set(FONT_OPTIONS.map(f => f.importUrl).filter(Boolean)));
+
   return (
     <div className="min-h-screen gradient-warm pb-24">
+      {allImportUrls.map(url => <link key={url} href={url} rel="stylesheet" />)}
       {/* Header */}
       <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border/50">
         <div className="max-w-lg mx-auto px-4 py-4">

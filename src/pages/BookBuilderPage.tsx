@@ -65,7 +65,13 @@ const BookBuilderPage = () => {
   const [layout, setLayout] = useState<EntryLayout>("one-per-page");
   const [watermark, setWatermark] = useState(true);
   const [photoSize, setPhotoSize] = useState<PhotoSize>("medium");
-  const [fontSize, setFontSize] = useState<FontSize>("medium");
+  const [fontSize, setFontSize] = useState<FontSize>(() => {
+    const saved = (typeof window !== "undefined" && localStorage.getItem("book-font-size")) as FontSize | null;
+    return saved && ["small", "medium", "large"].includes(saved) ? saved : "medium";
+  });
+  useEffect(() => {
+    if (typeof window !== "undefined") localStorage.setItem("book-font-size", fontSize);
+  }, [fontSize]);
 
   // Preview
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);

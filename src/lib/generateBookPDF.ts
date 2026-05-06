@@ -82,10 +82,10 @@ const PAGE_H_PX = Math.round(PAGE_H_MM * 3.7795 * SCALE);
 
 const getFontSizePx = (size: FontSize): { body: number; title: number; meta: number } => {
   switch (size) {
-    case "small": return { body: 13, title: 18, meta: 11 };
-    case "large": return { body: 19, title: 26, meta: 15 };
+    case "small": return { body: 14, title: 20, meta: 12 };
+    case "large": return { body: 22, title: 30, meta: 16 };
     case "medium":
-    default: return { body: 16, title: 22, meta: 13 };
+    default: return { body: 17, title: 24, meta: 13 };
   }
 };
 
@@ -241,7 +241,7 @@ const buildSoulReflectionHTML = (reflection: string, fontSize: number): string =
     <div style="margin-top:28px;padding:16px 20px;border-radius:14px;background:linear-gradient(135deg, rgba(139,92,246,0.08), rgba(236,72,153,0.06));border:1px solid rgba(139,92,246,0.15);">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
         <span style="font-size:14px;">✨</span>
-        <span style="font-size:${fontSize - 4}px;font-weight:600;color:#7c3aed;text-transform:uppercase;letter-spacing:0.08em;">Message from your Soul</span>
+        <span style="font-size:${fontSize - 4}px;font-weight:600;color:#7c3aed;letter-spacing:0.04em;">Message from your Soul</span>
       </div>
       <p style="font-size:${fontSize - 1}px;line-height:1.7;color:#4b5563;font-style:italic;">"${reflection}"</p>
     </div>`;
@@ -326,8 +326,8 @@ const buildEntryPageHTML = (
       <div style="margin-bottom:0;${dirAttr}">
         <div style="font-size:${fs.title}px;font-weight:600;color:#0a0a0a;margin-bottom:8px;">${entry.title || "Untitled Entry"}</div>
         <div style="font-size:${fs.meta}px;color:#9ca3af;margin-bottom:20px;font-style:italic;">${date}${moodBadge}</div>
-        <div style="font-size:${fs.body}px;line-height:2;color:#374151;">${displayContent}</div>
         ${photoHTML}
+        <div style="font-size:${fs.body}px;line-height:2;color:#374151;">${displayContent}</div>
         ${reflectionHTML}
       </div>`;
     if (idx < entries.length - 1) {
@@ -378,8 +378,8 @@ const buildSingleEntryHTML = (
       <div style="position:relative;z-index:1;">
         <div style="font-size:${fs.title}px;font-weight:600;color:#0a0a0a;margin-bottom:8px;">${entry.title || "Untitled Entry"}</div>
         <div style="font-size:${fs.meta}px;color:#9ca3af;margin-bottom:20px;font-style:italic;">${date}${moodBadge}</div>
-        <div style="font-size:${fs.body}px;line-height:2;color:#374151;">${displayContent}</div>
         ${photoHTML}
+        <div style="font-size:${fs.body}px;line-height:2;color:#374151;">${displayContent}</div>
         ${reflectionHTML}
       </div>
     </div>`;
