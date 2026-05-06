@@ -194,16 +194,22 @@ const CoachingPage = () => {
   return (
     <div className="min-h-screen gradient-warm pb-24">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border/50">
+      <header className="sticky top-0 z-40 backdrop-blur-2xl bg-white/30 border-b border-white/40">
         <div className="max-w-lg mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full gradient-amber flex items-center justify-center">
-                <Brain className="w-5 h-5 text-primary-foreground" />
+              <div
+                className="w-11 h-11 rounded-2xl flex items-center justify-center border border-white/50"
+                style={{
+                  background: "linear-gradient(135deg, hsl(211 90% 60%) 0%, hsl(220 85% 48%) 100%)",
+                  boxShadow: "0 8px 20px -6px hsl(220 80% 30% / 0.45)",
+                }}
+              >
+                <Brain className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h1 className="text-lg font-semibold text-foreground">AI Coach</h1>
-                <p className="text-sm text-muted-foreground">
+                <h1 className="text-xl font-display font-semibold text-foreground">AI Coach</h1>
+                <p className="text-xs text-muted-foreground">
                   {unreadCount > 0 ? `${unreadCount} new insights` : "Personalized guidance"}
                 </p>
               </div>
@@ -213,10 +219,10 @@ const CoachingPage = () => {
               size="sm"
               onClick={generateInsights}
               disabled={generating || coachingLimitReached}
-              className="gap-2"
+              className="gap-2 rounded-full bg-white/40 border-white/50 backdrop-blur-md"
             >
               <RefreshCw className={`w-4 h-4 ${generating ? 'animate-spin' : ''}`} />
-              {generating ? "Analyzing..." : coachingLimitReached ? "Limit Reached" : "Refresh"}
+              {generating ? "Analyzing..." : coachingLimitReached ? "Limit" : "Refresh"}
             </Button>
           </div>
           {coachingLimitReached && (

@@ -139,19 +139,19 @@ const AdminDashboard = () => {
 
   return (
     <div className="min-h-screen gradient-warm pb-8">
-      <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border/50">
+      <header className="sticky top-0 z-40 backdrop-blur-2xl bg-white/30 border-b border-white/40">
         <div className="max-w-4xl mx-auto px-4 py-4">
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" className="rounded-full" onClick={() => navigate("/settings")}>
+            <Button variant="ghost" size="icon" className="rounded-full bg-white/40 backdrop-blur-md border border-white/50" onClick={() => navigate("/settings")}>
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div>
-              <h1 className="text-lg font-semibold text-foreground flex items-center gap-2">
+              <h1 className="text-xl font-display font-semibold text-foreground flex items-center gap-2">
                 <Crown className="w-5 h-5 text-primary" /> Admin Dashboard
               </h1>
-              <p className="text-sm text-muted-foreground">Manage users & business metrics</p>
+              <p className="text-xs text-muted-foreground">Manage users & business metrics</p>
             </div>
-            <Button variant="ghost" size="icon" className="ml-auto rounded-full" onClick={fetchUsers}>
+            <Button variant="ghost" size="icon" className="ml-auto rounded-full bg-white/40 backdrop-blur-md border border-white/50" onClick={fetchUsers}>
               <RefreshCw className="w-4 h-4" />
             </Button>
           </div>
@@ -160,15 +160,15 @@ const AdminDashboard = () => {
 
       <main className="max-w-4xl mx-auto px-4 py-6">
         <Tabs defaultValue="users" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="users" className="flex items-center gap-2">
+          <TabsList className="grid w-full grid-cols-3 bg-white/40 backdrop-blur-xl border border-white/50 rounded-2xl p-1 h-12">
+            <TabsTrigger value="users" className="flex items-center gap-2 rounded-xl data-[state=active]:bg-white data-[state=active]:shadow">
               <Users className="w-4 h-4" /> Users
             </TabsTrigger>
-            <TabsTrigger value="revenue" className="flex items-center gap-2">
+            <TabsTrigger value="revenue" className="flex items-center gap-2 rounded-xl data-[state=active]:bg-white data-[state=active]:shadow">
               <BarChart3 className="w-4 h-4" /> Revenue
             </TabsTrigger>
-            <TabsTrigger value="grants" className="flex items-center gap-2">
-              <Gift className="w-4 h-4" /> Manual Access
+            <TabsTrigger value="grants" className="flex items-center gap-2 rounded-xl data-[state=active]:bg-white data-[state=active]:shadow">
+              <Gift className="w-4 h-4" /> Manual
             </TabsTrigger>
           </TabsList>
 
