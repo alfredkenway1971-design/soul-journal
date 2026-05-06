@@ -82,10 +82,10 @@ const PAGE_H_PX = Math.round(PAGE_H_MM * 3.7795 * SCALE);
 
 const getFontSizePx = (size: FontSize): { body: number; title: number; meta: number } => {
   switch (size) {
-    case "small": return { body: 13, title: 18, meta: 11 };
-    case "large": return { body: 19, title: 26, meta: 15 };
+    case "small": return { body: 14, title: 20, meta: 12 };
+    case "large": return { body: 22, title: 30, meta: 16 };
     case "medium":
-    default: return { body: 16, title: 22, meta: 13 };
+    default: return { body: 17, title: 24, meta: 13 };
   }
 };
 
