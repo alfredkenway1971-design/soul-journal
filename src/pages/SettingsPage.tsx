@@ -196,7 +196,7 @@ const SettingsPage = () => {
                 />
               }
             />
-            <Row icon={PenSquare} label="Journaling Prompts" onClick={() => navigate("/settings/reminders")} />
+            
             <Row icon={Sunrise} label="Morning Reflection" onClick={() => navigate("/settings/reminders")} />
           </SectionCard>
         </motion.div>

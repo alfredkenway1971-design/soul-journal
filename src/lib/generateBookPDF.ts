@@ -83,9 +83,9 @@ const PAGE_H_PX = Math.round(PAGE_H_MM * 3.7795 * SCALE);
 const getFontSizePx = (size: FontSize): { body: number; title: number; meta: number } => {
   switch (size) {
     case "small": return { body: 14, title: 20, meta: 12 };
-    case "large": return { body: 22, title: 30, meta: 16 };
+    case "large": return { body: 26, title: 36, meta: 18 };
     case "medium":
-    default: return { body: 17, title: 24, meta: 13 };
+    default: return { body: 18, title: 26, meta: 14 };
   }
 };
 
@@ -237,6 +237,7 @@ const buildImageGalleryHTML = (photoUrls: string[], photoSize: PhotoSize, isRTL:
 // ── Soul Reflection HTML ──
 const buildSoulReflectionHTML = (reflection: string, fontSize: number): string => {
   if (!reflection) return "";
+  // Title case with "from" and "your" left lowercase per spec: "Message from your Soul"
   return `
     <div style="margin-top:28px;padding:16px 20px;border-radius:14px;background:linear-gradient(135deg, rgba(139,92,246,0.08), rgba(236,72,153,0.06));border:1px solid rgba(139,92,246,0.15);">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
@@ -282,14 +283,21 @@ const buildCoverHTML = (config: BookConfig, fontCSS: string, fontImportUrl: stri
     ? `<img src="${config.avatarUrl}" style="width:100px;height:100px;border-radius:50%;object-fit:cover;border:3px solid ${isLight ? '#d6d3d1' : 'rgba(255,255,255,0.3)'};margin-bottom:24px;" crossorigin="anonymous" />`
     : "";
 
+  // Scale cover typography UP — preview was small; printed PDF needs to read big at A5
+  const subtitleFs = 36;
+  const titleFs = 96;
+  const yearFs = 30;
+  const avatarSize = config.showAvatar && config.avatarUrl
+    ? `<img src="${config.avatarUrl}" style="width:240px;height:240px;border-radius:50%;object-fit:cover;border:6px solid ${isLight ? '#d6d3d1' : 'rgba(255,255,255,0.35)'};margin-bottom:48px;" crossorigin="anonymous" />`
+    : "";
   const inner = `
-    <div style="width:100%;height:100%;background:${gradient};display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden;">
+    <div style="width:100%;height:100%;background:${gradient};display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden;padding:0 80px;">
       ${decorations}
-      <div style="position:relative;z-index:2;text-align:center;color:${color};">
-        ${avatarHTML}
-        <div style="font-size:14px;letter-spacing:0.3em;text-transform:uppercase;opacity:0.7;margin-bottom:12px;">The Soul Journal of</div>
-        <div style="font-size:38px;font-weight:600;${config.cover === 'minimalist' ? 'font-style:italic;' : ''}margin-bottom:8px;">${config.userName}</div>
-        <div style="font-size:12px;letter-spacing:0.2em;text-transform:uppercase;opacity:0.5;margin-top:16px;">${config.yearRange}</div>
+      <div style="position:relative;z-index:2;text-align:center;color:${color};max-width:100%;">
+        ${avatarSize}
+        <div style="font-size:${subtitleFs}px;letter-spacing:0.32em;text-transform:uppercase;opacity:0.78;margin-bottom:36px;font-weight:500;">The Soul Journal of</div>
+        <div style="font-size:${titleFs}px;font-weight:700;line-height:1.05;${config.cover === 'minimalist' ? 'font-style:italic;' : ''}margin-bottom:40px;">${config.userName}</div>
+        <div style="font-size:${yearFs}px;letter-spacing:0.28em;text-transform:uppercase;opacity:0.6;margin-top:24px;">${config.yearRange}</div>
       </div>
     </div>`;
 

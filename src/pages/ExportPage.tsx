@@ -248,53 +248,6 @@ const ExportPage = () => {
             </div>
           </motion.button>
 
-          <motion.button
-            className="w-full glass-premium p-5 flex items-center gap-4"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={exportToMarkdown}
-            disabled={exporting !== null}
-          >
-            <div className="w-14 h-14 rounded-2xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-              {exporting === "markdown" ? (
-                <Loader2 className="w-7 h-7 text-blue-600 animate-spin" />
-              ) : success === "markdown" ? (
-                <CheckCircle className="w-7 h-7 text-green-600" />
-              ) : (
-                <FileText className="w-7 h-7 text-blue-600" />
-              )}
-            </div>
-            <div className="flex-1 text-left">
-              <h3 className="font-semibold text-foreground">{t("export.quickMarkdown")}</h3>
-              <p className="text-sm text-muted-foreground">{t("export.markdownDesc")}</p>
-            </div>
-          </motion.button>
-
-          <motion.button
-            className="w-full glass-premium p-5 flex items-center gap-4"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={exportToPDF}
-            disabled={exporting !== null}
-          >
-            <div className="w-14 h-14 rounded-2xl bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
-              {exporting === "pdf" ? (
-                <Loader2 className="w-7 h-7 text-red-600 animate-spin" />
-              ) : success === "pdf" ? (
-                <CheckCircle className="w-7 h-7 text-green-600" />
-              ) : (
-                <FileText className="w-7 h-7 text-red-600" />
-              )}
-            </div>
-            <div className="flex-1 text-left">
-              <h3 className="font-semibold text-foreground">{t("export.quickPDF")}</h3>
-              <p className="text-sm text-muted-foreground">{t("export.quickPDFDesc")}</p>
-            </div>
-          </motion.button>
         </div>
 
         <motion.div
