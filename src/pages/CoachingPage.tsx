@@ -1,20 +1,15 @@
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { 
-  Brain, 
-  Target, 
-  Zap, 
-  AlertTriangle, 
-  CheckCircle2, 
+import { motion } from "framer-motion";
+import {
+  Target,
   RefreshCw,
-  ChevronRight,
-  Sparkles,
-  TrendingUp,
-  Heart
+  Flower2,
+  Check,
+  Play,
+  ArrowLeft,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUsageLimits } from "@/hooks/useUsageLimits";
@@ -22,6 +17,7 @@ import { FREE_LIMITS } from "@/contexts/SubscriptionContext";
 import { useLanguage, getLanguageName } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import BottomNav from "@/components/BottomNav";
+import { smartTitleCase } from "@/lib/smartTitleCase";
 
 interface Insight {
   id: string;
@@ -37,68 +33,64 @@ interface Insight {
 interface Goal {
   id: string;
   title: string;
-  category: string;
-  icon: string;
+  category?: string;
+  icon?: string;
+  completed?: boolean;
 }
 
-const insightIcons: Record<string, React.ComponentType<{ className?: string }>> = {
-  daily_tip: Sparkles,
-  challenge: Zap,
-  wellness_alert: AlertTriangle,
-  goal_progress: TrendingUp,
-};
-
-const insightColors: Record<string, string> = {
-  daily_tip: "bg-primary/20 text-primary",
-  challenge: "bg-amber-500/20 text-amber-600",
-  wellness_alert: "bg-destructive/20 text-destructive",
-  goal_progress: "bg-green-500/20 text-green-600",
+// Reusable glass card style block
+const GLASS = {
+  background:
+    "linear-gradient(135deg, rgba(255,255,255,0.45) 0%, rgba(220,240,255,0.28) 100%)",
+  boxShadow:
+    "0 20px 50px -20px hsl(215 60% 25% / 0.35), inset 0 1px 0 rgba(255,255,255,0.65)",
 };
 
 const CoachingPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
-  const { coachingCallsThisMonth, coachingLimitReached, canUseCoaching, refetch: refetchLimits } = useUsageLimits();
+  const { coachingCallsThisMonth, coachingLimitReached, canUseCoaching, refetch } = useUsageLimits();
   const { language } = useLanguage();
-  
+
   const [insights, setInsights] = useState<Insight[]>([]);
   const [goals, setGoals] = useState<Goal[]>([]);
+  const [weeklyCount, setWeeklyCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
 
   useEffect(() => {
-    if (user) {
-      fetchData();
-    }
+    if (user) fetchData();
   }, [user]);
 
   const fetchData = async () => {
     if (!user) return;
-    
     try {
-      const [insightsRes, profileRes] = await Promise.all([
+      const weekStart = new Date();
+      weekStart.setDate(weekStart.getDate() - 7);
+
+      const [insightsRes, profileRes, entriesRes] = await Promise.all([
         supabase
-          .from('coaching_insights')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
+          .from("coaching_insights")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
           .limit(20),
+        supabase.from("profiles").select("goals").eq("id", user.id).maybeSingle(),
         supabase
-          .from('profiles')
-          .select('goals')
-          .eq('id', user.id)
-          .maybeSingle()
+          .from("journal_entries")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", user.id)
+          .gte("created_at", weekStart.toISOString()),
       ]);
-      
-      if (insightsRes.error) throw insightsRes.error;
+
       setInsights(insightsRes.data || []);
-      
       if (profileRes.data?.goals && Array.isArray(profileRes.data.goals)) {
         setGoals(profileRes.data.goals as unknown as Goal[]);
       }
-    } catch (error) {
-      console.error('Error fetching data:', error);
+      setWeeklyCount(entriesRes.count ?? 0);
+    } catch (e) {
+      console.error(e);
     } finally {
       setLoading(false);
     }
@@ -106,7 +98,6 @@ const CoachingPage = () => {
 
   const generateInsights = async () => {
     if (!user) return;
-    
     if (!canUseCoaching) {
       toast({
         title: "Coaching Limit Reached",
@@ -116,25 +107,20 @@ const CoachingPage = () => {
       navigate("/pricing");
       return;
     }
-    
     setGenerating(true);
-    
     try {
-      const { data, error } = await supabase.functions.invoke('generate-coaching-insights', {
-        body: { language: getLanguageName(language) }
+      const { data, error } = await supabase.functions.invoke("generate-coaching-insights", {
+        body: { language: getLanguageName(language) },
       });
-      
       if (error) throw error;
-      
       toast({
         title: "Insights Generated",
         description: `${data.insightsCount || 0} new insights based on your journal entries.`,
       });
-      
-      await refetchLimits();
+      await refetch();
       fetchData();
-    } catch (error) {
-      console.error('Error generating insights:', error);
+    } catch (e) {
+      console.error(e);
       toast({
         title: "Error",
         description: "Failed to generate insights. Please try again.",
@@ -145,43 +131,20 @@ const CoachingPage = () => {
     }
   };
 
-  const markAsRead = async (insightId: string) => {
+  const completeChallenge = async (id: string) => {
     try {
-      await supabase
-        .from('coaching_insights')
-        .update({ is_read: true })
-        .eq('id', insightId);
-      
-      setInsights(prev => 
-        prev.map(i => i.id === insightId ? { ...i, is_read: true } : i)
-      );
-    } catch (error) {
-      console.error('Error marking as read:', error);
+      await supabase.from("coaching_insights").update({ is_completed: true }).eq("id", id);
+      setInsights((p) => p.map((i) => (i.id === id ? { ...i, is_completed: true } : i)));
+      toast({ title: "Challenge Completed! 🎉" });
+    } catch (e) {
+      console.error(e);
     }
   };
 
-  const completeChallenge = async (insightId: string) => {
-    try {
-      await supabase
-        .from('coaching_insights')
-        .update({ is_completed: true })
-        .eq('id', insightId);
-      
-      setInsights(prev => 
-        prev.map(i => i.id === insightId ? { ...i, is_completed: true } : i)
-      );
-      
-      toast({
-        title: "Challenge Completed! 🎉",
-        description: "Great job! Keep up the momentum.",
-      });
-    } catch (error) {
-      console.error('Error completing challenge:', error);
-    }
-  };
-
-  const unreadCount = insights.filter(i => !i.is_read).length;
-  const activeChallenges = insights.filter(i => i.insight_type === 'challenge' && !i.is_completed);
+  const unreadCount = insights.filter((i) => !i.is_read).length;
+  const activeChallenge = insights.find((i) => i.insight_type === "challenge" && !i.is_completed);
+  const weeklyTarget = 7;
+  const progress = Math.min(100, Math.round((weeklyCount / weeklyTarget) * 100));
 
   if (loading) {
     return (
@@ -192,221 +155,239 @@ const CoachingPage = () => {
   }
 
   return (
-    <div className="min-h-screen gradient-warm pb-24">
+    <div className="min-h-screen gradient-warm pb-28 relative overflow-hidden">
+      {/* Sky water caustics for depth */}
+      <div className="absolute top-0 inset-x-0 h-72 pointer-events-none opacity-50"
+        style={{
+          background:
+            "radial-gradient(ellipse at 20% 10%, rgba(255,255,255,0.45) 0%, transparent 45%), radial-gradient(ellipse at 80% 30%, rgba(160,210,255,0.45) 0%, transparent 50%)",
+        }}
+      />
+
       {/* Header */}
-      <header className="sticky top-0 z-40 backdrop-blur-2xl bg-white/30 border-b border-white/40">
-        <div className="max-w-lg mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div
-                className="w-11 h-11 rounded-2xl flex items-center justify-center border border-white/50"
-                style={{
-                  background: "linear-gradient(135deg, hsl(211 90% 60%) 0%, hsl(220 85% 48%) 100%)",
-                  boxShadow: "0 8px 20px -6px hsl(220 80% 30% / 0.45)",
-                }}
-              >
-                <Brain className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h1 className="text-xl font-display font-semibold text-foreground">AI Coach</h1>
-                <p className="text-xs text-muted-foreground">
-                  {unreadCount > 0 ? `${unreadCount} new insights` : "Personalized guidance"}
-                </p>
-              </div>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={generateInsights}
-              disabled={generating || coachingLimitReached}
-              className="gap-2 rounded-full bg-white/40 border-white/50 backdrop-blur-md"
-            >
-              <RefreshCw className={`w-4 h-4 ${generating ? 'animate-spin' : ''}`} />
-              {generating ? "Analyzing..." : coachingLimitReached ? "Limit" : "Refresh"}
-            </Button>
-          </div>
-          {coachingLimitReached && (
-            <div className="mt-3 bg-destructive/10 border border-destructive/20 rounded-xl px-4 py-2 flex items-center justify-between">
-              <p className="text-xs text-destructive font-medium">
-                {coachingCallsThisMonth}/{FREE_LIMITS.aiCoachingCallsPerMonth} coaching calls used this month
-              </p>
-              <button onClick={() => navigate("/pricing")} className="text-xs text-primary underline ml-2 shrink-0">
-                Upgrade
-              </button>
-            </div>
-          )}
-          {!coachingLimitReached && !loading && (
-            <p className="mt-2 text-xs text-muted-foreground">
-              {coachingCallsThisMonth}/{FREE_LIMITS.aiCoachingCallsPerMonth} coaching calls used this month
-            </p>
-          )}
+      <header className="relative pt-12 pb-3 px-5">
+        <div className="max-w-lg mx-auto flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="rounded-full bg-white/50 backdrop-blur-md border border-white/60"
+            onClick={() => navigate("/")}
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <div className="flex-1" />
+          <Button
+            variant="ghost"
+            size="icon"
+            className="rounded-full bg-white/50 backdrop-blur-md border border-white/60"
+            onClick={generateInsights}
+            disabled={generating || coachingLimitReached}
+            title="Refresh insights"
+          >
+            <RefreshCw className={`w-4 h-4 ${generating ? "animate-spin" : ""}`} />
+          </Button>
         </div>
       </header>
 
-      {/* Content */}
-      <main className="max-w-lg mx-auto px-4 py-6 space-y-6">
-        {/* Goals Summary */}
-        {goals.length > 0 ? (
-          <motion.div
-            className="glass-card rounded-2xl p-4"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <Target className="w-4 h-4 text-primary" />
-                <span className="text-sm font-medium text-foreground">Your Goals</span>
-              </div>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => navigate("/settings/goals")}
-                className="text-xs"
-              >
-                Edit
-                <ChevronRight className="w-3 h-3 ml-1" />
-              </Button>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {goals.slice(0, 3).map((goal) => (
-                <Badge key={goal.id} variant="secondary" className="text-xs">
-                  {goal.title}
-                </Badge>
-              ))}
-              {goals.length > 3 && (
-                <Badge variant="outline" className="text-xs">
-                  +{goals.length - 3} more
-                </Badge>
-              )}
-            </div>
-          </motion.div>
-        ) : (
-          <motion.div
-            className="glass-card rounded-2xl p-6 text-center"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-4">
-              <Target className="w-8 h-8 text-primary" />
-            </div>
-            <h3 className="font-semibold text-foreground mb-2">Set Your Goals</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              Define your goals to get personalized AI coaching insights.
-            </p>
-            <Button onClick={() => navigate("/settings/goals")} className="gradient-amber">
-              <Target className="w-4 h-4 mr-2" />
-              Set Goals
-            </Button>
-          </motion.div>
-        )}
-
-        {/* Active Challenges */}
-        {activeChallenges.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-          >
-            <h2 className="text-sm font-medium text-muted-foreground mb-3 px-2">
-              Active Challenges
-            </h2>
-            <div className="space-y-3">
-              {activeChallenges.map((challenge) => (
-                <motion.div
-                  key={challenge.id}
-                  className="glass-card rounded-2xl p-4"
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <div className="flex items-start gap-3">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${insightColors.challenge}`}>
-                      <Zap className="w-5 h-5" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-medium text-foreground">{challenge.title}</h3>
-                      <p className="text-sm text-muted-foreground mt-1">{challenge.content}</p>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="mt-3 gap-2"
-                        onClick={() => completeChallenge(challenge.id)}
-                      >
-                        <CheckCircle2 className="w-4 h-4" />
-                        Mark Complete
-                      </Button>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-        )}
-
-        {/* All Insights */}
+      <main className="relative max-w-lg mx-auto px-5 space-y-5">
+        {/* AI Coach Hero Card */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
+          className="rounded-[28px] p-5 backdrop-blur-2xl border border-white/55 flex items-center gap-4"
+          style={GLASS}
         >
-          <h2 className="text-sm font-medium text-muted-foreground mb-3 px-2">
-            Recent Insights
-          </h2>
-          
-          {insights.length === 0 ? (
-            <div className="glass-card rounded-2xl p-6 text-center">
-              <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
-                <Sparkles className="w-8 h-8 text-muted-foreground" />
-              </div>
-              <h3 className="font-semibold text-foreground mb-2">No insights yet</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Record some journal entries and tap "Refresh" to get personalized insights.
-              </p>
+          <div
+            className="w-20 h-20 rounded-3xl shrink-0 flex items-center justify-center border border-white/70"
+            style={{
+              background:
+                "radial-gradient(circle at 30% 30%, rgba(255,255,255,0.9), rgba(180,215,250,0.6))",
+              boxShadow:
+                "0 8px 24px -8px hsl(215 60% 35% / 0.4), inset 0 1px 0 rgba(255,255,255,0.95)",
+            }}
+          >
+            {/* swirl */}
+            <svg viewBox="0 0 32 32" className="w-9 h-9 text-[hsl(215_70%_45%)]" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M16 4a12 12 0 1 0 12 12" />
+              <path d="M16 10a6 6 0 1 0 6 6" />
+              <circle cx="16" cy="16" r="2" fill="currentColor" />
+            </svg>
+          </div>
+          <div className="min-w-0">
+            <h1 className="text-3xl font-display font-semibold text-foreground leading-tight">
+              {smartTitleCase("AI Coach")}
+            </h1>
+            <p className="text-sm text-foreground/75 mt-1 leading-snug">
+              Your personal wellness guide.
+              <br />
+              {unreadCount > 0 ? `${unreadCount} new insights.` : "Tap refresh for new insights."}
+            </p>
+          </div>
+        </motion.div>
+
+        {/* Your Goals Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05 }}
+          className="rounded-[28px] p-5 backdrop-blur-2xl border border-white/55"
+          style={GLASS}
+        >
+          <div className="flex items-center gap-3 mb-4">
+            <div
+              className="w-11 h-11 rounded-2xl flex items-center justify-center border border-white/70"
+              style={{
+                background:
+                  "radial-gradient(circle at 30% 30%, rgba(255,255,255,0.9), rgba(180,215,250,0.55))",
+              }}
+            >
+              <Target className="w-5 h-5 text-[hsl(215_70%_40%)]" />
             </div>
+            <h2 className="text-xl font-display font-semibold text-foreground">
+              {smartTitleCase("Your Goals")}
+            </h2>
+            <button
+              onClick={() => navigate("/settings/goals")}
+              className="ml-auto text-xs font-medium text-primary hover:underline"
+            >
+              Edit
+            </button>
+          </div>
+
+          {goals.length === 0 ? (
+            <p className="text-sm text-foreground/70">
+              Set your first goal to see personalized progress here.
+            </p>
           ) : (
-            <div className="space-y-3">
-              <AnimatePresence>
-                {insights.filter(i => i.insight_type !== 'challenge' || i.is_completed).map((insight, index) => {
-                  const IconComponent = insightIcons[insight.insight_type] || Sparkles;
-                  const colorClass = insightColors[insight.insight_type] || insightColors.daily_tip;
-                  
-                  return (
-                    <motion.div
-                      key={insight.id}
-                      className={`glass-card rounded-2xl p-4 ${!insight.is_read ? 'ring-2 ring-primary/30' : ''}`}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.05 }}
-                      onClick={() => !insight.is_read && markAsRead(insight.id)}
-                    >
-                      <div className="flex items-start gap-3">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${colorClass}`}>
-                          <IconComponent className="w-5 h-5" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h3 className="font-medium text-foreground truncate">{insight.title}</h3>
-                            {!insight.is_read && (
-                              <Badge variant="default" className="text-xs">New</Badge>
-                            )}
-                            {insight.is_completed && (
-                              <CheckCircle2 className="w-4 h-4 text-green-500" />
-                            )}
-                          </div>
-                          <p className="text-sm text-muted-foreground">{insight.content}</p>
-                          {insight.related_goal && (
-                            <Badge variant="outline" className="mt-2 text-xs">
-                              <Target className="w-3 h-3 mr-1" />
-                              {insight.related_goal}
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                    </motion.div>
-                  );
-                })}
-              </AnimatePresence>
+            <div className="space-y-1">
+              {goals.slice(0, 3).map((g, i) => (
+                <div
+                  key={g.id || i}
+                  className={`flex items-center justify-between py-3 ${
+                    i < Math.min(goals.length, 3) - 1 ? "border-b border-white/40" : ""
+                  }`}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-7 h-7 rounded-full border-2 border-white/70 flex items-center justify-center shrink-0">
+                      {g.completed && <Check className="w-3.5 h-3.5 text-primary" />}
+                    </div>
+                    <span className="text-[15px] text-foreground/90 truncate">{g.title}</span>
+                  </div>
+                  <button
+                    className="w-7 h-7 rounded-full bg-white/65 border border-white/70 flex items-center justify-center"
+                    aria-label={g.completed ? "Done" : "Track"}
+                  >
+                    {g.completed ? (
+                      <Check className="w-4 h-4 text-primary" />
+                    ) : (
+                      <Play className="w-3.5 h-3.5 text-primary fill-primary" />
+                    )}
+                  </button>
+                </div>
+              ))}
             </div>
           )}
+
+          {/* Weekly entries progress */}
+          <div className="mt-5">
+            <p className="text-sm text-foreground/85 mb-2">
+              Journal entries this week: <span className="font-medium">{weeklyCount}/{weeklyTarget}</span>
+            </p>
+            <div className="h-2 rounded-full bg-white/45 overflow-hidden">
+              <motion.div
+                className="h-full rounded-full"
+                style={{
+                  background:
+                    "linear-gradient(90deg, hsl(205 90% 65%), hsl(215 85% 55%))",
+                }}
+                initial={{ width: 0 }}
+                animate={{ width: `${progress}%` }}
+                transition={{ duration: 0.8, ease: "easeOut" }}
+              />
+            </div>
+          </div>
         </motion.div>
+
+        {/* Active Challenges Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="rounded-[28px] p-5 backdrop-blur-2xl border border-white/55"
+          style={GLASS}
+        >
+          <div className="flex items-center gap-3 mb-4">
+            <div
+              className="w-11 h-11 rounded-2xl flex items-center justify-center border border-white/70"
+              style={{
+                background:
+                  "linear-gradient(135deg, rgba(255,210,160,0.85) 0%, rgba(255,180,140,0.6) 100%)",
+                boxShadow: "0 6px 16px -6px hsl(25 80% 50% / 0.35)",
+              }}
+            >
+              <Flower2 className="w-5 h-5 text-orange-700" />
+            </div>
+            <h2 className="text-xl font-display font-semibold text-foreground">
+              {smartTitleCase("Active Challenges")}
+            </h2>
+          </div>
+
+          {activeChallenge ? (
+            <>
+              <h3 className="text-lg font-semibold text-foreground mb-2">
+                {smartTitleCase(activeChallenge.title)}
+              </h3>
+              <p className="text-[15px] text-foreground/80 leading-relaxed mb-5">
+                {activeChallenge.content}
+              </p>
+              <button
+                onClick={() => completeChallenge(activeChallenge.id)}
+                className="w-full h-12 rounded-full bg-white/55 border border-white/70 backdrop-blur-md text-foreground font-medium hover:bg-white/70 transition"
+              >
+                Start Challenge
+              </button>
+            </>
+          ) : (
+            <p className="text-sm text-foreground/75">
+              No active challenges right now. Tap refresh to receive a new one.
+            </p>
+          )}
+        </motion.div>
+
+        {/* Recent insights (compact) */}
+        {insights.filter((i) => i.insight_type !== "challenge" || i.is_completed).length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+          >
+            <h2 className="px-1 mb-2 text-sm font-medium text-foreground/70">Recent Insights</h2>
+            <div className="space-y-2">
+              {insights
+                .filter((i) => i.insight_type !== "challenge" || i.is_completed)
+                .slice(0, 4)
+                .map((insight) => (
+                  <div
+                    key={insight.id}
+                    className="rounded-2xl p-4 border border-white/55 backdrop-blur-xl"
+                    style={GLASS}
+                  >
+                    <p className="font-medium text-foreground">{smartTitleCase(insight.title)}</p>
+                    <p className="text-sm text-foreground/80 mt-1">{insight.content}</p>
+                  </div>
+                ))}
+            </div>
+          </motion.div>
+        )}
+
+        {coachingLimitReached && (
+          <div className="rounded-2xl bg-destructive/10 border border-destructive/20 px-4 py-3 text-xs text-destructive flex items-center justify-between">
+            <span>{coachingCallsThisMonth}/{FREE_LIMITS.aiCoachingCallsPerMonth} coaching calls used this month</span>
+            <button onClick={() => navigate("/pricing")} className="underline ml-2 shrink-0">
+              Upgrade
+            </button>
+          </div>
+        )}
       </main>
 
       <BottomNav />

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Eye, EyeOff, Mail, Lock, User, ArrowRight, ChevronDown, Sparkles } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User, ArrowRight, ChevronDown, BookOpen, Feather } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,10 +38,10 @@ const AuthPage = () => {
 
   const validateForm = () => {
     const newErrors: { email?: string; password?: string } = {};
-    const emailResult = emailSchema.safeParse(email);
-    if (!emailResult.success) newErrors.email = emailResult.error.errors[0].message;
-    const passwordResult = passwordSchema.safeParse(password);
-    if (!passwordResult.success) newErrors.password = passwordResult.error.errors[0].message;
+    const e1 = emailSchema.safeParse(email);
+    if (!e1.success) newErrors.email = e1.error.errors[0].message;
+    const e2 = passwordSchema.safeParse(password);
+    if (!e2.success) newErrors.password = e2.error.errors[0].message;
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -53,14 +53,12 @@ const AuthPage = () => {
     try {
       if (isLogin) {
         const { error } = await signIn(email, password);
-        if (error) {
-          toast({ title: t("auth.signIn"), description: error.message, variant: "destructive" });
-        } else navigate("/");
+        if (error) toast({ title: t("auth.signIn"), description: error.message, variant: "destructive" });
+        else navigate("/");
       } else {
         const { error } = await signUp(email, password, displayName);
-        if (error) {
-          toast({ title: t("auth.signUp"), description: error.message, variant: "destructive" });
-        } else navigate("/");
+        if (error) toast({ title: t("auth.signUp"), description: error.message, variant: "destructive" });
+        else navigate("/");
       }
     } finally {
       setIsLoading(false);
@@ -68,98 +66,110 @@ const AuthPage = () => {
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden flex items-center justify-center px-4">
-      {/* Underwater gradient backdrop */}
+    <div className="relative min-h-screen overflow-hidden flex items-center justify-center px-5 py-10">
+      {/* Light sky-water gradient backdrop */}
       <div
         className="absolute inset-0"
         style={{
           background:
-            "radial-gradient(ellipse at 20% 0%, hsl(195 85% 75%) 0%, transparent 55%), radial-gradient(ellipse at 80% 100%, hsl(220 80% 55%) 0%, transparent 60%), linear-gradient(180deg, hsl(200 80% 80%) 0%, hsl(210 75% 60%) 50%, hsl(220 70% 40%) 100%)",
+            "linear-gradient(180deg, hsl(198 85% 80%) 0%, hsl(200 80% 75%) 45%, hsl(205 75% 70%) 100%)",
         }}
       />
-      {/* Caustic light orbs */}
-      <div className="absolute top-10 -left-20 w-80 h-80 rounded-full bg-white/30 blur-3xl" />
-      <div className="absolute bottom-10 -right-20 w-96 h-96 rounded-full bg-cyan-200/40 blur-3xl" />
-      <div className="absolute top-1/3 right-10 w-40 h-40 rounded-full bg-white/20 blur-2xl" />
+      {/* Caustic water ripples */}
+      <div
+        className="absolute inset-x-0 bottom-0 h-1/2 opacity-60"
+        style={{
+          background:
+            "radial-gradient(ellipse at 20% 80%, rgba(255,255,255,0.55) 0%, transparent 35%), radial-gradient(ellipse at 70% 90%, rgba(255,255,255,0.4) 0%, transparent 40%), radial-gradient(ellipse at 50% 60%, rgba(255,255,255,0.3) 0%, transparent 45%)",
+        }}
+      />
+      <div className="absolute top-20 -left-10 w-72 h-72 rounded-full bg-white/35 blur-3xl" />
+      <div className="absolute bottom-0 right-0 w-96 h-72 rounded-full bg-white/40 blur-3xl" />
 
       <motion.div
         className="relative w-full max-w-md z-10"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        {/* Language Dropdown */}
-        <div className="flex justify-end mb-6">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                className="rounded-full gap-2 px-4 py-2 bg-white/20 border-white/40 backdrop-blur-xl text-white hover:bg-white/30"
-              >
-                <span className="text-lg">{currentLang?.flag}</span>
-                <span className="text-sm font-medium">{currentLang?.native}</span>
-                <ChevronDown className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="min-w-[200px]">
-              {LANGUAGES.map((lang) => (
-                <DropdownMenuItem
-                  key={lang.code}
-                  onClick={() => setLanguage(lang.code)}
-                  className={`flex items-center gap-3 px-3 py-2.5 cursor-pointer ${
-                    language === lang.code ? "bg-primary/10 font-semibold" : ""
-                  }`}
-                >
-                  <span className="text-lg">{lang.flag}</span>
-                  <span className="text-sm">{lang.native}</span>
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-
-        {/* Logo & Title */}
-        <div className="text-center mb-8">
-          <motion.div
-            className="w-24 h-24 rounded-full mx-auto mb-5 flex items-center justify-center backdrop-blur-2xl border border-white/50"
-            style={{
-              background:
-                "radial-gradient(circle at 30% 30%, rgba(255,255,255,0.7), rgba(255,255,255,0.2))",
-              boxShadow: "0 20px 50px -10px hsl(220 80% 30% / 0.5), inset 0 1px 0 rgba(255,255,255,0.6)",
-            }}
-            animate={{ scale: [1, 1.04, 1] }}
-            transition={{ duration: 3, repeat: Infinity }}
-          >
-            <Sparkles className="w-10 h-10 text-white drop-shadow-lg" />
-          </motion.div>
-          <h1 className="text-4xl font-display font-semibold text-white drop-shadow-md mb-2">
-            Soul Journal
-          </h1>
-          <p className="text-white/80">
-            {isLogin ? t("auth.welcomeBack") : t("auth.createAccount")}
-          </p>
-        </div>
-
         {/* Glass Auth Card */}
         <div
-          className="rounded-3xl p-7 backdrop-blur-2xl border border-white/40"
+          className="relative rounded-[32px] p-8 pt-7 backdrop-blur-2xl border border-white/60"
           style={{
             background:
-              "linear-gradient(135deg, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0.18) 100%)",
+              "linear-gradient(135deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.35) 100%)",
             boxShadow:
-              "0 25px 60px -15px hsl(220 80% 25% / 0.5), inset 0 1px 0 rgba(255,255,255,0.55)",
+              "0 30px 80px -20px hsl(210 60% 35% / 0.35), inset 0 1px 0 rgba(255,255,255,0.75)",
           }}
         >
-          <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Language pill — top right */}
+          <div className="flex justify-end mb-1">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  className="flex items-center gap-1.5 rounded-full bg-white/60 border border-white/70 backdrop-blur-md px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-white/80 transition"
+                >
+                  <span>{currentLang?.flag}</span>
+                  <span>{currentLang?.native}</span>
+                  <ChevronDown className="w-3.5 h-3.5" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="min-w-[200px]">
+                {LANGUAGES.map((lang) => (
+                  <DropdownMenuItem
+                    key={lang.code}
+                    onClick={() => setLanguage(lang.code)}
+                    className={`flex items-center gap-3 px-3 py-2.5 cursor-pointer ${
+                      language === lang.code ? "bg-primary/10 font-semibold" : ""
+                    }`}
+                  >
+                    <span className="text-lg">{lang.flag}</span>
+                    <span className="text-sm">{lang.native}</span>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+
+          {/* Logo */}
+          <div className="text-center mb-7 -mt-3">
+            <motion.div
+              className="w-20 h-20 rounded-full mx-auto mb-4 flex items-center justify-center border border-white/80 relative"
+              style={{
+                background:
+                  "radial-gradient(circle at 30% 30%, rgba(255,255,255,0.95), rgba(220,240,255,0.6))",
+                boxShadow:
+                  "0 10px 30px -10px hsl(210 60% 30% / 0.35), inset 0 1px 0 rgba(255,255,255,0.95)",
+              }}
+              animate={{ scale: [1, 1.03, 1] }}
+              transition={{ duration: 3, repeat: Infinity }}
+            >
+              <BookOpen className="w-9 h-9 text-[hsl(215_60%_30%)]" strokeWidth={2.2} />
+              <Feather
+                className="absolute -right-1 top-2 w-5 h-5 text-[hsl(215_60%_30%)] rotate-12"
+                strokeWidth={2.2}
+              />
+              {/* Halo */}
+              <div
+                className="absolute inset-0 rounded-full pointer-events-none"
+                style={{ boxShadow: "0 0 0 4px rgba(255,200,80,0.25)" }}
+              />
+            </motion.div>
+            <h1 className="text-[34px] leading-none font-display font-semibold text-[hsl(215_55%_22%)] tracking-tight">
+              Soul Journal
+            </h1>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-3.5">
             {!isLogin && (
               <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}>
                 <div className="relative">
-                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/70" />
+                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
                   <Input
                     type="text"
                     placeholder={t("auth.yourName")}
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
-                    className="pl-12 h-14 rounded-2xl bg-white/20 border-white/40 text-white placeholder:text-white/60 backdrop-blur-md"
+                    className="pl-12 h-14 rounded-full bg-white/55 border border-white/70 text-slate-800 placeholder:text-slate-500 backdrop-blur-md focus-visible:ring-1 focus-visible:ring-primary"
                   />
                 </div>
               </motion.div>
@@ -167,56 +177,57 @@ const AuthPage = () => {
 
             <div>
               <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/70" />
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
                 <Input
                   type="email"
-                  placeholder={t("auth.email")}
+                  placeholder={t("auth.email") || "Email address"}
                   value={email}
                   onChange={(e) => {
                     setEmail(e.target.value);
-                    setErrors((prev) => ({ ...prev, email: undefined }));
+                    setErrors((p) => ({ ...p, email: undefined }));
                   }}
-                  className={`pl-12 h-14 rounded-2xl bg-white/20 border-white/40 text-white placeholder:text-white/60 backdrop-blur-md ${
+                  className={`pl-12 h-14 rounded-full bg-white/55 border border-white/70 text-slate-800 placeholder:text-slate-500 backdrop-blur-md ${
                     errors.email ? "border-destructive" : ""
                   }`}
                 />
               </div>
-              {errors.email && <p className="text-red-100 text-sm mt-1 ml-1">{errors.email}</p>}
+              {errors.email && <p className="text-destructive text-xs mt-1 ml-4">{errors.email}</p>}
             </div>
 
             <div>
               <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/70" />
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
                 <Input
                   type={showPassword ? "text" : "password"}
-                  placeholder={t("auth.password")}
+                  placeholder={t("auth.password") || "Password"}
                   value={password}
                   onChange={(e) => {
                     setPassword(e.target.value);
-                    setErrors((prev) => ({ ...prev, password: undefined }));
+                    setErrors((p) => ({ ...p, password: undefined }));
                   }}
-                  className={`pl-12 pr-12 h-14 rounded-2xl bg-white/20 border-white/40 text-white placeholder:text-white/60 backdrop-blur-md ${
+                  className={`pl-12 pr-12 h-14 rounded-full bg-white/55 border border-white/70 text-slate-800 placeholder:text-slate-500 backdrop-blur-md ${
                     errors.password ? "border-destructive" : ""
                   }`}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700"
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
-              {errors.password && <p className="text-red-100 text-sm mt-1 ml-1">{errors.password}</p>}
+              {errors.password && <p className="text-destructive text-xs mt-1 ml-4">{errors.password}</p>}
             </div>
 
             <Button
               type="submit"
-              className="w-full h-14 rounded-2xl text-lg font-medium text-white border border-white/30"
+              className="w-full h-14 rounded-full text-base font-medium text-white border-0 mt-1"
               style={{
                 background:
-                  "linear-gradient(135deg, hsl(211 90% 58%) 0%, hsl(220 85% 45%) 100%)",
-                boxShadow: "0 10px 30px -8px hsl(220 80% 30% / 0.6)",
+                  "linear-gradient(180deg, hsl(208 80% 55%) 0%, hsl(215 75% 42%) 100%)",
+                boxShadow:
+                  "0 10px 28px -8px hsl(215 75% 35% / 0.55), inset 0 1px 0 rgba(255,255,255,0.35)",
               }}
               disabled={isLoading}
             >
@@ -228,7 +239,7 @@ const AuthPage = () => {
                 />
               ) : (
                 <>
-                  {isLogin ? t("auth.signIn") : t("auth.signUp")}
+                  {isLogin ? t("auth.signIn") || "Sign In" : t("auth.signUp") || "Sign Up"}
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </>
               )}
@@ -236,15 +247,14 @@ const AuthPage = () => {
           </form>
 
           <div className="flex items-center gap-3 my-5">
-            <div className="flex-1 h-px bg-white/30" />
-            <span className="text-xs text-white/70">{t("auth.or")}</span>
-            <div className="flex-1 h-px bg-white/30" />
+            <div className="flex-1 h-px bg-slate-400/30" />
+            <span className="text-xs text-slate-500">{t("auth.or") || "or"}</span>
+            <div className="flex-1 h-px bg-slate-400/30" />
           </div>
 
-          <Button
+          <button
             type="button"
-            variant="outline"
-            className="w-full h-14 rounded-2xl gap-3 text-base bg-white/30 border-white/40 text-white hover:bg-white/40 backdrop-blur-md"
+            className="w-full h-14 rounded-full gap-3 text-base bg-white/55 border border-white/70 text-slate-800 hover:bg-white/70 backdrop-blur-md flex items-center justify-center font-medium transition"
             onClick={async () => {
               const { error } = await lovable.auth.signInWithOAuth("google", {
                 redirect_uri: window.location.origin,
@@ -264,27 +274,31 @@ const AuthPage = () => {
               <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
               <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
             </svg>
-            {t("auth.continueGoogle")}
-          </Button>
+            {t("auth.continueGoogle") || "Continue with Google"}
+          </button>
 
-          <div className="mt-6 text-center">
+          <div className="mt-5 text-center">
             <button
               type="button"
               onClick={() => {
                 setIsLogin(!isLogin);
                 setErrors({});
               }}
-              className="text-white/80 hover:text-white transition-colors"
+              className="text-sm text-slate-600 hover:text-slate-800 transition-colors"
             >
               {isLogin ? (
                 <>
-                  {t("auth.noAccount")}{" "}
-                  <span className="text-white font-semibold underline">{t("auth.signUpLink")}</span>
+                  {t("auth.noAccount") || "Don't have an account?"}{" "}
+                  <span className="text-[hsl(208_80%_45%)] font-semibold">
+                    {t("auth.signUpLink") || "Sign up"}
+                  </span>
                 </>
               ) : (
                 <>
-                  {t("auth.hasAccount")}{" "}
-                  <span className="text-white font-semibold underline">{t("auth.signInLink")}</span>
+                  {t("auth.hasAccount") || "Already have an account?"}{" "}
+                  <span className="text-[hsl(208_80%_45%)] font-semibold">
+                    {t("auth.signInLink") || "Sign in"}
+                  </span>
                 </>
               )}
             </button>
