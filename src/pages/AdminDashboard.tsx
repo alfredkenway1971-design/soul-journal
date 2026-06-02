@@ -137,21 +137,38 @@ const AdminDashboard = () => {
     return <Badge variant="outline">Inactive</Badge>;
   };
 
+  // Mock revenue figures derived from subscription counts (placeholder until Stripe webhooks populate real data)
+  const monthlyRevenue = monthlySubscribers.length * 599;
+  const annualRevenueShare = Math.round((annualSubscribers.length * 4999) / 12);
+  const totalRevenueThisMonth = monthlyRevenue + annualRevenueShare;
+  const fmtUSD = (cents: number) =>
+    `$${(cents / 100).toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+
   return (
-    <div className="min-h-screen gradient-warm pb-8">
+    <div className="min-h-screen gradient-warm pb-24">
       <header className="sticky top-0 z-40 backdrop-blur-2xl bg-white/30 border-b border-white/40">
         <div className="max-w-4xl mx-auto px-4 py-4">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" className="rounded-full bg-white/40 backdrop-blur-md border border-white/50" onClick={() => navigate("/settings")}>
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-full bg-white/50 backdrop-blur-md border border-white/60"
+              onClick={() => navigate("/settings")}
+            >
               <ArrowLeft className="w-5 h-5" />
             </Button>
-            <div>
-              <h1 className="text-xl font-display font-semibold text-foreground flex items-center gap-2">
-                <Crown className="w-5 h-5 text-primary" /> Admin Dashboard
+            <div className="flex-1 text-center -ml-9">
+              <h1 className="text-xl font-display font-semibold text-foreground flex items-center justify-center gap-2">
+                Admin Dashboard <Crown className="w-5 h-5 text-primary" />
               </h1>
-              <p className="text-xs text-muted-foreground">Manage users & business metrics</p>
+              <p className="text-xs text-muted-foreground">Revenue Metrics</p>
             </div>
-            <Button variant="ghost" size="icon" className="ml-auto rounded-full bg-white/40 backdrop-blur-md border border-white/50" onClick={fetchUsers}>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-full bg-white/50 backdrop-blur-md border border-white/60"
+              onClick={fetchUsers}
+            >
               <RefreshCw className="w-4 h-4" />
             </Button>
           </div>
@@ -159,16 +176,25 @@ const AdminDashboard = () => {
       </header>
 
       <main className="max-w-4xl mx-auto px-4 py-6">
-        <Tabs defaultValue="users" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 bg-white/40 backdrop-blur-xl border border-white/50 rounded-2xl p-1 h-12">
-            <TabsTrigger value="users" className="flex items-center gap-2 rounded-xl data-[state=active]:bg-white data-[state=active]:shadow">
-              <Users className="w-4 h-4" /> Users
+        <Tabs defaultValue="revenue" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-3 bg-white/45 backdrop-blur-xl border border-white/60 rounded-full p-1 h-12 shadow-[0_8px_24px_-10px_hsl(215_50%_30%_/_0.18),inset_0_1px_0_rgba(255,255,255,0.7)]">
+            <TabsTrigger
+              value="users"
+              className="rounded-full text-sm font-medium data-[state=active]:bg-white/80 data-[state=active]:text-primary data-[state=active]:shadow-[0_4px_14px_-4px_hsl(211_85%_45%_/_0.35)]"
+            >
+              Users
             </TabsTrigger>
-            <TabsTrigger value="revenue" className="flex items-center gap-2 rounded-xl data-[state=active]:bg-white data-[state=active]:shadow">
-              <BarChart3 className="w-4 h-4" /> Revenue
+            <TabsTrigger
+              value="revenue"
+              className="rounded-full text-sm font-medium data-[state=active]:bg-white/80 data-[state=active]:text-primary data-[state=active]:shadow-[0_4px_14px_-4px_hsl(211_85%_45%_/_0.35)]"
+            >
+              Revenue
             </TabsTrigger>
-            <TabsTrigger value="grants" className="flex items-center gap-2 rounded-xl data-[state=active]:bg-white data-[state=active]:shadow">
-              <Gift className="w-4 h-4" /> Manual
+            <TabsTrigger
+              value="grants"
+              className="rounded-full text-sm font-medium data-[state=active]:bg-white/80 data-[state=active]:text-primary data-[state=active]:shadow-[0_4px_14px_-4px_hsl(211_85%_45%_/_0.35)]"
+            >
+              Manual Access
             </TabsTrigger>
           </TabsList>
 
@@ -178,7 +204,7 @@ const AdminDashboard = () => {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 placeholder="Search users by email or name..."
-                className="pl-10"
+                className="pl-10 rounded-full bg-white/60 border-white/60 backdrop-blur-md"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -197,9 +223,9 @@ const AdminDashboard = () => {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.03 }}
-                    className="glass-card rounded-xl p-4 flex items-center gap-4"
+                    className="glass-card rounded-2xl p-4 flex items-center gap-4"
                   >
-                    <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-sm font-medium text-muted-foreground">
+                    <div className="w-10 h-10 rounded-full bg-white/60 flex items-center justify-center text-sm font-medium text-primary">
                       {user.display_name?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase() || "?"}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -220,31 +246,70 @@ const AdminDashboard = () => {
             )}
           </TabsContent>
 
-          {/* Revenue Tab */}
+          {/* Revenue Tab — matches design screenshot */}
           <TabsContent value="revenue" className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="glass-card rounded-xl p-5 text-center">
-                <p className="text-3xl font-bold text-foreground">{users.length}</p>
-                <p className="text-sm text-muted-foreground">Total Users</p>
-              </div>
-              <div className="glass-card rounded-xl p-5 text-center">
-                <p className="text-3xl font-bold text-emerald-500">{activeSubscribers.length}</p>
-                <p className="text-sm text-muted-foreground">Active Subscribers</p>
-              </div>
-              <div className="glass-card rounded-xl p-5 text-center">
-                <p className="text-3xl font-bold text-primary">{monthlySubscribers.length}</p>
-                <p className="text-sm text-muted-foreground">Monthly</p>
-              </div>
-              <div className="glass-card rounded-xl p-5 text-center">
-                <p className="text-3xl font-bold text-primary">{annualSubscribers.length}</p>
-                <p className="text-sm text-muted-foreground">Annual</p>
-              </div>
-              <div className="glass-card rounded-xl p-5 text-center col-span-2">
-                <p className="text-3xl font-bold text-purple-500">{manualGrants.length}</p>
-                <p className="text-sm text-muted-foreground">Manual Grants</p>
-              </div>
+            {/* Hero card — Total Revenue */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="rounded-[28px] p-7 text-center backdrop-blur-2xl border border-white/70"
+              style={{
+                background:
+                  "linear-gradient(135deg, rgba(255,255,255,0.7) 0%, rgba(230,242,255,0.5) 100%)",
+                boxShadow:
+                  "0 18px 50px -18px hsl(215 60% 30% / 0.3), inset 0 1px 0 rgba(255,255,255,0.85)",
+              }}
+            >
+              <p className="text-base text-foreground/80 mb-1">Total Revenue</p>
+              <p className="text-6xl font-bold text-primary tracking-tight leading-none my-2">
+                {fmtUSD(totalRevenueThisMonth)}
+              </p>
+              <p className="text-sm text-muted-foreground mt-1">This Month</p>
+            </motion.div>
+
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { label: "Total Users", value: users.length.toLocaleString() },
+                { label: "Active Subscribers", value: activeSubscribers.length.toLocaleString() },
+                { label: "Monthly Revenue", value: fmtUSD(monthlyRevenue) },
+                { label: "Annual Revenue", value: fmtUSD(annualSubscribers.length * 4999) },
+              ].map((stat, i) => (
+                <motion.div
+                  key={stat.label}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.05 + i * 0.04 }}
+                  className="rounded-3xl p-5 text-center backdrop-blur-2xl border border-white/70"
+                  style={{
+                    background:
+                      "linear-gradient(135deg, rgba(255,255,255,0.7) 0%, rgba(230,242,255,0.45) 100%)",
+                    boxShadow:
+                      "0 10px 30px -12px hsl(215 60% 30% / 0.22), inset 0 1px 0 rgba(255,255,255,0.85)",
+                  }}
+                >
+                  <p className="text-sm text-foreground/80 mb-2">{stat.label}</p>
+                  <p className="text-3xl font-bold text-primary tracking-tight">{stat.value}</p>
+                </motion.div>
+              ))}
             </div>
-            <p className="text-xs text-muted-foreground text-center">
+
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.25 }}
+              className="rounded-3xl p-6 text-center backdrop-blur-2xl border border-white/70"
+              style={{
+                background:
+                  "linear-gradient(135deg, rgba(255,255,255,0.7) 0%, rgba(230,242,255,0.45) 100%)",
+                boxShadow:
+                  "0 10px 30px -12px hsl(215 60% 30% / 0.22), inset 0 1px 0 rgba(255,255,255,0.85)",
+              }}
+            >
+              <p className="text-sm text-foreground/80 mb-2">Manual Grants</p>
+              <p className="text-4xl font-bold text-primary tracking-tight">{manualGrants.length}</p>
+            </motion.div>
+
+            <p className="text-xs text-muted-foreground text-center px-4 pt-1">
               Revenue metrics will populate once Stripe is connected and subscriptions are active.
             </p>
           </TabsContent>
