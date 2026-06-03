@@ -11,6 +11,7 @@ import { useSubscription } from "@/contexts/SubscriptionContext";
 import UpgradePrompt from "@/components/premium/UpgradePrompt";
 import { format } from "date-fns";
 import BottomNav from "@/components/BottomNav";
+import { escapeHtml } from "@/lib/escapeHtml";
 
 const ExportPage = () => {
   const navigate = useNavigate();
@@ -135,14 +136,15 @@ const ExportPage = () => {
       entries.forEach((entry) => {
         const date = format(new Date(entry.created_at), "EEEE, MMMM d, yyyy 'at' h:mm a");
         const mood = entry.mood ? entry.mood.charAt(0).toUpperCase() + entry.mood.slice(1) : "";
-        const content = (entry.enhanced_text || entry.original_transcription || "No content")
+        // Escape user-controlled values before injecting into HTML to prevent XSS.
+        const content = escapeHtml(entry.enhanced_text || entry.original_transcription || "No content")
           .replace(/\n/g, '<br>');
-        
+
         htmlContent += `
           <div class="entry">
-            <div class="entry-title">${entry.title || "Untitled Entry"}</div>
+            <div class="entry-title">${escapeHtml(entry.title || "Untitled Entry")}</div>
             <div class="entry-meta">
-              ${date}${mood ? `<span class="mood-badge">${mood}</span>` : ""}
+              ${escapeHtml(date)}${mood ? `<span class="mood-badge">${escapeHtml(mood)}</span>` : ""}
             </div>
             <div class="entry-content">${content}</div>
           </div>
