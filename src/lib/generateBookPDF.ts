@@ -4,6 +4,11 @@ import { type CoverTemplate } from "@/components/book-builder/CoverTemplates";
 import { type BookFont, getFontConfig } from "@/components/book-builder/FontSelector";
 import { type PageBackground, type EntryLayout } from "@/components/book-builder/PageStyleSelector";
 import { format } from "date-fns";
+import { escapeHtml } from "@/lib/escapeHtml";
+
+// Escape user-supplied text, then convert newlines to <br>. Order matters:
+// escape first so any '<' the user typed becomes '&lt;' before we inject our own <br> tags.
+const escMultiline = (s: string) => escapeHtml(s).replace(/\n/g, "<br>");
 
 export type PhotoSize = "small" | "medium" | "large";
 export type FontSize = "small" | "medium" | "large";
