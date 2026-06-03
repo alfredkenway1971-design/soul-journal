@@ -249,7 +249,7 @@ const buildSoulReflectionHTML = (reflection: string, fontSize: number): string =
         <span style="font-size:14px;">✨</span>
         <span style="font-size:${fontSize - 4}px;font-weight:600;color:#7c3aed;letter-spacing:0.04em;">Message from your Soul</span>
       </div>
-      <p style="font-size:${fontSize - 1}px;line-height:1.7;color:#4b5563;font-style:italic;">"${reflection}"</p>
+      <p style="font-size:${fontSize - 1}px;line-height:1.7;color:#4b5563;font-style:italic;">"${escapeHtml(reflection)}"</p>
     </div>`;
 };
 
@@ -301,8 +301,8 @@ const buildCoverHTML = (config: BookConfig, fontCSS: string, fontImportUrl: stri
       <div style="position:relative;z-index:2;text-align:center;color:${color};max-width:100%;">
         ${avatarSize}
         <div style="font-size:${subtitleFs}px;letter-spacing:0.32em;text-transform:uppercase;opacity:0.78;margin-bottom:36px;font-weight:500;">The Soul Journal of</div>
-        <div style="font-size:${titleFs}px;font-weight:700;line-height:1.05;${config.cover === 'minimalist' ? 'font-style:italic;' : ''}margin-bottom:40px;">${config.userName}</div>
-        <div style="font-size:${yearFs}px;letter-spacing:0.28em;text-transform:uppercase;opacity:0.6;margin-top:24px;">${config.yearRange}</div>
+        <div style="font-size:${titleFs}px;font-weight:700;line-height:1.05;${config.cover === 'minimalist' ? 'font-style:italic;' : ''}margin-bottom:40px;">${escapeHtml(config.userName)}</div>
+        <div style="font-size:${yearFs}px;letter-spacing:0.28em;text-transform:uppercase;opacity:0.6;margin-top:24px;">${escapeHtml(config.yearRange)}</div>
       </div>
     </div>`;
 
@@ -329,16 +329,16 @@ const buildEntryPageHTML = (
     const content = (entry.enhanced_text || entry.original_transcription || "No content");
     const rtl = isRTLText(content);
     const dirAttr = rtl ? 'direction:rtl;text-align:right;' : '';
-    const displayContent = content.replace(/\n/g, "<br>");
-    const moodBadge = mood ? `<span style="display:inline-block;background:#f5f5f5;padding:2px 10px;border-radius:10px;font-size:${fs.meta - 1}px;margin-left:10px;font-style:normal;">${mood}</span>` : "";
+    const displayContent = escMultiline(content);
+    const moodBadge = mood ? `<span style="display:inline-block;background:#f5f5f5;padding:2px 10px;border-radius:10px;font-size:${fs.meta - 1}px;margin-left:10px;font-style:normal;">${escapeHtml(mood)}</span>` : "";
 
     const photoHTML = buildImageGalleryHTML(entry.photoUrls || [], config.photoSize || "medium", rtl);
     const reflectionHTML = buildSoulReflectionHTML(entry.soul_reflection || "", fs.body);
 
     entriesHTML += `
       <div style="margin-bottom:0;${dirAttr}">
-        <div style="font-size:${fs.title}px;font-weight:600;color:#0a0a0a;margin-bottom:8px;">${entry.title || "Untitled Entry"}</div>
-        <div style="font-size:${fs.meta}px;color:#9ca3af;margin-bottom:20px;font-style:italic;">${date}${moodBadge}</div>
+        <div style="font-size:${fs.title}px;font-weight:600;color:#0a0a0a;margin-bottom:8px;">${escapeHtml(entry.title || "Untitled Entry")}</div>
+        <div style="font-size:${fs.meta}px;color:#9ca3af;margin-bottom:20px;font-style:italic;">${escapeHtml(date)}${moodBadge}</div>
         ${photoHTML}
         <div style="font-size:${fs.body}px;line-height:2;color:#374151;">${displayContent}</div>
         ${reflectionHTML}
@@ -378,8 +378,8 @@ const buildSingleEntryHTML = (
   const content = (entry.enhanced_text || entry.original_transcription || "No content");
   const rtl = isRTLText(content);
   const dirAttr = rtl ? 'direction:rtl;text-align:right;' : '';
-  const displayContent = content.replace(/\n/g, "<br>");
-  const moodBadge = mood ? `<span style="display:inline-block;background:#f5f5f5;padding:2px 10px;border-radius:10px;font-size:${fs.meta - 1}px;margin-left:10px;font-style:normal;">${mood}</span>` : "";
+  const displayContent = escMultiline(content);
+  const moodBadge = mood ? `<span style="display:inline-block;background:#f5f5f5;padding:2px 10px;border-radius:10px;font-size:${fs.meta - 1}px;margin-left:10px;font-style:normal;">${escapeHtml(mood)}</span>` : "";
 
   const photoHTML = buildImageGalleryHTML(entry.photoUrls || [], config.photoSize || "medium", rtl);
   const reflectionHTML = buildSoulReflectionHTML(entry.soul_reflection || "", fs.body);
@@ -389,8 +389,8 @@ const buildSingleEntryHTML = (
       ${bgSVG}
       ${watermarkHTML}
       <div style="position:relative;z-index:1;">
-        <div style="font-size:${fs.title}px;font-weight:600;color:#0a0a0a;margin-bottom:8px;">${entry.title || "Untitled Entry"}</div>
-        <div style="font-size:${fs.meta}px;color:#9ca3af;margin-bottom:20px;font-style:italic;">${date}${moodBadge}</div>
+        <div style="font-size:${fs.title}px;font-weight:600;color:#0a0a0a;margin-bottom:8px;">${escapeHtml(entry.title || "Untitled Entry")}</div>
+        <div style="font-size:${fs.meta}px;color:#9ca3af;margin-bottom:20px;font-style:italic;">${escapeHtml(date)}${moodBadge}</div>
         ${photoHTML}
         <div style="font-size:${fs.body}px;line-height:2;color:#374151;">${displayContent}</div>
         ${reflectionHTML}
@@ -417,8 +417,8 @@ const buildMagazineEntryHTML = (
   const content = (entry.enhanced_text || entry.original_transcription || "No content");
   const rtl = isRTLText(content);
   const dirAttr = rtl ? 'direction:rtl;text-align:right;' : '';
-  const first = content.charAt(0);
-  const rest = content.slice(1).replace(/\n/g, "<br>");
+  const first = escapeHtml(content.charAt(0));
+  const rest = escMultiline(content.slice(1));
 
   const photoHTML = buildImageGalleryHTML(entry.photoUrls || [], config.photoSize || "medium", rtl);
   const reflectionHTML = buildSoulReflectionHTML(entry.soul_reflection || "", fs.body);
@@ -428,8 +428,8 @@ const buildMagazineEntryHTML = (
       ${bgSVG}
       ${watermarkHTML}
       <div style="position:relative;z-index:1;">
-        <div style="font-size:${fs.meta}px;color:#9ca3af;letter-spacing:0.25em;margin-bottom:6px;">${date}${mood ? ` · ${mood.toUpperCase()}` : ""}</div>
-        <div style="font-size:${fs.title + 6}px;font-weight:700;color:#0a0a0a;line-height:1.1;margin-bottom:8px;font-style:italic;">${entry.title || "Untitled Entry"}</div>
+        <div style="font-size:${fs.meta}px;color:#9ca3af;letter-spacing:0.25em;margin-bottom:6px;">${escapeHtml(date)}${mood ? ` · ${escapeHtml(mood.toUpperCase())}` : ""}</div>
+        <div style="font-size:${fs.title + 6}px;font-weight:700;color:#0a0a0a;line-height:1.1;margin-bottom:8px;font-style:italic;">${escapeHtml(entry.title || "Untitled Entry")}</div>
         <div style="width:48px;height:2px;background:#0a0a0a;margin:14px 0 22px;"></div>
         <div style="font-size:${fs.body}px;line-height:1.85;color:#374151;column-count:2;column-gap:24px;">
           <span style="float:left;font-size:${fs.body * 3.4}px;line-height:0.85;font-weight:700;padding:6px 8px 0 0;color:#0a0a0a;">${first}</span>${rest}
@@ -458,7 +458,7 @@ const buildPhotoForwardEntryHTML = (
   const content = (entry.enhanced_text || entry.original_transcription || "No content");
   const rtl = isRTLText(content);
   const dirAttr = rtl ? 'direction:rtl;text-align:right;' : '';
-  const displayContent = content.replace(/\n/g, "<br>");
+  const displayContent = escMultiline(content);
 
   const heroPhoto = entry.photoUrls && entry.photoUrls.length > 0
     ? `<div style="width:100%;height:${Math.round(PAGE_H_PX * 0.42)}px;margin-bottom:28px;border-radius:0;overflow:hidden;">
@@ -478,8 +478,8 @@ const buildPhotoForwardEntryHTML = (
       <div style="position:relative;z-index:1;">
         ${heroPhoto}
         <div style="padding:0 56px 60px;">
-          <div style="font-size:${fs.meta}px;color:#9ca3af;text-transform:uppercase;letter-spacing:0.2em;margin-bottom:8px;">${date}${mood ? ` · ${mood}` : ""}</div>
-          <div style="font-size:${fs.title + 4}px;font-weight:600;color:#0a0a0a;margin-bottom:18px;">${entry.title || "Untitled Entry"}</div>
+          <div style="font-size:${fs.meta}px;color:#9ca3af;text-transform:uppercase;letter-spacing:0.2em;margin-bottom:8px;">${escapeHtml(date)}${mood ? ` · ${escapeHtml(mood)}` : ""}</div>
+          <div style="font-size:${fs.title + 4}px;font-weight:600;color:#0a0a0a;margin-bottom:18px;">${escapeHtml(entry.title || "Untitled Entry")}</div>
           <div style="font-size:${fs.body}px;line-height:1.95;color:#374151;">${displayContent}</div>
           ${extraPhotos}
           ${reflectionHTML}
@@ -656,18 +656,18 @@ export const generateBookHTML = (config: BookConfig, entries: JournalEntry[]): s
     html += `<img class="cover-avatar" src="${config.avatarUrl}" alt="Avatar" />`;
   }
   html += `<div class="cover-subtitle">The Soul Journal of</div>`;
-  html += `<div class="cover-name">${config.userName}</div>`;
-  html += `<div class="cover-year">${config.yearRange}</div>`;
+  html += `<div class="cover-name">${escapeHtml(config.userName)}</div>`;
+  html += `<div class="cover-year">${escapeHtml(config.yearRange)}</div>`;
   html += `</div></div>`;
 
   entries.forEach((entry, idx) => {
     const date = format(new Date(entry.created_at), "EEEE, MMMM d, yyyy");
     const mood = entry.mood ? entry.mood.charAt(0).toUpperCase() + entry.mood.slice(1) : "";
-    const content = (entry.enhanced_text || entry.original_transcription || "No content").replace(/\n/g, "<br>");
+    const content = escMultiline(entry.enhanced_text || entry.original_transcription || "No content");
     html += `<div class="entry-page">`;
     html += watermarkHTML;
-    html += `<div class="entry-title">${entry.title || "Untitled Entry"}</div>`;
-    html += `<div class="entry-meta">${date}${mood ? `<span class="mood-badge">${mood}</span>` : ""}</div>`;
+    html += `<div class="entry-title">${escapeHtml(entry.title || "Untitled Entry")}</div>`;
+    html += `<div class="entry-meta">${escapeHtml(date)}${mood ? `<span class="mood-badge">${escapeHtml(mood)}</span>` : ""}</div>`;
     html += `<div class="entry-content">${content}</div>`;
     if (!isOnePerPage && idx < entries.length - 1) html += `<div class="entry-divider"></div>`;
     html += `</div>`;
