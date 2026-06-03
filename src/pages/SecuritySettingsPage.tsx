@@ -28,15 +28,11 @@ const SecuritySettingsPage = () => {
       if (!user) return;
       
       try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('pin_hash')
-          .eq('id', user.id)
-          .single();
-        
+        // Server-side check — the PIN hash itself is never returned to the browser.
+        const { data, error } = await supabase.rpc('has_pin');
         if (error) throw error;
-        setPinEnabled(!!data?.pin_hash);
-        
+        setPinEnabled(!!data);
+
         const bioPref = localStorage.getItem(`biometric_enabled_${user.id}`);
         setBiometricEnabled(bioPref === 'true');
       } catch (error) {
