@@ -211,6 +211,8 @@ export type Database = {
       }
       profiles: {
         Row: {
+          app_font: string | null
+          app_font_size: number | null
           avatar_url: string | null
           capture_context: boolean
           created_at: string
@@ -229,6 +231,8 @@ export type Database = {
           worldview: string | null
         }
         Insert: {
+          app_font?: string | null
+          app_font_size?: number | null
           avatar_url?: string | null
           capture_context?: boolean
           created_at?: string
@@ -247,6 +251,8 @@ export type Database = {
           worldview?: string | null
         }
         Update: {
+          app_font?: string | null
+          app_font_size?: number | null
           avatar_url?: string | null
           capture_context?: boolean
           created_at?: string
