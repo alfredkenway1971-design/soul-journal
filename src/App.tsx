@@ -29,6 +29,7 @@ import AdminDashboard from "@/pages/AdminDashboard";
 import PricingPage from "@/pages/PricingPage";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
+import { FontProvider } from "@/contexts/FontContext";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -304,26 +305,13 @@ const App = () => {
       }
     }
     
-    // Apply saved font
-    const savedFont = localStorage.getItem('app-font');
-    if (savedFont) {
-      document.documentElement.setAttribute('data-font', savedFont);
-      // Apply font family
-      const fontFamilies: Record<string, string> = {
-        'inter': "'Inter', sans-serif",
-        'crimson': "'Crimson Pro', serif",
-        'georgia': "Georgia, serif",
-        'system': "system-ui, sans-serif",
-      };
-      if (fontFamilies[savedFont]) {
-        document.body.style.fontFamily = fontFamilies[savedFont];
-      }
-    }
+    // Font preferences are now managed by FontProvider
   }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
+        <FontProvider>
         <LanguageProvider>
         <SubscriptionProvider>
         <TooltipProvider>
@@ -335,6 +323,7 @@ const App = () => {
         </TooltipProvider>
         </SubscriptionProvider>
         </LanguageProvider>
+        </FontProvider>
       </AuthProvider>
     </QueryClientProvider>
   );
