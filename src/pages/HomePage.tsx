@@ -10,6 +10,7 @@ import BottomNav from "@/components/BottomNav";
 import AppLanguageSwitcher from "@/components/AppLanguageSwitcher";
 import QuickCapture from "@/components/premium/QuickCapture";
 import RecentEntryCard from "@/components/premium/RecentEntryCard";
+import AIInsightCard from "@/components/premium/AIInsightCard";
 import WeatherBadge from "@/components/WeatherBadge";
 import MoodFilterBar, { type MoodFilterValue } from "@/components/MoodFilterBar";
 import OnThisDayCard from "@/components/OnThisDayCard";
@@ -43,7 +44,7 @@ const HomePage = () => {
   
   const currentDate = new Date();
   const dayOfWeek = format(currentDate, "EEEE");
-  const formattedDate = format(currentDate, "MMM d").toUpperCase() + ", " + dayOfWeek.toUpperCase();
+  const formattedDate = format(currentDate, "MMM d") + ", " + dayOfWeek;
   
   const currentHour = new Date().getHours();
   const getGreeting = () => {
@@ -146,6 +147,9 @@ const HomePage = () => {
       <main className="max-w-lg mx-auto px-5 space-y-5">
         {/* Quick Capture */}
         <QuickCapture />
+
+        {/* AI Insight */}
+        <AIInsightCard userName={firstName} />
 
         {/* Mood Filter Bar */}
         <section>

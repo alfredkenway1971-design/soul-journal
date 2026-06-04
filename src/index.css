@@ -4,6 +4,10 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Global font family driven by FontContext */
+html { font-family: var(--app-font, 'Inter', system-ui, sans-serif); }
+body { font-family: inherit; }
+
 @layer base {
   :root {
     /* Sky-Blue Glassmorphic palette */
