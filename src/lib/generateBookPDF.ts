@@ -5,6 +5,7 @@ import { type BookFont, getFontConfig } from "@/components/book-builder/FontSele
 import { type PageBackground, type EntryLayout } from "@/components/book-builder/PageStyleSelector";
 import { format } from "date-fns";
 import { escapeHtml } from "@/lib/escapeHtml";
+import { smartTitleCase } from "@/lib/smartTitleCase";
 
 // Escape user-supplied text, then convert newlines to <br>. Order matters:
 // escape first so any '<' the user typed becomes '&lt;' before we inject our own <br> tags.
@@ -87,10 +88,19 @@ const PAGE_H_PX = Math.round(PAGE_H_MM * 3.7795 * SCALE);
 
 const getFontSizePx = (size: FontSize): { body: number; title: number; meta: number } => {
   switch (size) {
-    case "small": return { body: 14, title: 20, meta: 12 };
-    case "large": return { body: 26, title: 36, meta: 18 };
+    case "small": return { body: 16, title: 22, meta: 13 };
+    case "large": return { body: 32, title: 46, meta: 22 };
     case "medium":
-    default: return { body: 18, title: 26, meta: 14 };
+    default: return { body: 22, title: 32, meta: 16 };
+  }
+};
+
+const getCoverFontSizes = (size: FontSize): { subtitle: number; title: number; year: number; avatar: number } => {
+  switch (size) {
+    case "small": return { subtitle: 28, title: 80, year: 24, avatar: 200 };
+    case "large": return { subtitle: 44, title: 128, year: 38, avatar: 280 };
+    case "medium":
+    default: return { subtitle: 36, title: 100, year: 30, avatar: 240 };
   }
 };
 
@@ -242,12 +252,11 @@ const buildImageGalleryHTML = (photoUrls: string[], photoSize: PhotoSize, isRTL:
 // ── Soul Reflection HTML ──
 const buildSoulReflectionHTML = (reflection: string, fontSize: number): string => {
   if (!reflection) return "";
-  // Title case with "from" and "your" left lowercase per spec: "Message from your Soul"
   return `
     <div style="margin-top:28px;padding:16px 20px;border-radius:14px;background:linear-gradient(135deg, rgba(139,92,246,0.08), rgba(236,72,153,0.06));border:1px solid rgba(139,92,246,0.15);">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
         <span style="font-size:14px;">✨</span>
-        <span style="font-size:${fontSize - 4}px;font-weight:600;color:#7c3aed;letter-spacing:0.04em;">Message from your Soul</span>
+        <span style="font-size:${fontSize - 4}px;font-weight:600;color:#7c3aed;letter-spacing:0.04em;">Message from Your Soul</span>
       </div>
       <p style="font-size:${fontSize - 1}px;line-height:1.7;color:#4b5563;font-style:italic;">"${escapeHtml(reflection)}"</p>
     </div>`;
@@ -288,21 +297,19 @@ const buildCoverHTML = (config: BookConfig, fontCSS: string, fontImportUrl: stri
     ? `<img src="${config.avatarUrl}" style="width:100px;height:100px;border-radius:50%;object-fit:cover;border:3px solid ${isLight ? '#d6d3d1' : 'rgba(255,255,255,0.3)'};margin-bottom:24px;" crossorigin="anonymous" />`
     : "";
 
-  // Scale cover typography UP — preview was small; printed PDF needs to read big at A5
-  const subtitleFs = 36;
-  const titleFs = 96;
-  const yearFs = 30;
+  // Cover typography scales with selected font size
+  const cfs = getCoverFontSizes(config.fontSize || "medium");
   const avatarSize = config.showAvatar && config.avatarUrl
-    ? `<img src="${config.avatarUrl}" style="width:240px;height:240px;border-radius:50%;object-fit:cover;border:6px solid ${isLight ? '#d6d3d1' : 'rgba(255,255,255,0.35)'};margin-bottom:48px;" crossorigin="anonymous" />`
+    ? `<img src="${config.avatarUrl}" style="width:${cfs.avatar}px;height:${cfs.avatar}px;border-radius:50%;object-fit:cover;border:6px solid ${isLight ? '#d6d3d1' : 'rgba(255,255,255,0.35)'};margin-bottom:48px;" crossorigin="anonymous" />`
     : "";
   const inner = `
     <div style="width:100%;height:100%;background:${gradient};display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden;padding:0 80px;">
       ${decorations}
       <div style="position:relative;z-index:2;text-align:center;color:${color};max-width:100%;">
         ${avatarSize}
-        <div style="font-size:${subtitleFs}px;letter-spacing:0.32em;text-transform:uppercase;opacity:0.78;margin-bottom:36px;font-weight:500;">The Soul Journal of</div>
-        <div style="font-size:${titleFs}px;font-weight:700;line-height:1.05;${config.cover === 'minimalist' ? 'font-style:italic;' : ''}margin-bottom:40px;">${escapeHtml(config.userName)}</div>
-        <div style="font-size:${yearFs}px;letter-spacing:0.28em;text-transform:uppercase;opacity:0.6;margin-top:24px;">${escapeHtml(config.yearRange)}</div>
+        <div style="font-size:${cfs.subtitle}px;letter-spacing:0.18em;opacity:0.85;margin-bottom:36px;font-weight:500;">The Soul Journal of</div>
+        <div style="font-size:${cfs.title}px;font-weight:700;line-height:1.05;${config.cover === 'minimalist' ? 'font-style:italic;' : ''}margin-bottom:40px;">${escapeHtml(smartTitleCase(config.userName))}</div>
+        <div style="font-size:${cfs.year}px;letter-spacing:0.18em;opacity:0.7;margin-top:24px;">${escapeHtml(config.yearRange)}</div>
       </div>
     </div>`;
 
