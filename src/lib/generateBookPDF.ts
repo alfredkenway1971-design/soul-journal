@@ -344,7 +344,7 @@ const buildEntryPageHTML = (
 
     entriesHTML += `
       <div style="margin-bottom:0;${dirAttr}">
-        <div style="font-size:${fs.title}px;font-weight:600;color:#0a0a0a;margin-bottom:8px;">${escapeHtml(entry.title || "Untitled Entry")}</div>
+        <div style="font-size:${fs.title}px;font-weight:600;color:#0a0a0a;margin-bottom:8px;">${escapeHtml(smartTitleCase(entry.title || "Untitled Entry"))}</div>
         <div style="font-size:${fs.meta}px;color:#9ca3af;margin-bottom:20px;font-style:italic;">${escapeHtml(date)}${moodBadge}</div>
         ${photoHTML}
         <div style="font-size:${fs.body}px;line-height:2;color:#374151;">${displayContent}</div>
@@ -396,7 +396,7 @@ const buildSingleEntryHTML = (
       ${bgSVG}
       ${watermarkHTML}
       <div style="position:relative;z-index:1;">
-        <div style="font-size:${fs.title}px;font-weight:600;color:#0a0a0a;margin-bottom:8px;">${escapeHtml(entry.title || "Untitled Entry")}</div>
+        <div style="font-size:${fs.title}px;font-weight:600;color:#0a0a0a;margin-bottom:8px;">${escapeHtml(smartTitleCase(entry.title || "Untitled Entry"))}</div>
         <div style="font-size:${fs.meta}px;color:#9ca3af;margin-bottom:20px;font-style:italic;">${escapeHtml(date)}${moodBadge}</div>
         ${photoHTML}
         <div style="font-size:${fs.body}px;line-height:2;color:#374151;">${displayContent}</div>
@@ -419,7 +419,7 @@ const buildMagazineEntryHTML = (
     ? `<div style="position:absolute;bottom:30px;right:36px;font-size:24px;opacity:0.06;font-family:Georgia,serif;z-index:2;">✦</div>`
     : "";
   const fs = getFontSizePx(config.fontSize || "medium");
-  const date = format(new Date(entry.created_at), "EEEE, MMMM d, yyyy").toUpperCase();
+  const date = format(new Date(entry.created_at), "EEEE, MMMM d, yyyy");
   const mood = entry.mood ? entry.mood.charAt(0).toUpperCase() + entry.mood.slice(1) : "";
   const content = (entry.enhanced_text || entry.original_transcription || "No content");
   const rtl = isRTLText(content);
@@ -435,8 +435,8 @@ const buildMagazineEntryHTML = (
       ${bgSVG}
       ${watermarkHTML}
       <div style="position:relative;z-index:1;">
-        <div style="font-size:${fs.meta}px;color:#9ca3af;letter-spacing:0.25em;margin-bottom:6px;">${escapeHtml(date)}${mood ? ` · ${escapeHtml(mood.toUpperCase())}` : ""}</div>
-        <div style="font-size:${fs.title + 6}px;font-weight:700;color:#0a0a0a;line-height:1.1;margin-bottom:8px;font-style:italic;">${escapeHtml(entry.title || "Untitled Entry")}</div>
+        <div style="font-size:${fs.meta}px;color:#9ca3af;letter-spacing:0.06em;margin-bottom:6px;">${escapeHtml(date)}${mood ? ` · ${escapeHtml(mood)}` : ""}</div>
+        <div style="font-size:${fs.title + 6}px;font-weight:700;color:#0a0a0a;line-height:1.1;margin-bottom:8px;font-style:italic;">${escapeHtml(smartTitleCase(entry.title || "Untitled Entry"))}</div>
         <div style="width:48px;height:2px;background:#0a0a0a;margin:14px 0 22px;"></div>
         <div style="font-size:${fs.body}px;line-height:1.85;color:#374151;column-count:2;column-gap:24px;">
           <span style="float:left;font-size:${fs.body * 3.4}px;line-height:0.85;font-weight:700;padding:6px 8px 0 0;color:#0a0a0a;">${first}</span>${rest}
@@ -485,8 +485,8 @@ const buildPhotoForwardEntryHTML = (
       <div style="position:relative;z-index:1;">
         ${heroPhoto}
         <div style="padding:0 56px 60px;">
-          <div style="font-size:${fs.meta}px;color:#9ca3af;text-transform:uppercase;letter-spacing:0.2em;margin-bottom:8px;">${escapeHtml(date)}${mood ? ` · ${escapeHtml(mood)}` : ""}</div>
-          <div style="font-size:${fs.title + 4}px;font-weight:600;color:#0a0a0a;margin-bottom:18px;">${escapeHtml(entry.title || "Untitled Entry")}</div>
+          <div style="font-size:${fs.meta}px;color:#9ca3af;letter-spacing:0.06em;margin-bottom:8px;">${escapeHtml(date)}${mood ? ` · ${escapeHtml(mood)}` : ""}</div>
+          <div style="font-size:${fs.title + 4}px;font-weight:600;color:#0a0a0a;margin-bottom:18px;">${escapeHtml(smartTitleCase(entry.title || "Untitled Entry"))}</div>
           <div style="font-size:${fs.body}px;line-height:1.95;color:#374151;">${displayContent}</div>
           ${extraPhotos}
           ${reflectionHTML}
@@ -513,7 +513,7 @@ const buildBackCoverHTML = (fontCSS: string, fontImportUrl: string): string => {
         "Every page is a piece of your soul."
       </div>
       <div style="width:50px;height:1px;background:#d6d3d1;margin-bottom:16px;"></div>
-      <div style="font-size:10px;color:#a8a29e;text-transform:uppercase;letter-spacing:0.3em;">Soul Journal · ${new Date().getFullYear()}</div>
+      <div style="font-size:10px;color:#a8a29e;letter-spacing:0.12em;">Soul Journal · ${new Date().getFullYear()}</div>
     </div>`;
 
   return buildPageHTML(inner, fontCSS, fontImportUrl);
