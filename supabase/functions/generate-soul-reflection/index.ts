@@ -145,9 +145,8 @@ Choose your coaching style based on the analysis:
 
   } catch (error) {
     console.error('Error in generate-soul-reflection:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ error: 'Reflection service temporarily unavailable' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
