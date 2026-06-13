@@ -62,7 +62,7 @@ async function transcribeWithElevenLabs(binaryAudio: Uint8Array): Promise<string
   if (!response.ok) {
     const errorText = await response.text();
     console.error('ElevenLabs API error:', response.status, errorText);
-    throw new Error(`ElevenLabs API error (${response.status}): ${errorText}`);
+    throw new Error('UPSTREAM_STT_ERROR');
   }
 
   const result = await response.json();
@@ -90,7 +90,7 @@ async function transcribeWithWhisper(binaryAudio: Uint8Array, languageHint?: str
   if (!response.ok) {
     const errorText = await response.text();
     console.error('OpenAI API error:', response.status, errorText);
-    throw new Error(`OpenAI API error (${response.status}): ${errorText}`);
+    throw new Error('UPSTREAM_STT_ERROR');
   }
 
   const result = await response.json();
@@ -159,9 +159,8 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error in transcribe-audio function:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ error: 'Transcription service temporarily unavailable' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
