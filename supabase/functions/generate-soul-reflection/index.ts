@@ -113,7 +113,7 @@ Choose your coaching style based on the analysis:
     if (!response.ok) {
       const errorText = await response.text();
       console.error('AI gateway error:', response.status, errorText);
-      throw new Error(`AI gateway error: ${errorText}`);
+      throw new Error('UPSTREAM_AI_ERROR');
     }
 
     const result = await response.json();
