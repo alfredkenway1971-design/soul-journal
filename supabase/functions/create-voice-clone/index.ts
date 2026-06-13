@@ -69,10 +69,10 @@ serve(async (req) => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('ElevenLabs API error:', errorText);
+      console.error('ElevenLabs API error:', response.status, errorText);
       return new Response(
-        JSON.stringify({ error: `Voice cloning failed: ${errorText}` }),
-        { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ error: 'Voice cloning service unavailable' }),
+        { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -88,9 +88,8 @@ serve(async (req) => {
     );
   } catch (error) {
     console.error('Error in create-voice-clone function:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ error: 'Voice cloning failed' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
