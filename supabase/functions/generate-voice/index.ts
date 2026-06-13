@@ -63,7 +63,7 @@ async function generateWithElevenLabs(text: string, voiceId: string): Promise<Ui
   if (!response.ok) {
     const errorText = await response.text();
     console.error('ElevenLabs API error:', response.status, errorText);
-    throw new Error(`ElevenLabs API error (${response.status}): ${errorText}`);
+    throw new Error('UPSTREAM_TTS_ERROR');
   }
 
   const audioBuffer = await response.arrayBuffer();
