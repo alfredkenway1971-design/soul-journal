@@ -88,8 +88,8 @@ Output language: ${language}.${styleBlock}`;
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('OpenAI API error:', errorText);
-      throw new Error(`OpenAI API error: ${errorText}`);
+      console.error('OpenAI API error:', response.status, errorText);
+      throw new Error('UPSTREAM_AI_ERROR');
     }
 
     const data = await response.json();
