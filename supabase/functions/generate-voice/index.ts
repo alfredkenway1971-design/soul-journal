@@ -107,7 +107,7 @@ async function generateWithCartesia(text: string, language: string): Promise<Uin
   if (!response.ok) {
     const errorText = await response.text();
     console.error('Cartesia API error:', response.status, errorText);
-    throw new Error(`Cartesia API error (${response.status}): ${errorText}`);
+    throw new Error('UPSTREAM_TTS_ERROR');
   }
 
   const audioBuffer = await response.arrayBuffer();
