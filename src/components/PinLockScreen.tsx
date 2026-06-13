@@ -36,7 +36,9 @@ const PinLockScreen = ({ onUnlock }: PinLockScreenProps) => {
         if (!pinSet) onUnlock();
       } catch (err) {
         console.error("Error checking PIN status:", err);
-        onUnlock();
+        // Fail closed: keep the lock screen shown rather than granting access.
+        setHasPin(true);
+        setError(true);
       } finally {
         setLoading(false);
       }
