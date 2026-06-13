@@ -90,7 +90,7 @@ async function transcribeWithWhisper(binaryAudio: Uint8Array, languageHint?: str
   if (!response.ok) {
     const errorText = await response.text();
     console.error('OpenAI API error:', response.status, errorText);
-    throw new Error(`OpenAI API error (${response.status}): ${errorText}`);
+    throw new Error('UPSTREAM_STT_ERROR');
   }
 
   const result = await response.json();
