@@ -1,12 +1,30 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.b37e071b1a684378a8690340e8016b15',
-  appName: 'voice-weave-journal',
+  appId: 'com.souljournal.app',
+  appName: 'Soul Journal',
   webDir: 'dist',
   server: {
-    url: 'https://b37e071b-1a68-4378-a869-0340e8016b15.lovableproject.com?forceHideBadge=true',
     cleartext: true,
+    androidScheme: 'https',
+  },
+  android: {
+    buildOptions: {
+      keystorePath: undefined,
+      keystoreAlias: undefined,
+      keystorePassword: undefined,
+      keystoreAliasPassword: undefined,
+    },
+    allowMixedContent: true,
+  },
+  plugins: {
+    SplashScreen: {
+      launchShowDuration: 2000,
+      backgroundColor: '#1a1a2e',
+      androidSplashResourceName: 'splash',
+      androidScaleType: 'CENTER_CROP',
+      showSpinner: false,
+    },
   },
 };
 
