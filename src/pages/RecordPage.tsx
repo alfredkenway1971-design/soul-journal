@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { X, Type, Smile, Sparkles, Wand2, Play, Volume2, Camera, ImagePlus, Trash2 } from "lucide-react";
+import { X, Type, Smile, Sparkles, Wand2, Play, Volume2, Camera, ImagePlus, Trash2, PartyPopper, Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -852,16 +852,43 @@ const RecordPage = () => {
         )}
 
 
-        {/* Complete */}
+        {/* Complete — Celebration 🎉 */}
         {step === "complete" && (
           <motion.div
-            className="glass-premium p-8 text-center"
+            className="glass-premium p-8 text-center relative overflow-hidden"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
           >
-            <span className="text-6xl mb-4 block">✨</span>
-            <h2 className="text-2xl font-display font-semibold mb-2">{t("record.entrySaved")}</h2>
-            <p className="text-muted-foreground">{t("record.entrySavedDesc")}</p>
+            {/* Floating emoji particles */}
+            <div className="absolute inset-0 pointer-events-none">
+              {['🎉', '✨', '⭐', '💫', '🌟', '🎊'].map((emoji, i) => (
+                <motion.span
+                  key={i}
+                  className="absolute text-2xl"
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: -60, opacity: [0, 1, 1, 0] }}
+                  transition={{ delay: i * 0.15, duration: 2, repeat: Infinity }}
+                  style={{ left: `${10 + i * 14}%`, top: '60%' }}
+                >
+                  {emoji}
+                </motion.span>
+              ))}
+            </div>
+            <div className="relative z-10">
+              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-emerald-200/30">
+                <PartyPopper className="w-9 h-9 text-white" />
+              </div>
+              <h2 className="text-2xl font-display font-semibold mb-1">{t("record.entrySaved")}</h2>
+              <div className="flex items-center justify-center gap-1 mb-3">
+                {[1,2,3,4,5].map(i => (
+                  <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
+                ))}
+              </div>
+              <p className="text-muted-foreground">{t("record.entrySavedDesc")}</p>
+              <p className="text-xs text-emerald-600 font-medium mt-3">
+                Keep going — every entry is a step in your journey ✨
+              </p>
+            </div>
           </motion.div>
         )}
       </main>

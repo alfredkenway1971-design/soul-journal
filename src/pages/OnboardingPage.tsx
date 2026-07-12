@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { 
   ArrowRight, ArrowLeft, Mic, Square, Globe, Check, 
   Loader2, Sparkles, User, TrendingUp, Award, ShieldAlert, 
-  AlertTriangle, Zap, Heart
+  AlertTriangle, Zap, Heart, Clock
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -101,7 +101,7 @@ const OnboardingPage = () => {
   const [soulProfile, setSoulProfile] = useState<any>(null);
   const [analyzing, setAnalyzing] = useState(false);
 
-  const totalSteps = 10; // 0=lang, 1-6=questions, 7=worldview, 8=analyzing, 9=results
+  const totalSteps = 11; // 0=lang, 1-6=questions, 7=worldview, 8=reminder, 9=analyzing, 10=results
   const progressPercent = (step / (totalSteps - 1)) * 100;
 
   const currentQuestionIndex = step >= 1 && step <= 6 ? step - 1 : -1;
@@ -485,8 +485,36 @@ const OnboardingPage = () => {
       );
     }
 
-    // Step 8: Analyzing
+    // Step 8: Reminder Time
     if (step === 8) {
+      return (
+        <div key="reminder" className="flex flex-col items-center px-6 pt-10">
+          <motion.div
+            className="w-20 h-20 rounded-full bg-gradient-to-br from-sky-500/20 to-blue-500/30 flex items-center justify-center mb-6"
+            animate={{ scale: [1, 1.06, 1] }}
+            transition={{ repeat: Infinity, duration: 3 }}
+          >
+            <Clock className="w-8 h-8 text-primary" />
+          </motion.div>
+          <h2 className="text-2xl font-bold font-serif text-foreground mb-2 text-center">
+            When should we remind you to journal?
+          </h2>
+          <p className="text-muted-foreground text-sm mb-8 text-center max-w-xs">
+            Pick a time for a gentle daily journaling reminder.
+          </p>
+          <div className="w-full max-w-sm">
+            <input
+              type="time"
+              defaultValue="20:00"
+              className="w-full px-4 py-3 rounded-xl bg-muted/50 border border-border text-foreground text-lg text-center focus:outline-none focus:ring-2 focus:ring-primary/50"
+            />
+          </div>
+        </div>
+      );
+    }
+
+    // Step 9: Analyzing
+    if (step === 9) {
       return (
         <div key="analyzing" className="flex flex-col items-center text-center px-6 pt-24">
           <motion.div
@@ -518,8 +546,8 @@ const OnboardingPage = () => {
       );
     }
 
-    // Step 9: Results
-    if (step === 9 && soulProfile) {
+    // Step 10: Results
+    if (step === 10 && soulProfile) {
       return (
         <div key="results" className="px-6 pt-8 pb-8">
           <div className="flex flex-col items-center text-center mb-8">
@@ -631,12 +659,13 @@ const OnboardingPage = () => {
     if (step === 0) return true;
     if (step >= 1 && step <= 6) return !!answers[step - 1]?.trim();
     if (step === 7) return true; // worldview is optional
+    if (step === 8) return true; // reminder time is optional
     return false;
   };
 
   const handleNext = () => {
-    if (step === 7) {
-      // After worldview, run analysis
+    if (step === 8) {
+      // After reminder time, run analysis
       runAnalysis();
     } else {
       next();
@@ -650,9 +679,9 @@ const OnboardingPage = () => {
         <Progress value={progressPercent} className="h-1.5" />
         <div className="flex justify-between items-center mt-2">
           <span className="text-xs text-muted-foreground">
-            {step === 0 ? t("onboarding.language") : step >= 1 && step <= 6 ? `${t("onboarding.question")} ${step}/6` : step === 7 ? t("onboarding.belief") : step === 8 ? t("onboarding.analyzing") : t("onboarding.profile")}
+            {step === 0 ? t("onboarding.language") : step >= 1 && step <= 6 ? `${t("onboarding.question")} ${step}/6` : step === 7 ? t("onboarding.belief") : step === 8 ? "Reminder" : step === 9 ? t("onboarding.analyzing") : t("onboarding.profile")}
           </span>
-          {step < 8 && (
+          {step < 9 && (
             <button
               className="text-xs text-muted-foreground hover:text-foreground transition-colors"
               onClick={handleSkip}
@@ -682,26 +711,26 @@ const OnboardingPage = () => {
       </div>
 
       {/* Bottom nav */}
-      {step !== 8 && (
+      {step !== 9 && (
         <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-background via-background to-transparent">
           <div className="flex gap-3 max-w-md mx-auto">
-            {step > 0 && step < 8 && step !== 9 && (
+            {step > 0 && step < 9 && step !== 10 && (
               <Button variant="outline" className="rounded-full flex-1" onClick={back} disabled={isRecording || isTranscribing}>
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 {t("onboarding.back")}
               </Button>
             )}
-            {step < 8 && (
+            {step < 9 && (
               <Button
                 className="rounded-full flex-1 gradient-primary text-white"
                 onClick={handleNext}
                 disabled={!canProceed() || isRecording || isTranscribing}
               >
-                {step === 0 ? t("onboarding.getStarted") : step === 7 ? t("onboarding.analyzeProfile") : t("onboarding.next")}
+                {step === 0 ? t("onboarding.getStarted") : step === 8 ? t("onboarding.analyzeProfile") : t("onboarding.next")}
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             )}
-            {step === 9 && (
+            {step === 10 && (
               <Button
                 className="rounded-full flex-1 gradient-primary text-white py-6 text-base"
                 onClick={handleComplete}

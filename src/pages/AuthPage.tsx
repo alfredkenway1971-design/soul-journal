@@ -13,7 +13,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { LANGUAGES, useLanguage } from "@/contexts/LanguageContext";
-import { lovable } from "@/integrations/lovable/index";
+import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
 
 const emailSchema = z.string().email("Please enter a valid email address");
@@ -256,13 +256,16 @@ const AuthPage = () => {
             type="button"
             className="w-full h-14 rounded-full gap-3 text-base bg-white/55 border border-white/70 text-slate-800 hover:bg-white/70 backdrop-blur-md flex items-center justify-center font-medium transition"
             onClick={async () => {
-              const { error } = await lovable.auth.signInWithOAuth("google", {
-                redirect_uri: window.location.origin,
+              const { error } = await supabase.auth.signInWithOAuth({
+                provider: "google",
+                options: {
+                  redirectTo: window.location.origin,
+                },
               });
               if (error) {
                 toast({
                   title: "Google Sign In Failed",
-                  description: String(error),
+                  description: error.message,
                   variant: "destructive",
                 });
               }

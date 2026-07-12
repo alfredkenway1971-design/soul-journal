@@ -16,6 +16,7 @@ import MoodFilterBar, { type MoodFilterValue } from "@/components/MoodFilterBar"
 import OnThisDayCard from "@/components/OnThisDayCard";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
+import { Flame, TrendingUp, Clock } from "lucide-react";
 import type { Mood } from "@/components/MoodSelector";
 
 interface Entry {
@@ -104,6 +105,25 @@ const HomePage = () => {
 
   const firstName = displayName?.split(' ')[0] || user?.user_metadata?.display_name?.split(' ')[0] || user?.email?.split('@')[0] || t("home.friend");
 
+  const currentStreak = (() => {
+    if (entries.length === 0) return 0;
+    const dates = entries.map(e => new Date(e.date).toDateString());
+    const uniqueDates = [...new Set(dates)].sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+    let streak = 0;
+    const today = new Date().toDateString();
+    const yesterday = new Date(Date.now() - 86400000).toDateString();
+    if (uniqueDates[0] === today) {
+      streak = 1;
+      for (let i = 1; i < uniqueDates.length; i++) {
+        const prev = new Date(uniqueDates[i - 1]).getTime();
+        const curr = new Date(uniqueDates[i]).getTime();
+        if (prev - curr === 86400000) streak++;
+        else break;
+      }
+    }
+    return streak;
+  })();
+
   return (
     <div className="min-h-screen gradient-warm pb-32">
       {/* Header */}
@@ -142,6 +162,58 @@ const HomePage = () => {
           </div>
         </div>
       </header>
+
+      {/* Streak Counter & Journey Recap */}
+      <section className="max-w-lg mx-auto px-5 mt-5">
+        <motion.div
+          className="glass-premium p-5 rounded-2xl"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Flame className="w-5 h-5 text-orange-500" />
+              <span className="text-lg font-bold text-foreground">Your Journey So Far</span>
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-4 text-center">
+            <div>
+              <div className="flex items-center justify-center gap-1 mb-1">
+                <Flame className={`w-4 h-4 ${currentStreak > 0 ? 'text-orange-500' : 'text-muted-foreground'}`} />
+                <span className="text-2xl font-bold text-foreground">{currentStreak}</span>
+              </div>
+              <p className="text-xs text-muted-foreground">Day Streak</p>
+            </div>
+            <div>
+              <div className="flex items-center justify-center gap-1 mb-1">
+                <TrendingUp className="w-4 h-4 text-emerald-500" />
+                <span className="text-2xl font-bold text-foreground">{entries.length}</span>
+              </div>
+              <p className="text-xs text-muted-foreground">Total Entries</p>
+            </div>
+            <div>
+              <div className="flex items-center justify-center gap-1 mb-1">
+                <Clock className="w-4 h-4 text-blue-500" />
+                <span className="text-lg font-bold text-foreground">
+                  {entries.length >= 10 ? "📖" : entries.length >= 5 ? "🎯" : entries.length >= 3 ? "✨" : "🌱"}
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {entries.length >= 10 ? "Book Builder" : entries.length >= 5 ? "Coaching" : entries.length >= 3 ? "AI Insights" : "Getting Started"}
+              </p>
+            </div>
+          </div>
+          {/* Progressive unlock hint */}
+          <div className="mt-3 pt-3 border-t border-border/50">
+            <p className="text-xs text-muted-foreground text-center">
+              {entries.length < 3 ? `✨ ${3 - entries.length} more entries to unlock AI Insights` :
+               entries.length < 5 ? `✨ ${5 - entries.length} more entries to unlock Coaching` :
+               entries.length < 10 ? `✨ ${10 - entries.length} more entries to unlock Book Builder` :
+               "🎉 All features unlocked!"}
+            </p>
+          </div>
+        </motion.div>
+      </section>
 
       {/* Content */}
       <main className="max-w-lg mx-auto px-5 space-y-5">
