@@ -10,6 +10,7 @@ import MoodSlider, { moodToScore } from "@/components/MoodSlider";
 import RichTextEditor from "@/components/RichTextToolbar";
 import LanguageSelector, { Language } from "@/components/LanguageSelector";
 import RecentEntryCard from "@/components/premium/RecentEntryCard";
+import { SPOKEN_LANGUAGE_OPTIONS, dirFor } from "@/lib/textDirection";
 import { captureEntryContext } from "@/lib/contextCapture";
 
 import BottomNav from "@/components/BottomNav";
@@ -40,6 +41,7 @@ const RecordPage = () => {
   const [isGeneratingTitle, setIsGeneratingTitle] = useState(false);
   const [transcription, setTranscription] = useState("");
   const [detectedLanguage, setDetectedLanguage] = useState<string | null>(null);
+  const [spokenLanguage, setSpokenLanguage] = useState<string>("auto");
   const [enhancedText, setEnhancedText] = useState("");
   const [entryTitle, setEntryTitle] = useState("");
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
@@ -140,7 +142,7 @@ const RecordPage = () => {
         // Transcribe
         setIsProcessing(true);
         try {
-          const { text, detectedLanguage } = await api.transcribeAudio(audioBlob);
+          const { text, detectedLanguage } = await api.transcribeAudio(audioBlob, spokenLanguage);
           setTranscription(text);
           setDetectedLanguage(detectedLanguage);
           // Auto-detect mood from transcription
@@ -460,6 +462,22 @@ const RecordPage = () => {
                     ? t("record.audioLimitReached")
                     : t("record.tapToRecordAssessment")}
                 </p>
+              </div>
+
+              {/* Spoken language override */}
+              <div className="flex justify-center">
+                <select
+                  value={spokenLanguage}
+                  onChange={(e) => setSpokenLanguage(e.target.value)}
+                  className="glass-premium rounded-full px-4 py-2 text-sm bg-transparent text-foreground outline-none"
+                  aria-label="Spoken language"
+                >
+                  {SPOKEN_LANGUAGE_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value} className="text-foreground">
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               {/* Action Buttons */}
