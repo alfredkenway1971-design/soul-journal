@@ -610,7 +610,10 @@ const RecordPage = () => {
               <h3 className="text-sm font-medium text-muted-foreground mb-3">
                 {t("record.originalTranscription")}
               </h3>
-              <p className="font-journal text-foreground leading-relaxed">
+              <p
+                dir={dirFor(detectedLanguage)}
+                className="font-journal text-foreground leading-relaxed"
+              >
                 {transcription}
               </p>
               {/* Auto-detected mood suggestion */}
