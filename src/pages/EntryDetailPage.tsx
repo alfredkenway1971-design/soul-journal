@@ -13,6 +13,7 @@ import BottomNav from "@/components/BottomNav";
 import RelatedEntriesCard from "@/components/RelatedEntriesCard";
 import type { Mood } from "@/components/MoodSelector";
 import {
+import { dirFor } from "@/lib/textDirection";
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -36,6 +37,7 @@ interface EntryData {
   id: string;
   title?: string | null;
   enhanced_text: string | null;
+  detected_language?: string | null;
   original_transcription: string | null;
   mood: string | null;
   playback_language: string | null;
@@ -399,7 +401,10 @@ const EntryDetailPage = () => {
           <h3 className="text-sm font-medium text-muted-foreground mb-3">
             Your Story
           </h3>
-          <p className="font-journal text-foreground leading-relaxed whitespace-pre-wrap">
+          <p
+            dir={dirFor(entry.detected_language)}
+            className="font-journal text-foreground leading-relaxed whitespace-pre-wrap"
+          >
             {entry.enhanced_text}
           </p>
         </motion.div>
@@ -576,7 +581,10 @@ const EntryDetailPage = () => {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
             >
-              <p className="text-sm text-muted-foreground leading-relaxed">
+              <p
+                dir={dirFor(entry.detected_language)}
+                className="text-sm text-muted-foreground leading-relaxed"
+              >
                 {entry.original_transcription}
               </p>
             </motion.div>
