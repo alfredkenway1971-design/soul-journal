@@ -39,20 +39,60 @@ function processBase64Chunks(base64String: string, chunkSize = 32768) {
   return result;
 }
 
-// ElevenLabs Scribe (best for Swahili)
+class UpstreamError extends Error {
+  status: number;
+  constructor(message: string, status: number) {
+    super(message);
+    this.status = status;
+  }
+}
+
+// Primary: built-in Lovable AI speech-to-text (auto-detects the spoken language)
+async function transcribeWithLovableAI(binaryAudio: Uint8Array, languageOverride?: string): Promise<string> {
+  const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+  if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY is not configured');
+
+  const form = new FormData();
+  form.append('file', new Blob([binaryAudio], { type: 'audio/webm' }), 'recording.webm');
+  form.append('model', 'openai/gpt-4o-mini-transcribe');
+  // Only pass a language when the caller explicitly forces one; otherwise auto-detect
+  // so the transcript stays in the language actually spoken.
+  if (languageOverride && languageOverride !== 'auto') {
+    form.append('language', languageOverride);
+  }
+
+  const response = await fetch('https://ai.gateway.lovable.dev/v1/audio/transcriptions', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${LOVABLE_API_KEY}` },
+    body: form,
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text().catch(() => '');
+    console.error('Lovable AI STT error:', response.status, errorText);
+    if (response.status === 429) throw new UpstreamError('Too many requests right now. Please try again in a moment.', 429);
+    if (response.status === 402) throw new UpstreamError('AI credits exhausted. Please add credits to continue transcribing.', 402);
+    if (response.status === 400) throw new UpstreamError('That recording could not be read. Please record again (a bit longer).', 400);
+    throw new UpstreamError('Transcription service temporarily unavailable.', 502);
+  }
+
+  const result = await response.json();
+  console.log('Lovable AI transcription successful');
+  return result.text ?? '';
+}
+
+// Swahili-only fallback: ElevenLabs Scribe
 async function transcribeWithElevenLabs(binaryAudio: Uint8Array): Promise<string> {
   const ELEVENLABS_API_KEY = Deno.env.get('ELEVENLABS_API_KEY');
   if (!ELEVENLABS_API_KEY) throw new Error('ELEVENLABS_API_KEY is not configured');
 
   const formData = new FormData();
-  const blob = new Blob([binaryAudio], { type: 'audio/webm' });
-  formData.append('file', blob, 'audio.webm');
+  formData.append('file', new Blob([binaryAudio], { type: 'audio/webm' }), 'audio.webm');
   formData.append('model_id', 'scribe_v2');
   formData.append('language_code', 'swa');
   formData.append('tag_audio_events', 'false');
   formData.append('diarize', 'false');
 
-  console.log('Sending to ElevenLabs Scribe for Swahili transcription...');
   const response = await fetch('https://api.elevenlabs.io/v1/speech-to-text', {
     method: 'POST',
     headers: { 'xi-api-key': ELEVENLABS_API_KEY },
@@ -60,54 +100,28 @@ async function transcribeWithElevenLabs(binaryAudio: Uint8Array): Promise<string
   });
 
   if (!response.ok) {
-    const errorText = await response.text();
+    const errorText = await response.text().catch(() => '');
     console.error('ElevenLabs API error:', response.status, errorText);
     throw new Error('UPSTREAM_STT_ERROR');
   }
 
   const result = await response.json();
-  console.log('ElevenLabs transcription successful');
   return result.text;
 }
 
-// OpenAI Whisper (default)
-async function transcribeWithWhisper(binaryAudio: Uint8Array, languageHint?: string): Promise<string> {
-  const formData = new FormData();
-  const blob = new Blob([binaryAudio], { type: 'audio/webm' });
-  formData.append('file', blob, 'audio.webm');
-  formData.append('model', 'whisper-1');
-  if (languageHint && languageHint !== 'auto') {
-    formData.append('language', languageHint);
-  }
-
-  console.log('Sending to OpenAI Whisper...', languageHint ? `Language: ${languageHint}` : 'Auto-detect');
-  const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}` },
-    body: formData,
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error('OpenAI API error:', response.status, errorText);
-    throw new Error('UPSTREAM_STT_ERROR');
-  }
-
-  const result = await response.json();
-  console.log('Whisper transcription successful');
-  return result.text;
+// Lightweight script-based language detection so entries can render with the
+// correct text direction without an extra model call.
+function detectLanguage(text: string): string | null {
+  const t = text || '';
+  if (/[\u0600-\u06FF]/.test(t)) return 'ar';
+  if (/[\u0590-\u05FF]/.test(t)) return 'he';
+  if (/[\u4E00-\u9FFF]/.test(t)) return 'zh';
+  if (/[\u3040-\u30FF]/.test(t)) return 'ja';
+  if (/[\uAC00-\uD7AF]/.test(t)) return 'ko';
+  if (/[\u0400-\u04FF]/.test(t)) return 'ru';
+  if (/[\u0900-\u097F]/.test(t)) return 'hi';
+  return null;
 }
-
-// Cartesia fallback for transcription (uses Whisper-compatible endpoint or basic STT)
-async function transcribeWithCartesiaFallback(binaryAudio: Uint8Array, languageHint?: string): Promise<string> {
-  // Cartesia doesn't have a direct STT API, so we fall back to a simpler approach
-  // If both ElevenLabs and Whisper fail, we throw a clear error
-  throw new Error('All transcription engines failed. Please try again later.');
-}
-
-const whisperLanguageMap: Record<string, string> = {
-  en: 'en', fr: 'fr', es: 'es', ar: 'ar', zh: 'zh', ja: 'ja', sw: 'sw',
-};
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -120,48 +134,46 @@ serve(async (req) => {
   }
 
   try {
-    const { audio, language } = await req.json();
-    if (!audio) throw new Error('No audio data provided');
+    const body = await req.json();
+    const audio = body?.audio;
+    // `languageOverride` forces a language; plain `language` (the UI language) is
+    // intentionally ignored so the spoken language is preserved.
+    const languageOverride: string | undefined = body?.languageOverride;
+    if (!audio) throw new UpstreamError('No audio data provided', 400);
 
-    console.log('Received audio data. App language:', language || 'not specified');
+    console.log('Received audio. Override:', languageOverride || 'auto-detect');
     const binaryAudio = processBase64Chunks(audio);
-    
-    let text: string;
 
-    if (language === 'sw') {
-      // Try ElevenLabs first for Swahili, fallback to Whisper
+    let text: string;
+    if (languageOverride === 'sw') {
       try {
         text = await transcribeWithElevenLabs(binaryAudio);
-      } catch (elevenLabsError) {
-        console.warn('ElevenLabs Swahili failed, falling back to Whisper:', elevenLabsError);
-        text = await transcribeWithWhisper(binaryAudio, 'sw');
+      } catch (err) {
+        console.warn('ElevenLabs Swahili failed, falling back to built-in AI:', err);
+        text = await transcribeWithLovableAI(binaryAudio, 'sw');
       }
     } else {
-      // Try Whisper first, fallback to ElevenLabs
-      try {
-        const whisperLang = language ? whisperLanguageMap[language] : undefined;
-        text = await transcribeWithWhisper(binaryAudio, whisperLang);
-      } catch (whisperError) {
-        console.warn('Whisper failed, falling back to ElevenLabs:', whisperError);
-        try {
-          text = await transcribeWithElevenLabs(binaryAudio);
-        } catch (elevenLabsError) {
-          console.error('Both transcription engines failed');
-          throw new Error('All transcription engines are unavailable. Please try again later.');
-        }
-      }
+      text = await transcribeWithLovableAI(binaryAudio, languageOverride);
     }
 
+    const detected = languageOverride && languageOverride !== 'auto'
+      ? languageOverride
+      : detectLanguage(text);
+
     return new Response(
-      JSON.stringify({ text }),
+      JSON.stringify({ text, language: detected }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
     console.error('Error in transcribe-audio function:', error);
+    const status = error instanceof UpstreamError ? error.status : 500;
+    const message = error instanceof UpstreamError
+      ? error.message
+      : 'Transcription service temporarily unavailable';
     return new Response(
-      JSON.stringify({ error: 'Transcription service temporarily unavailable' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({ error: message }),
+      { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });
