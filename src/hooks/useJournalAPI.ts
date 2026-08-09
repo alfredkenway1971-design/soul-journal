@@ -256,7 +256,9 @@ export const useJournalAPI = (appLanguage?: AppLanguage) => {
     location?: any;
     timeOfDay?: string | null;
     durationSeconds?: number | null;
+    detectedLanguage?: string | null;
   }) => {
+
     const { data, error } = await supabase
       .from('journal_entries')
       .insert({

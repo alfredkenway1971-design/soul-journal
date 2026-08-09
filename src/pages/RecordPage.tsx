@@ -39,6 +39,7 @@ const RecordPage = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [isGeneratingTitle, setIsGeneratingTitle] = useState(false);
   const [transcription, setTranscription] = useState("");
+  const [detectedLanguage, setDetectedLanguage] = useState<string | null>(null);
   const [enhancedText, setEnhancedText] = useState("");
   const [entryTitle, setEntryTitle] = useState("");
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
@@ -139,8 +140,9 @@ const RecordPage = () => {
         // Transcribe
         setIsProcessing(true);
         try {
-          const text = await api.transcribeAudio(audioBlob);
+          const { text, detectedLanguage } = await api.transcribeAudio(audioBlob);
           setTranscription(text);
+          setDetectedLanguage(detectedLanguage);
           // Auto-detect mood from transcription
           try {
             const detectedMood = await api.detectMood(text);
@@ -324,6 +326,7 @@ const RecordPage = () => {
         location: ctx.location,
         timeOfDay: ctx.time_of_day,
         durationSeconds: recordingDuration > 0 ? recordingDuration : null,
+        detectedLanguage: detectedLanguage,
       });
 
       // Upload photos and save media references
