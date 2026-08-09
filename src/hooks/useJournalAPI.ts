@@ -275,6 +275,7 @@ export const useJournalAPI = (appLanguage?: AppLanguage) => {
         location: entry.location ?? null,
         time_of_day: entry.timeOfDay ?? null,
         duration_seconds: entry.durationSeconds ?? null,
+        detected_language: entry.detectedLanguage ?? null,
       } as any)
       .select()
       .single();
