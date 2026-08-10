@@ -55,9 +55,16 @@ const injectFontLink = (importUrl: string) => {
 const applyFontGlobally = (fontId: string, size: number) => {
   const opt = FONT_OPTIONS.find((f) => f.id === fontId) || FONT_OPTIONS[0];
   injectFontLink(opt.importUrl);
-  document.documentElement.style.setProperty("--app-font", opt.family);
-  document.documentElement.style.fontSize = `${size}px`;
-  document.documentElement.setAttribute("data-font", fontId);
+  const root = document.documentElement;
+  root.style.setProperty("--app-font", opt.family);
+  // Headings follow the chosen font too, unless the user keeps a neutral default
+  const displayFamily =
+    fontId === "inter" || fontId === "system"
+      ? "'Playfair Display', 'Crimson Pro', Georgia, serif"
+      : opt.family;
+  root.style.setProperty("--app-display-font", displayFamily);
+  root.style.fontSize = `${size}px`;
+  root.setAttribute("data-font", fontId);
 };
 
 export const FontProvider = ({ children }: { children: ReactNode }) => {
