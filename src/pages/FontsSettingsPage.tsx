@@ -5,11 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
 import { useFont, FONT_OPTIONS } from "@/contexts/FontContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const FontsSettingsPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { font, fontSize, setFont, setFontSize } = useFont();
+  const { t } = useLanguage();
 
   const allImportUrls = Array.from(new Set(FONT_OPTIONS.map((f) => f.importUrl).filter(Boolean)));
   const selectedFontData = FONT_OPTIONS.find((f) => f.id === font);
@@ -17,8 +19,8 @@ const FontsSettingsPage = () => {
   const handleSave = () => {
     // Values already applied + persisted via context; this just confirms to the user.
     toast({
-      title: "Font Settings Saved",
-      description: "Applied across the app and synced to your profile.",
+      title: t("fonts.saved"),
+      description: t("fonts.savedDesc"),
     });
   };
 
@@ -34,8 +36,8 @@ const FontsSettingsPage = () => {
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div>
-              <h1 className="text-lg font-semibold text-foreground">Fonts</h1>
-              <p className="text-sm text-muted-foreground">Customize text appearance</p>
+              <h1 className="text-lg font-semibold text-foreground">{t("fonts.title")}</h1>
+              <p className="text-sm text-muted-foreground">{t("fonts.subtitle")}</p>
             </div>
           </div>
         </div>
@@ -49,7 +51,7 @@ const FontsSettingsPage = () => {
         >
           <div className="flex items-center gap-2 mb-2">
             <Type className="w-5 h-5 text-primary" />
-            <h2 className="font-semibold text-foreground">Font Style</h2>
+            <h2 className="font-semibold text-foreground">{t("fonts.style")}</h2>
           </div>
 
           <div className="space-y-3">
@@ -65,7 +67,7 @@ const FontsSettingsPage = () => {
                 <div className="flex-1 text-left">
                   <p className="font-medium text-foreground">{opt.name}</p>
                   <p className="text-sm text-muted-foreground mt-1" style={{ fontFamily: opt.family }}>
-                    The quick brown fox jumps over the lazy dog.
+                    {t("fonts.sample")}
                   </p>
                 </div>
                 {font === opt.id && <Check className="w-5 h-5 text-primary" />}
@@ -81,7 +83,7 @@ const FontsSettingsPage = () => {
           transition={{ delay: 0.1 }}
         >
           <div className="flex items-center justify-between mb-2">
-            <h2 className="font-semibold text-foreground">Font Size</h2>
+            <h2 className="font-semibold text-foreground">{t("fonts.size")}</h2>
             <span className="text-sm text-muted-foreground">{fontSize}px</span>
           </div>
 
@@ -95,8 +97,8 @@ const FontsSettingsPage = () => {
           />
 
           <div className="flex justify-between text-xs text-muted-foreground">
-            <span>Small</span>
-            <span>Large</span>
+            <span>{t("fonts.small")}</span>
+            <span>{t("fonts.large")}</span>
           </div>
         </motion.div>
 
@@ -106,14 +108,13 @@ const FontsSettingsPage = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <h2 className="font-semibold text-foreground">Preview</h2>
+          <h2 className="font-semibold text-foreground">{t("fonts.preview")}</h2>
           <div
             className="p-4 bg-muted/30 rounded-xl"
             style={{ fontFamily: selectedFontData?.family, fontSize: `${fontSize}px` }}
           >
             <p className="text-foreground leading-relaxed">
-              Today was a beautiful day. I spent time in the garden and reflected on my goals.
-              The weather was perfect for journaling outside.
+              {t("fonts.previewText")}
             </p>
           </div>
         </motion.div>
@@ -124,7 +125,7 @@ const FontsSettingsPage = () => {
           transition={{ delay: 0.3 }}
         >
           <Button className="w-full h-12 rounded-xl gradient-amber" onClick={handleSave}>
-            Save Changes
+            {t("fonts.save")}
           </Button>
         </motion.div>
       </main>

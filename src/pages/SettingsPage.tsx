@@ -148,7 +148,7 @@ const SettingsPage = () => {
   const firstName =
     displayName?.split(" ")[0] ||
     user?.email?.split("@")[0] ||
-    "Friend";
+    t("home.friend");
 
   return (
     <div className="min-h-screen gradient-warm pb-32">
