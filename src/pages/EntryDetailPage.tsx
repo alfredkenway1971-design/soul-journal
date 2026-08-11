@@ -58,7 +58,7 @@ const EntryDetailPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   const api = useJournalAPI(language);
   
   const [entry, setEntry] = useState<EntryData | null>(null);
