@@ -418,7 +418,7 @@ const EntryDetailPage = () => {
           transition={{ delay: 0.2 }}
         >
           <h3 className="text-sm font-medium text-muted-foreground mb-4">
-            Listen to Your Story
+            Listen To Your Story
           </h3>
           
           {!generatedAudioUrl ? (
@@ -526,11 +526,11 @@ const EntryDetailPage = () => {
                   <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
                     <Sparkles className="w-4 h-4 text-primary" />
                   </div>
-                  <h3 className="text-sm font-semibold text-primary tracking-wide uppercase">
-                    Message from your Soul
+                  <h3 className="text-sm font-semibold text-primary tracking-wide">
+                    Message From Your Soul
                   </h3>
                 </div>
-                <div className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${config.bg} ${config.text} ${config.border} border`}>
+                <div className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider ${config.bg} ${config.text} ${config.border} border`}>
                   <ModeIcon className="w-3 h-3" />
                   {config.label}
                 </div>
@@ -550,7 +550,7 @@ const EntryDetailPage = () => {
                 disabled={isGeneratingVoice}
               >
                 <Volume2 className="w-3 h-3" />
-                Listen to reflection
+                Listen To Reflection
               </Button>
             </motion.div>
           );
