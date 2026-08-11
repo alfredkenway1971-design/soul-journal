@@ -1,5 +1,5 @@
 import { jsPDF } from "jspdf";
-import html2canvas from "html2canvas";
+import html2canvas from "html2canvas-pro";
 import { type CoverTemplate } from "@/components/book-builder/CoverTemplates";
 import { type BookFont, getFontConfig } from "@/components/book-builder/FontSelector";
 import { type PageBackground, type EntryLayout } from "@/components/book-builder/PageStyleSelector";
@@ -197,7 +197,8 @@ const renderHTMLToCanvas = async (html: string): Promise<HTMLCanvasElement> => {
     useCORS: true,
     allowTaint: true,
     logging: false,
-    backgroundColor: null,
+    backgroundColor: "#ffffff",
+    imageSmoothingQuality: "high",
   });
 
   document.body.removeChild(iframe);
