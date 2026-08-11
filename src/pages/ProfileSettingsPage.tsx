@@ -8,6 +8,7 @@ import AvatarUpload from "@/components/premium/AvatarUpload";
 import BottomNav from "@/components/BottomNav";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import type { Mood } from "@/components/MoodSelector";
 
@@ -15,6 +16,7 @@ const ProfileSettingsPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
+  const { t } = useLanguage();
   
   const [displayName, setDisplayName] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -114,9 +116,9 @@ const ProfileSettingsPage = () => {
         .from('profiles')
         .update({ gender: newGender } as any)
         .eq('id', user.id);
-      toast({ title: "Voice Preference Updated", description: `Playback voice set to ${newGender}.` });
+      toast({ title: t("profile.voiceUpdated"), description: `${t("profile.voicePreference")}: ${newGender}` });
     } catch {
-      toast({ title: "Error", description: "Failed to save preference.", variant: "destructive" });
+      toast({ title: t("common.error"), description: t("profile.saveFailed"), variant: "destructive" });
     }
   };
 
@@ -135,7 +137,7 @@ const ProfileSettingsPage = () => {
           : "We'll only store the time of day for new entries.",
       });
     } catch {
-      toast({ title: "Error", description: "Failed to save preference.", variant: "destructive" });
+      toast({ title: t("common.error"), description: t("profile.saveFailed"), variant: "destructive" });
     }
   };
 
@@ -148,9 +150,9 @@ const ProfileSettingsPage = () => {
         .eq('id', user.id);
       setDisplayName(editedName.trim());
       setIsEditingName(false);
-      toast({ title: "Name Updated", description: "Your display name has been saved." });
+      toast({ title: t("profile.nameUpdated"), description: t("profile.nameUpdatedDesc") });
     } catch {
-      toast({ title: "Error", description: "Failed to update name.", variant: "destructive" });
+      toast({ title: t("common.error"), description: t("profile.nameFailed"), variant: "destructive" });
     }
   };
 
@@ -183,7 +185,7 @@ const ProfileSettingsPage = () => {
             >
               <ChevronLeft className="w-5 h-5" />
             </Button>
-            <p className="section-label">PROFILE</p>
+            <p className="section-label">{t("profile.section")}</p>
             <Button
               variant="ghost"
               size="icon"
@@ -246,15 +248,15 @@ const ProfileSettingsPage = () => {
         >
           <div className="vitality-card p-4 text-center">
             <p className="text-2xl font-semibold text-foreground">{stats.streak}</p>
-            <p className="text-xs text-muted-foreground uppercase tracking-wider">Streak</p>
+            <p className="text-xs text-muted-foreground uppercase tracking-wider">{t("profile.streak")}</p>
           </div>
           <div className="vitality-card p-4 text-center">
             <p className="text-2xl font-semibold text-foreground">{stats.entries}</p>
-            <p className="text-xs text-muted-foreground uppercase tracking-wider">Entries</p>
+            <p className="text-xs text-muted-foreground uppercase tracking-wider">{t("profile.entries")}</p>
           </div>
           <div className="vitality-card p-4 text-center">
             <p className="text-2xl font-semibold text-foreground capitalize">Top</p>
-            <p className="text-xs text-muted-foreground uppercase tracking-wider">Mood</p>
+            <p className="text-xs text-muted-foreground uppercase tracking-wider">{t("profile.mood")}</p>
           </div>
         </motion.div>
 
@@ -264,7 +266,7 @@ const ProfileSettingsPage = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <p className="section-label mb-3">VOICE PREFERENCE</p>
+          <p className="section-label mb-3">{t("profile.voicePreference")}</p>
           <div className="glass-premium p-5 space-y-3">
             <p className="text-sm text-muted-foreground">Select your preferred playback voice gender:</p>
             <div className="grid grid-cols-2 gap-3">
@@ -273,14 +275,14 @@ const ProfileSettingsPage = () => {
                 onClick={() => handleGenderChange('male')}
               >
                 <span className="text-2xl block mb-1">🧔</span>
-                <span className="text-sm">Male</span>
+                <span className="text-sm">{t("profile.male")}</span>
               </button>
               <button
                 className={`p-4 rounded-xl border-2 text-center transition-all ${gender === 'female' ? 'border-primary bg-primary/10 text-primary font-semibold' : 'border-border/50 bg-white/40 dark:bg-white/5 text-foreground'}`}
                 onClick={() => handleGenderChange('female')}
               >
                 <span className="text-2xl block mb-1">👩</span>
-                <span className="text-sm">Female</span>
+                <span className="text-sm">{t("profile.female")}</span>
               </button>
             </div>
           </div>
@@ -292,7 +294,7 @@ const ProfileSettingsPage = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.25 }}
         >
-          <p className="section-label mb-3">CONTEXT CAPTURE</p>
+          <p className="section-label mb-3">{t("profile.contextCapture")}</p>
           <div className="glass-premium p-5">
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1">
@@ -319,7 +321,7 @@ const ProfileSettingsPage = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <p className="section-label mb-3">CURRENT FOCUS</p>
+          <p className="section-label mb-3">{t("profile.currentFocus")}</p>
           <div className="flex flex-wrap gap-2">
             {interests.map((interest) => (
               <span 

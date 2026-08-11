@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { EXTRA_TRANSLATIONS } from "@/contexts/extraTranslations";
+import { UI_TRANSLATIONS } from "@/contexts/uiTranslations";
 
 export type AppLanguage = "en" | "fr" | "es" | "ar" | "zh" | "ja" | "sw" | "de";
 
@@ -2079,8 +2080,10 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
     return (
       translations[language]?.[key] ||
       EXTRA_TRANSLATIONS[language]?.[key] ||
+      UI_TRANSLATIONS[language]?.[key] ||
       translations.en[key] ||
       EXTRA_TRANSLATIONS.en[key] ||
+      UI_TRANSLATIONS.en[key] ||
       key
     );
   };

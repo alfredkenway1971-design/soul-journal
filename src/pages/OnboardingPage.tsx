@@ -301,7 +301,7 @@ const OnboardingPage = () => {
           <Icon className="w-8 h-8 text-primary" />
         </motion.div>
 
-        <h2 className="text-2xl font-bold font-serif text-foreground mb-2 text-center">
+        <h2 className="text-2xl font-bold font-display text-foreground mb-2 text-center">
           {t(q.titleKey)}
         </h2>
         <p className="text-muted-foreground text-sm mb-8 text-center max-w-xs">
@@ -411,7 +411,7 @@ const OnboardingPage = () => {
           >
             <Globe className="w-10 h-10 text-primary" />
           </motion.div>
-          <h1 className="text-3xl font-bold font-serif text-foreground mb-3">{t("onboarding.chooseLanguage")}</h1>
+          <h1 className="text-3xl font-bold font-display text-foreground mb-3">{t("onboarding.chooseLanguage")}</h1>
           <p className="text-muted-foreground text-base leading-relaxed max-w-xs mb-8">
             {t("onboarding.chooseLanguageDesc")}
           </p>
@@ -457,7 +457,7 @@ const OnboardingPage = () => {
           >
             <Heart className="w-8 h-8 text-primary" />
           </motion.div>
-          <h2 className="text-2xl font-bold font-serif text-foreground mb-2 text-center">
+          <h2 className="text-2xl font-bold font-display text-foreground mb-2 text-center">
             {t("onboarding.beliefSystem")}
           </h2>
           <p className="text-muted-foreground text-sm mb-8 text-center max-w-xs">
@@ -496,7 +496,7 @@ const OnboardingPage = () => {
           >
             <Sparkles className="w-12 h-12 text-primary" />
           </motion.div>
-          <h2 className="text-2xl font-bold font-serif text-foreground mb-3">
+          <h2 className="text-2xl font-bold font-display text-foreground mb-3">
             {t("onboarding.analyzingTitle")}
           </h2>
           <p className="text-muted-foreground text-base leading-relaxed max-w-xs mb-8">
@@ -531,7 +531,7 @@ const OnboardingPage = () => {
             >
               <Sparkles className="w-8 h-8 text-white" />
             </motion.div>
-            <h2 className="text-2xl font-bold font-serif text-foreground mb-2">
+            <h2 className="text-2xl font-bold font-display text-foreground mb-2">
               {t("onboarding.soulProfileTitle")}
             </h2>
             <p className="text-muted-foreground text-sm max-w-xs">

@@ -58,7 +58,7 @@ const EntryDetailPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   const api = useJournalAPI(language);
   
   const [entry, setEntry] = useState<EntryData | null>(null);
@@ -95,8 +95,8 @@ const EntryDetailPage = () => {
       } catch (error) {
         console.error('Error fetching entry:', error);
         toast({
-          title: "Error",
-          description: "Failed to load entry",
+          title: t("common.error"),
+          description: t("entry.loadFailed"),
           variant: "destructive",
         });
       } finally {
@@ -113,15 +113,15 @@ const EntryDetailPage = () => {
     try {
       await api.deleteEntry(id);
       toast({
-        title: "Entry Deleted",
-        description: "Your journal entry has been deleted.",
+        title: t("entry.deleted"),
+        description: t("entry.deletedDesc"),
       });
       navigate("/");
     } catch (error) {
       console.error('Error deleting entry:', error);
       toast({
-        title: "Error",
-        description: "Failed to delete entry",
+        title: t("common.error"),
+        description: t("entry.deleteFailed"),
         variant: "destructive",
       });
     }
@@ -147,14 +147,14 @@ const EntryDetailPage = () => {
       setEntry(prev => prev ? { ...prev, title: editedTitle.trim() } : null);
       setIsEditingTitle(false);
       toast({
-        title: "Title Updated",
-        description: "Your entry title has been saved.",
+        title: t("entry.titleUpdated"),
+        description: t("entry.titleUpdatedDesc"),
       });
     } catch (error) {
       console.error('Error updating title:', error);
       toast({
-        title: "Error",
-        description: "Failed to update title",
+        title: t("common.error"),
+        description: t("entry.titleFailed"),
         variant: "destructive",
       });
     } finally {
@@ -190,7 +190,7 @@ const EntryDetailPage = () => {
       }
       
       toast({
-        title: "Voice Generation Failed",
+        title: t("entry.voiceFailed"),
         description: userMessage,
         variant: "destructive",
       });
@@ -213,7 +213,7 @@ const EntryDetailPage = () => {
     } catch (error) {
       console.error('Error generating voice:', error);
       toast({
-        title: "Voice Generation Failed",
+        title: t("entry.voiceFailed"),
         description: error instanceof Error ? error.message : "Failed to generate voice",
         variant: "destructive",
       });
@@ -266,8 +266,8 @@ const EntryDetailPage = () => {
   if (!entry) {
     return (
       <div className="min-h-screen gradient-warm flex flex-col items-center justify-center p-6">
-        <p className="text-muted-foreground mb-4">Entry not found</p>
-        <Button onClick={() => navigate("/")}>Go Home</Button>
+        <p className="text-muted-foreground mb-4">{t("entry.notFound")}</p>
+        <Button onClick={() => navigate("/")}>{t("entry.goHome")}</Button>
       </div>
     );
   }
@@ -356,13 +356,13 @@ const EntryDetailPage = () => {
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Delete Entry?</AlertDialogTitle>
+                  <AlertDialogTitle>{t("entry.deleteConfirm")}</AlertDialogTitle>
                   <AlertDialogDescription>
                     This action cannot be undone. This will permanently delete your journal entry.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
                   <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground">
                     Delete
                   </AlertDialogAction>
@@ -458,9 +458,9 @@ const EntryDetailPage = () => {
                 )}
               </Button>
               <div className="flex-1">
-                <p className="font-medium text-sm">Voice Playback</p>
+                <p className="font-medium text-sm">{t("entry.voicePlayback")}</p>
                 <p className="text-muted-foreground text-xs">
-                  {isPlaying ? "Playing..." : "Tap to play your story"}
+                  {isPlaying ? t("entry.playing") : t("entry.tapToPlay")}
                 </p>
               </div>
             </div>
