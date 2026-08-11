@@ -102,16 +102,31 @@ const BookBuilderPage = () => {
   }, [user]);
 
   // Count entries when dates change
+  const [countingEntries, setCountingEntries] = useState(false);
   useEffect(() => {
-    if (!user || !startDate || !endDate) { setEntryCount(null); return; }
+    if (!user || !startDate || !endDate) { setEntryCount(null); setCountingEntries(false); return; }
+    setCountingEntries(true);
     (async () => {
-      const { count } = await supabase
-        .from("journal_entries")
-        .select("id", { count: "exact", head: true })
-        .eq("user_id", user.id)
-        .gte("created_at", new Date(startDate).toISOString())
-        .lte("created_at", new Date(endDate + "T23:59:59").toISOString());
-      setEntryCount(count ?? 0);
+      try {
+        const { count, error } = await supabase
+          .from("journal_entries")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", user.id)
+          .gte("created_at", new Date(startDate + "T00:00:00").toISOString())
+          .lte("created_at", new Date(endDate + "T23:59:59").toISOString());
+        if (error) throw error;
+        setEntryCount(count ?? 0);
+      } catch (err) {
+        console.error("Entry count failed:", err);
+        setEntryCount(null);
+        toast({
+          title: "Could not check entries",
+          description: "Check your connection and try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setCountingEntries(false);
+      }
     })();
   }, [user, startDate, endDate]);
 
@@ -129,7 +144,7 @@ const BookBuilderPage = () => {
         .order("created_at", { ascending: false })
         .limit(1);
 
-      if (startDate) query = query.gte("created_at", new Date(startDate).toISOString());
+      if (startDate) query = query.gte("created_at", new Date(startDate + "T00:00:00").toISOString());
       if (endDate) query = query.lte("created_at", new Date(endDate + "T23:59:59").toISOString());
 
       const { data } = await query;
@@ -182,7 +197,7 @@ const BookBuilderPage = () => {
         .eq("user_id", user.id)
         .order("created_at", { ascending: true });
 
-      if (startDate) query = query.gte("created_at", new Date(startDate).toISOString());
+      if (startDate) query = query.gte("created_at", new Date(startDate + "T00:00:00").toISOString());
       if (endDate) query = query.lte("created_at", new Date(endDate + "T23:59:59").toISOString());
 
       const { data: entries, error } = await query;
@@ -237,10 +252,28 @@ const BookBuilderPage = () => {
   };
 
   const canProceed: Record<Step, boolean> = {
-    1: !!startDate && !!endDate && (entryCount ?? 0) > 0,
+    1: !!startDate && !!endDate,
     2: true,
     3: true,
     4: true,
+  };
+
+  const handleContinue = () => {
+    if (step === 1) {
+      if (countingEntries) {
+        toast({ title: "Checking entries…", description: "Please wait a moment." });
+        return;
+      }
+      if (entryCount === null) {
+        toast({ title: "Could not check entries", description: "Tap Continue again to retry.", variant: "destructive" });
+        return;
+      }
+      if (entryCount === 0) {
+        toast({ title: "No entries in this range", description: "Adjust your date range — no journal entries were found.", variant: "destructive" });
+        return;
+      }
+    }
+    setStep((step + 1) as Step);
   };
 
   const fontSizeSliderValue = fontSize === "small" ? 0 : fontSize === "medium" ? 1 : 2;
@@ -322,13 +355,31 @@ const BookBuilderPage = () => {
                   </div>
                 </div>
 
-                {entryCount !== null && (
+                {countingEntries && (
+                  <motion.div
+                    className="p-3 rounded-xl text-center text-sm font-medium bg-muted/50 text-muted-foreground"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                  >
+                    Checking entries…
+                  </motion.div>
+                )}
+                {!countingEntries && entryCount !== null && (
                   <motion.div
                     className={`p-3 rounded-xl text-center text-sm font-medium ${entryCount > 0 ? "bg-primary/10 text-primary" : "bg-destructive/10 text-destructive"}`}
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                   >
                     {entryCount > 0 ? `${entryCount} entries found` : "No entries in this range"}
+                  </motion.div>
+                )}
+                {!countingEntries && entryCount === null && (
+                  <motion.div
+                    className="p-3 rounded-xl text-center text-sm font-medium bg-destructive/10 text-destructive"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                  >
+                    Couldn't check entries — tap Continue to retry
                   </motion.div>
                 )}
               </div>
@@ -527,7 +578,7 @@ const BookBuilderPage = () => {
           <motion.div className="mt-6" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}>
             <Button
               className="w-full h-12 rounded-xl gradient-primary gap-2"
-              onClick={() => setStep((step + 1) as Step)}
+              onClick={handleContinue}
               disabled={!canProceed[step]}
             >
               Continue
