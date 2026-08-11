@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, Calendar, Palette, Type, Sparkles, Loader2, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useSubscription } from "@/contexts/SubscriptionContext";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import UpgradePrompt from "@/components/premium/UpgradePrompt";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -326,10 +327,10 @@ const BookBuilderPage = () => {
       </header>
 
       <main className="max-w-lg mx-auto px-4 py-6">
-        <AnimatePresence mode="wait">
+        <ErrorBoundary>
           {/* Step 1 — Date Range */}
           {step === 1 && (
-            <motion.div key="s1" className="space-y-6" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+            <motion.div key="s1" className="space-y-6" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
               <div className="glass-premium p-6 space-y-5">
                 <div className="text-center">
                   <span className="text-4xl mb-3 block">📅</span>
@@ -393,7 +394,7 @@ const BookBuilderPage = () => {
 
           {/* Step 2 — Cover & Title */}
           {step === 2 && (
-            <motion.div key="s2" className="space-y-6" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+            <motion.div key="s2" className="space-y-6" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
               <div className="glass-premium p-6 space-y-5">
                 <div className="text-center">
                   <span className="text-4xl mb-3 block">🎨</span>
@@ -426,7 +427,7 @@ const BookBuilderPage = () => {
 
           {/* Step 3 — Font & Layout */}
           {step === 3 && (
-            <motion.div key="s3" className="space-y-6" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+            <motion.div key="s3" className="space-y-6" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
               <div className="glass-premium p-6 space-y-5">
                 <div className="text-center">
                   <span className="text-4xl mb-3 block">✍️</span>
@@ -492,7 +493,7 @@ const BookBuilderPage = () => {
 
           {/* Step 4 — Preview & Generate */}
           {step === 4 && (
-            <motion.div key="s4" className="space-y-6" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+            <motion.div key="s4" className="space-y-6" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
               <div className="glass-premium p-6 space-y-5">
                 <div className="text-center">
                   <span className="text-4xl mb-3 block">📖</span>
@@ -576,7 +577,7 @@ const BookBuilderPage = () => {
               </div>
             </motion.div>
           )}
-        </AnimatePresence>
+        </ErrorBoundary>
 
         {/* Navigation */}
         {step < 4 && (
