@@ -128,29 +128,29 @@ const CoverTemplates = ({ selected, onSelect, userName, yearRange, avatarUrl, sh
     <div className="space-y-5">
       {/* Template Grid */}
       <div className="grid grid-cols-3 gap-3">
-        {templates.map((t) => (
+        {templates.map((tpl) => (
           <motion.button
-            key={t.id}
+            key={tpl.id}
             className={`relative rounded-xl overflow-hidden border-2 transition-all ${
-              selected === t.id ? "border-primary ring-2 ring-primary/30" : "border-border"
+              selected === tpl.id ? "border-primary ring-2 ring-primary/30" : "border-border"
             }`}
-            onClick={() => onSelect(t.id)}
+            onClick={() => onSelect(tpl.id)}
             whileTap={{ scale: 0.95 }}
           >
             <CoverPreview
-              template={t.id}
+              template={tpl.id}
               userName={userName}
               yearRange={yearRange}
               avatarUrl={avatarUrl}
               showAvatar={showAvatar}
               small
             />
-            {selected === t.id && (
+            {selected === tpl.id && (
               <div className="absolute top-1 right-1 w-5 h-5 bg-primary rounded-full flex items-center justify-center">
                 <Check className="w-3 h-3 text-primary-foreground" />
               </div>
             )}
-            <p className="text-[9px] font-medium text-center py-1 bg-card">{t(t.name)}</p>
+            <p className="text-[9px] font-medium text-center py-1 bg-card">{t(tpl.name)}</p>
           </motion.button>
         ))}
       </div>
