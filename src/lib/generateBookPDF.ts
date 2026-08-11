@@ -224,18 +224,18 @@ const buildImageGalleryHTML = (photoUrls: string[], photoSize: PhotoSize, isRTL:
 
   // Determine layout based on count
   let gridStyle = "";
-  let imgStyle = `border-radius:15px;border:1pt solid #d1d5db;object-fit:cover;`;
+  let imgStyle = `border-radius:15px;border:1pt solid #d1d5db;object-fit:contain;`;
 
   if (count <= 2) {
-    // Single row, larger images
+    // Single row, larger images — each keeps its full aspect ratio (never cropped)
     const imgW = count === 1 ? Math.min(dims.w * 2.2, PAGE_W_PX - 160) : dims.w * 1.4;
     const imgH = count === 1 ? dims.h * 2 : dims.h * 1.4;
-    gridStyle = `display:flex;justify-content:center;gap:12px;direction:${dir};`;
-    imgStyle += `width:${imgW}px;height:${imgH}px;`;
+    gridStyle = `display:flex;justify-content:center;align-items:flex-start;gap:12px;direction:${dir};`;
+    imgStyle += `max-width:${imgW}px;max-height:${imgH}px;width:auto;height:auto;`;
   } else {
-    // 2-column masonry grid for 3-5 images
+    // 2-column grid for 3-5 images — full image, natural height, capped so portraits fit
     gridStyle = `display:grid;grid-template-columns:1fr 1fr;gap:10px;justify-items:center;direction:${dir};`;
-    imgStyle += `width:100%;height:${dims.h * 1.2}px;`;
+    imgStyle += `width:100%;height:auto;max-height:${dims.h * 1.2 * 3}px;`;
   }
 
   const imagesHTML = urls.map(url =>
