@@ -2,8 +2,11 @@ import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mic, Square, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+
+// Local Whisper API endpoint (self-hosted, offline)
+const WHISPER_API_URL = "http://144.91.106.188:8082/inference";
+const WHISPER_API_KEY = "whisper_key2026";
 
 interface VoiceGoalInputProps {
   onGoalTranscribed: (text: string) => void;
@@ -58,28 +61,31 @@ const VoiceGoalInput = ({ onGoalTranscribed }: VoiceGoalInputProps) => {
     setIsProcessing(true);
 
     try {
-      // Convert to base64
-      const reader = new FileReader();
-      const base64Promise = new Promise<string>((resolve, reject) => {
-        reader.onloadend = () => {
-          const base64 = (reader.result as string).split(",")[1];
-          resolve(base64);
-        };
-        reader.onerror = reject;
+      // Send directly to our local Whisper API server
+      const formData = new FormData();
+      const fileName = `recording-${Date.now()}.webm`;
+      formData.append("file", audioBlob, fileName);
+      formData.append("temperature", "0.0");
+      formData.append("temperature_inc", "0.2");
+      formData.append("response_format", "json");
+
+      const response = await fetch(WHISPER_API_URL, {
+        method: "POST",
+        headers: {
+          "x-api-key": WHISPER_API_KEY,
+        },
+        body: formData,
       });
-      reader.readAsDataURL(audioBlob);
-      const base64Audio = await base64Promise;
 
-      // Transcribe
-      const { data, error } = await supabase.functions.invoke("transcribe-audio", {
-        body: { audio: base64Audio },
-      });
+      if (!response.ok) {
+        throw new Error(`Whisper API returned ${response.status}`);
+      }
 
-      if (error) throw new Error(error.message);
-      if (data.error) throw new Error(data.error);
+      const result = await response.json();
+      if (!result.text) throw new Error("No transcription returned");
 
-      if (data.text) {
-        onGoalTranscribed(data.text);
+      if (result.text) {
+        onGoalTranscribed(result.text);
         toast({
           title: "Goal Recorded",
           description: "Your spoken goal has been transcribed.",
