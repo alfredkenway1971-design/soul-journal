@@ -33,7 +33,7 @@ const RecentEntryCard = ({
 }: RecentEntryCardProps) => {
   const titleCase = useTitleCase();
   const dateLabel =
-    format(date, "MMM d").toUpperCase() + ", " + format(date, "EEEE").toUpperCase();
+    format(date, "MMM d") + ", " + format(date, "EEEE");
 
   return (
     <motion.button

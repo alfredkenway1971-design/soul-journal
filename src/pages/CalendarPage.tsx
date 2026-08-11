@@ -318,8 +318,8 @@ const CalendarPage = () => {
             animate={{ opacity: 1, y: 0 }}
             key={getDateKey(selectedDate)}
           >
-            <p className="section-label mb-3">
-              {format(selectedDate, "EEEE, MMMM d").toUpperCase()}
+            <p className="section-label mb-3 normal-case">
+              {format(selectedDate, "EEEE, MMMM d")}
             </p>
             
             <div className="glass-premium p-5">
