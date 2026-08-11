@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { AudioLines } from "lucide-react";
 import { format } from "date-fns";
-import { smartTitleCase } from "@/lib/smartTitleCase";
+import { useTitleCase } from "@/hooks/useTitleCase";
 
 interface RecentEntryCardProps {
   id: string;
@@ -31,6 +31,7 @@ const RecentEntryCard = ({
   mood = "fine",
   onClick,
 }: RecentEntryCardProps) => {
+  const titleCase = useTitleCase();
   const dateLabel =
     format(date, "MMM d").toUpperCase() + ", " + format(date, "EEEE").toUpperCase();
 
@@ -53,7 +54,7 @@ const RecentEntryCard = ({
         )}
       </div>
       <h3 className="font-semibold text-foreground text-base mb-1">
-        {smartTitleCase(title)} <span className="ml-1">{moodEmoji[mood] || "🙂"}</span>
+        {titleCase(title)} <span className="ml-1">{moodEmoji[mood] || "🙂"}</span>
       </h3>
       <p className="text-sm text-muted-foreground line-clamp-2">{preview}</p>
     </motion.button>
