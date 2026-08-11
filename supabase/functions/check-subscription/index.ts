@@ -45,6 +45,42 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
+    // Owner/admin always gets premium access
+    const OWNER_EMAIL = "amer.niyonzima@gmail.com";
+    const isOwner = user.email.toLowerCase() === OWNER_EMAIL.toLowerCase();
+    if (isOwner) {
+      logStep("Owner detected, granting premium", { email: user.email });
+      return new Response(JSON.stringify({
+        subscribed: true,
+        plan_type: "manual",
+        is_manual_grant: true,
+        subscription_end: null,
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
+
+    // Any user with an admin role also gets premium access
+    const { data: adminRole } = await supabaseClient
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .eq("role", "admin")
+      .maybeSingle();
+    if (adminRole) {
+      logStep("Admin role detected, granting premium", { userId: user.id });
+      return new Response(JSON.stringify({
+        subscribed: true,
+        plan_type: "manual",
+        is_manual_grant: true,
+        subscription_end: null,
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
+
     // First check for manual grant in subscriptions table
     const { data: manualGrant } = await supabaseClient
       .from("subscriptions")

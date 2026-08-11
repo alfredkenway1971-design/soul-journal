@@ -43,6 +43,9 @@ export const PREMIUM_ENTITLEMENTS = {
   premiumThemes: true,
 } as const;
 
+// Owner email — the app owner always has premium access
+export const OWNER_EMAIL = "amer.niyonzima@gmail.com";
+
 interface SubscriptionState {
   subscribed: boolean;
   planType: string | null;
@@ -112,7 +115,8 @@ export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
     return () => clearInterval(interval);
   }, [user, checkSubscription]);
 
-  const isPremium = state.subscribed;
+  const isOwner = user?.email?.toLowerCase() === OWNER_EMAIL.toLowerCase();
+  const isPremium = state.subscribed || isOwner;
   const limits = isPremium ? PREMIUM_ENTITLEMENTS : FREE_LIMITS;
 
   const canUseFeature = (feature: keyof typeof FREE_LIMITS): boolean => {
