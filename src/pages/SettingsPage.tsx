@@ -141,14 +141,14 @@ const SettingsPage = () => {
 
   const handleSignOut = async () => {
     await signOut();
-    toast({ title: "Signed out" });
+    toast({ title: t("settings.signedOut") });
     navigate("/auth");
   };
 
   const firstName =
     displayName?.split(" ")[0] ||
     user?.email?.split("@")[0] ||
-    "Friend";
+    t("home.friend");
 
   return (
     <div className="min-h-screen gradient-warm pb-32">
@@ -160,12 +160,12 @@ const SettingsPage = () => {
               {firstName.charAt(0).toUpperCase()}
             </AvatarFallback>
           </Avatar>
-          <h1 className="flex-1 text-3xl font-bold text-foreground">Settings</h1>
+          <h1 className="flex-1 text-3xl font-bold text-foreground">{t("settings.title")}</h1>
           <AppLanguageSwitcher />
           <button
             className="w-9 h-9 rounded-xl glass-premium flex items-center justify-center"
             onClick={() => navigate("/settings/profile")}
-            aria-label="Edit profile"
+            aria-label={t("settings.editProfile")}
           >
             <Edit3 className="w-4 h-4 text-primary" />
           </button>
@@ -174,21 +174,21 @@ const SettingsPage = () => {
 
       <main className="max-w-lg mx-auto px-5 space-y-4">
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-          <SectionCard title="Account">
+          <SectionCard title={t("settings.account")}>
             <div className="flex items-start gap-2">
-              <IconTile icon={User} label="Profile" onClick={() => navigate("/settings/profile")} />
-              <IconTile icon={CreditCard} label="Manage Subscription" onClick={() => navigate("/pricing")} />
-              <IconTile icon={Shield} label="Security & PIN" onClick={() => navigate("/settings/security")} />
-              <IconTile icon={Mic} label="Voice Settings" onClick={() => navigate("/settings/voice")} />
+              <IconTile icon={User} label={t("settings.profile")} onClick={() => navigate("/settings/profile")} />
+              <IconTile icon={CreditCard} label={t("settings.manageSubscription")} onClick={() => navigate("/pricing")} />
+              <IconTile icon={Shield} label={t("settings.security")} onClick={() => navigate("/settings/security")} />
+              <IconTile icon={Mic} label={t("settings.voice")} onClick={() => navigate("/settings/voice")} />
             </div>
           </SectionCard>
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
-          <SectionCard title="Reminders">
+          <SectionCard title={t("settings.reminders.section")}>
             <Row
               icon={AlarmClock}
-              label="Daily Reminder"
+              label={t("settings.dailyReminder")}
               right={
                 <Switch
                   checked={dailyReminder}
@@ -197,15 +197,15 @@ const SettingsPage = () => {
               }
             />
             
-            <Row icon={Sunrise} label="Morning Reflection" onClick={() => navigate("/settings/reminders")} />
+            <Row icon={Sunrise} label={t("settings.morningReflection")} onClick={() => navigate("/settings/reminders")} />
           </SectionCard>
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-          <SectionCard title="Appearance">
+          <SectionCard title={t("settings.appearance")}>
             <Row
               icon={Moon}
-              label="Dark Mode"
+              label={t("settings.darkMode")}
               right={
                 <Switch
                   checked={darkMode}
@@ -221,7 +221,7 @@ const SettingsPage = () => {
                 <div className="w-9 h-9 rounded-xl glass-premium flex items-center justify-center">
                   <Palette className="w-[18px] h-[18px] text-primary" />
                 </div>
-                <span className="text-base font-medium text-foreground">Themes</span>
+                <span className="text-base font-medium text-foreground">{t("settings.themes")}</span>
               </button>
               <button
                 onClick={() => navigate("/settings/fonts")}
@@ -230,14 +230,14 @@ const SettingsPage = () => {
                 <div className="w-9 h-9 rounded-xl glass-premium flex items-center justify-center">
                   <Type className="w-[18px] h-[18px] text-primary" />
                 </div>
-                <span className="text-base font-medium text-foreground">Fonts</span>
+                <span className="text-base font-medium text-foreground">{t("settings.fonts")}</span>
               </button>
             </div>
           </SectionCard>
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
-          <SectionCard title="Data & Privacy">
+          <SectionCard title={t("settings.dataPrivacy")}>
             <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={() => navigate("/settings/export")}
@@ -246,13 +246,13 @@ const SettingsPage = () => {
                 <div className="w-9 h-9 rounded-xl glass-premium flex items-center justify-center">
                   <Download className="w-[18px] h-[18px] text-primary" />
                 </div>
-                <span className="text-base font-medium text-foreground">Export Journal</span>
+                <span className="text-base font-medium text-foreground">{t("settings.export")}</span>
               </button>
               <button className="flex items-center gap-3 py-2">
                 <div className="w-9 h-9 rounded-xl glass-premium flex items-center justify-center">
                   <FileText className="w-[18px] h-[18px] text-primary" />
                 </div>
-                <span className="text-base font-medium text-foreground">Privacy Policy</span>
+                <span className="text-base font-medium text-foreground">{t("settings.privacyPolicy")}</span>
               </button>
             </div>
           </SectionCard>
@@ -264,7 +264,7 @@ const SettingsPage = () => {
             className="w-full glass-premium p-4 flex items-center gap-3"
           >
             <Crown className="w-5 h-5 text-primary" />
-            <span className="font-semibold text-foreground">Admin Dashboard</span>
+            <span className="font-semibold text-foreground">{t("settings.admin")}</span>
           </motion.button>
         )}
 
@@ -273,7 +273,7 @@ const SettingsPage = () => {
           className="w-full glass-premium p-4 flex items-center justify-center gap-2 text-destructive font-semibold"
         >
           <LogOut className="w-5 h-5" />
-          Sign Out
+          {t("settings.signOut")}
         </motion.button>
       </main>
 

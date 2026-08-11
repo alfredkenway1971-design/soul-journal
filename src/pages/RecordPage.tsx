@@ -10,6 +10,7 @@ import MoodSlider, { moodToScore } from "@/components/MoodSlider";
 import RichTextEditor from "@/components/RichTextToolbar";
 import LanguageSelector, { Language } from "@/components/LanguageSelector";
 import RecentEntryCard from "@/components/premium/RecentEntryCard";
+import { SPOKEN_LANGUAGE_OPTIONS, dirFor } from "@/lib/textDirection";
 import { captureEntryContext } from "@/lib/contextCapture";
 
 import BottomNav from "@/components/BottomNav";
@@ -39,6 +40,8 @@ const RecordPage = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [isGeneratingTitle, setIsGeneratingTitle] = useState(false);
   const [transcription, setTranscription] = useState("");
+  const [detectedLanguage, setDetectedLanguage] = useState<string | null>(null);
+  const [spokenLanguage, setSpokenLanguage] = useState<string>("auto");
   const [enhancedText, setEnhancedText] = useState("");
   const [entryTitle, setEntryTitle] = useState("");
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
@@ -139,8 +142,9 @@ const RecordPage = () => {
         // Transcribe
         setIsProcessing(true);
         try {
-          const text = await api.transcribeAudio(audioBlob);
+          const { text, detectedLanguage } = await api.transcribeAudio(audioBlob, spokenLanguage);
           setTranscription(text);
+          setDetectedLanguage(detectedLanguage);
           // Auto-detect mood from transcription
           try {
             const detectedMood = await api.detectMood(text);
@@ -324,6 +328,7 @@ const RecordPage = () => {
         location: ctx.location,
         timeOfDay: ctx.time_of_day,
         durationSeconds: recordingDuration > 0 ? recordingDuration : null,
+        detectedLanguage: detectedLanguage,
       });
 
       // Upload photos and save media references
@@ -459,6 +464,22 @@ const RecordPage = () => {
                 </p>
               </div>
 
+              {/* Spoken language override */}
+              <div className="flex justify-center">
+                <select
+                  value={spokenLanguage}
+                  onChange={(e) => setSpokenLanguage(e.target.value)}
+                  className="glass-premium rounded-full px-4 py-2 text-sm bg-transparent text-foreground outline-none"
+                  aria-label="Spoken language"
+                >
+                  {SPOKEN_LANGUAGE_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value} className="text-foreground">
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               {/* Action Buttons */}
               <div className="flex justify-center gap-3">
                 <Button
@@ -589,7 +610,10 @@ const RecordPage = () => {
               <h3 className="text-sm font-medium text-muted-foreground mb-3">
                 {t("record.originalTranscription")}
               </h3>
-              <p className="font-journal text-foreground leading-relaxed">
+              <p
+                dir={dirFor(detectedLanguage)}
+                className="font-journal text-foreground leading-relaxed"
+              >
                 {transcription}
               </p>
               {/* Auto-detected mood suggestion */}

@@ -14,9 +14,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
-        display: ['Playfair Display', 'Crimson Pro', 'Georgia', 'serif'],
-        journal: ['Crimson Pro', 'Georgia', 'serif'],
+        sans: ['var(--app-font)', 'Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+        display: ['var(--app-display-font)', 'Playfair Display', 'Crimson Pro', 'Georgia', 'serif'],
+        journal: ['var(--app-display-font)', 'Crimson Pro', 'Georgia', 'serif'],
       },
       colors: {
         border: "hsl(var(--border))",

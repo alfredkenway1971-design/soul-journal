@@ -51,7 +51,7 @@ const CoachingPage = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   const { coachingCallsThisMonth, coachingLimitReached, canUseCoaching, refetch } = useUsageLimits();
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
 
   const [insights, setInsights] = useState<Insight[]>([]);
   const [goals, setGoals] = useState<Goal[]>([]);
@@ -123,7 +123,7 @@ const CoachingPage = () => {
       console.error(e);
       toast({
         title: "Error",
-        description: "Failed to generate insights. Please try again.",
+        description: t("coach.generateFailed"),
         variant: "destructive",
       });
     } finally {
@@ -182,7 +182,7 @@ const CoachingPage = () => {
             className="rounded-full bg-white/50 backdrop-blur-md border border-white/60"
             onClick={generateInsights}
             disabled={generating || coachingLimitReached}
-            title="Refresh insights"
+            title={t("coach.refresh")}
           >
             <RefreshCw className={`w-4 h-4 ${generating ? "animate-spin" : ""}`} />
           </Button>
@@ -220,7 +220,7 @@ const CoachingPage = () => {
             <p className="text-sm text-foreground/75 mt-1 leading-snug">
               Your personal wellness guide.
               <br />
-              {unreadCount > 0 ? `${unreadCount} new insights.` : "Tap refresh for new insights."}
+              {unreadCount > 0 ? `${unreadCount} ${t("coach.newInsights")}` : t("coach.tapRefresh")}
             </p>
           </div>
         </motion.div>
@@ -361,7 +361,7 @@ const CoachingPage = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15 }}
           >
-            <h2 className="px-1 mb-2 text-sm font-medium text-foreground/70">Recent Insights</h2>
+            <h2 className="px-1 mb-2 text-sm font-medium text-foreground/70">{t("coach.recentInsights")}</h2>
             <div className="space-y-2">
               {insights
                 .filter((i) => i.insight_type !== "challenge" || i.is_completed)

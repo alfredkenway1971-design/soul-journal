@@ -130,16 +130,20 @@ body { font-family: inherit; }
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: var(--app-font, 'Inter', -apple-system, BlinkMacSystemFont, sans-serif);
     letter-spacing: 0.01em;
   }
 
+  input, textarea, select, button {
+    font-family: inherit;
+  }
+
   .font-display {
-    font-family: 'Playfair Display', 'Crimson Pro', Georgia, serif;
+    font-family: var(--app-display-font, 'Playfair Display', 'Crimson Pro', Georgia, serif);
   }
 
   .font-journal {
-    font-family: 'Crimson Pro', Georgia, serif;
+    font-family: var(--app-display-font, 'Crimson Pro', Georgia, serif);
   }
 }
 

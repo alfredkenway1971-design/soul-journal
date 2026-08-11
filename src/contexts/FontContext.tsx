@@ -7,24 +7,25 @@ export interface FontOption {
   name: string;
   family: string;
   importUrl: string;
+  cursive?: boolean;
 }
 
 export const FONT_OPTIONS: FontOption[] = [
   { id: "inter", name: "Inter (Modern)", family: "'Inter', sans-serif", importUrl: "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" },
   { id: "playfair", name: "Playfair (Classic)", family: "'Playfair Display', Georgia, serif", importUrl: "https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&display=swap" },
-  { id: "dancing", name: "Dancing Script", family: "'Dancing Script', cursive", importUrl: "https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;600;700&display=swap" },
-  { id: "caveat", name: "Caveat (Phitradesign)", family: "'Caveat', cursive", importUrl: "https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&display=swap" },
-  { id: "shadows", name: "Shadows Into Light", family: "'Shadows Into Light', cursive", importUrl: "https://fonts.googleapis.com/css2?family=Shadows+Into+Light&display=swap" },
-  { id: "sacramento", name: "Sacramento (Agata)", family: "'Sacramento', cursive", importUrl: "https://fonts.googleapis.com/css2?family=Sacramento&display=swap" },
-  { id: "kalam", name: "Kalam (Alanis)", family: "'Kalam', cursive", importUrl: "https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&display=swap" },
-  { id: "alex-brush", name: "Alex Brush (Honey Script)", family: "'Alex Brush', cursive", importUrl: "https://fonts.googleapis.com/css2?family=Alex+Brush&display=swap" },
-  { id: "euphoria", name: "Euphoria Script", family: "'Euphoria Script', cursive", importUrl: "https://fonts.googleapis.com/css2?family=Euphoria+Script&display=swap" },
-  { id: "great-vibes", name: "Great Vibes (Scriptina)", family: "'Great Vibes', cursive", importUrl: "https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" },
-  { id: "tangerine", name: "Tangerine (Anke)", family: "'Tangerine', cursive", importUrl: "https://fonts.googleapis.com/css2?family=Tangerine:wght@400;700&display=swap" },
-  { id: "patrick", name: "Patrick Hand (Gravity)", family: "'Patrick Hand', cursive", importUrl: "https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap" },
-  { id: "petit-formal", name: "Petit Formal (Quilline)", family: "'Petit Formal Script', cursive", importUrl: "https://fonts.googleapis.com/css2?family=Petit+Formal+Script&display=swap" },
-  { id: "satisfy", name: "Satisfy (Farewell)", family: "'Satisfy', cursive", importUrl: "https://fonts.googleapis.com/css2?family=Satisfy&display=swap" },
-  { id: "arizonia", name: "Arizonia", family: "'Arizonia', cursive", importUrl: "https://fonts.googleapis.com/css2?family=Arizonia&display=swap" },
+  { id: "dancing", name: "Dancing Script", family: "'Dancing Script', cursive", importUrl: "https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;600;700&display=swap", cursive: true },
+  { id: "caveat", name: "Caveat (Phitradesign)", family: "'Caveat', cursive", importUrl: "https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&display=swap", cursive: true },
+  { id: "shadows", name: "Shadows Into Light", family: "'Shadows Into Light', cursive", importUrl: "https://fonts.googleapis.com/css2?family=Shadows+Into+Light&display=swap", cursive: true },
+  { id: "sacramento", name: "Sacramento (Agata)", family: "'Sacramento', cursive", importUrl: "https://fonts.googleapis.com/css2?family=Sacramento&display=swap", cursive: true },
+  { id: "kalam", name: "Kalam (Alanis)", family: "'Kalam', cursive", importUrl: "https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&display=swap", cursive: true },
+  { id: "alex-brush", name: "Alex Brush (Honey Script)", family: "'Alex Brush', cursive", importUrl: "https://fonts.googleapis.com/css2?family=Alex+Brush&display=swap", cursive: true },
+  { id: "euphoria", name: "Euphoria Script", family: "'Euphoria Script', cursive", importUrl: "https://fonts.googleapis.com/css2?family=Euphoria+Script&display=swap", cursive: true },
+  { id: "great-vibes", name: "Great Vibes (Scriptina)", family: "'Great Vibes', cursive", importUrl: "https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap", cursive: true },
+  { id: "tangerine", name: "Tangerine (Anke)", family: "'Tangerine', cursive", importUrl: "https://fonts.googleapis.com/css2?family=Tangerine:wght@400;700&display=swap", cursive: true },
+  { id: "patrick", name: "Patrick Hand (Gravity)", family: "'Patrick Hand', cursive", importUrl: "https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap", cursive: true },
+  { id: "petit-formal", name: "Petit Formal (Quilline)", family: "'Petit Formal Script', cursive", importUrl: "https://fonts.googleapis.com/css2?family=Petit+Formal+Script&display=swap", cursive: true },
+  { id: "satisfy", name: "Satisfy (Farewell)", family: "'Satisfy', cursive", importUrl: "https://fonts.googleapis.com/css2?family=Satisfy&display=swap", cursive: true },
+  { id: "arizonia", name: "Arizonia", family: "'Arizonia', cursive", importUrl: "https://fonts.googleapis.com/css2?family=Arizonia&display=swap", cursive: true },
   { id: "system", name: "System Default", family: "system-ui, sans-serif", importUrl: "" },
 ];
 
@@ -37,6 +38,7 @@ interface FontContextValue {
   setFont: (id: string) => void;
   setFontSize: (n: number) => void;
   saving: boolean;
+  isCursive: boolean;
 }
 
 const FontContext = createContext<FontContextValue | undefined>(undefined);
@@ -55,9 +57,16 @@ const injectFontLink = (importUrl: string) => {
 const applyFontGlobally = (fontId: string, size: number) => {
   const opt = FONT_OPTIONS.find((f) => f.id === fontId) || FONT_OPTIONS[0];
   injectFontLink(opt.importUrl);
-  document.documentElement.style.setProperty("--app-font", opt.family);
-  document.documentElement.style.fontSize = `${size}px`;
-  document.documentElement.setAttribute("data-font", fontId);
+  const root = document.documentElement;
+  root.style.setProperty("--app-font", opt.family);
+  // Headings follow the chosen font too, unless the user keeps a neutral default
+  const displayFamily =
+    fontId === "inter" || fontId === "system"
+      ? "'Playfair Display', 'Crimson Pro', Georgia, serif"
+      : opt.family;
+  root.style.setProperty("--app-display-font", displayFamily);
+  root.style.fontSize = `${size}px`;
+  root.setAttribute("data-font", fontId);
 };
 
 export const FontProvider = ({ children }: { children: ReactNode }) => {
@@ -127,7 +136,16 @@ export const FontProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <FontContext.Provider value={{ font, fontSize, setFont, setFontSize, saving }}>
+    <FontContext.Provider
+      value={{
+        font,
+        fontSize,
+        setFont,
+        setFontSize,
+        saving,
+        isCursive: !!FONT_OPTIONS.find((f) => f.id === font)?.cursive,
+      }}
+    >
       {children}
     </FontContext.Provider>
   );

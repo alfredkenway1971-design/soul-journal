@@ -85,7 +85,7 @@ const HomePage = () => {
         const formattedEntries: Entry[] = data.slice(0, 20).map((entry: any) => ({
           id: entry.id,
           date: new Date(entry.created_at),
-          title: entry.title || "Untitled Entry",
+          title: entry.title || t("entry.untitled"),
           preview: entry.enhanced_text || entry.original_transcription || "",
           mood: (entry.mood as Mood) || "fine",
           hasAudio: !!entry.audio_url,
@@ -225,7 +225,7 @@ const HomePage = () => {
 
         {/* Mood Filter Bar */}
         <section>
-          <h2 className="text-xl font-bold text-foreground mb-2.5">Mood Filter Bar</h2>
+          <h2 className="text-xl font-bold text-foreground mb-2.5">{t("home.moodFilter")}</h2>
           <MoodFilterBar value={moodFilter} onChange={setMoodFilter} />
         </section>
 
@@ -235,7 +235,7 @@ const HomePage = () => {
         {/* Recent Entries */}
         <section>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-xl font-bold text-foreground">Recent Entries</h2>
+            <h2 className="text-xl font-bold text-foreground">{t("home.recentEntries")}</h2>
             <button
               className="text-sm font-medium text-primary hover:underline"
               onClick={() => navigate("/calendar")}
@@ -253,13 +253,10 @@ const HomePage = () => {
               ? entries
               : entries.filter((e) => e.mood === moodFilter);
             if (filtered.length === 0 && entries.length > 0) {
-              const labelMap: Record<string, string> = {
-                happy: "happy", good: "grateful", fine: "peaceful", sad: "sad", unhappy: "anxious",
-              };
               return (
                 <div className="glass-premium p-8 text-center">
                   <span className="text-3xl mb-3 block">🌱</span>
-                  <p className="text-muted-foreground">No {labelMap[moodFilter] || moodFilter} memories yet</p>
+                  <p className="text-muted-foreground">{t("home.noMoodMemories")}</p>
                 </div>
               );
             }

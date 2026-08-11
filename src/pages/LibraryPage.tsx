@@ -14,6 +14,8 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import BottomNav from "@/components/BottomNav";
 import MoodFilterBar, { type MoodFilterValue } from "@/components/MoodFilterBar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useTitleCase } from "@/hooks/useTitleCase";
 import type { Mood } from "@/components/MoodSelector";
 
 interface JournalEntry {
@@ -40,16 +42,33 @@ const LibraryPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { t } = useLanguage();
+  const titleCase = useTitleCase();
 
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [moodFilter, setMoodFilter] = useState<MoodFilterValue>("all");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [displayName, setDisplayName] = useState<string>("");
 
   useEffect(() => {
-    if (user) fetchEntries();
+    if (user) {
+      fetchEntries();
+      fetchProfile();
+    }
   }, [user]);
+
+  const fetchProfile = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("profiles")
+      .select("display_name, avatar_url")
+      .eq("id", user.id)
+      .maybeSingle();
+    if (data?.display_name) setDisplayName(data.display_name);
+    if (data?.avatar_url) setAvatarUrl(data.avatar_url);
+  };
 
   const fetchEntries = async () => {
     if (!user) return;
@@ -120,11 +139,16 @@ const LibraryPage = () => {
         <div className="max-w-lg mx-auto">
           <div className="flex items-center justify-between mb-4">
             <div className="w-10" />
-            <h1 className="text-xl font-bold text-foreground">Soul Journal Library</h1>
-            <div
-              className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-white/60 shadow-md cursor-pointer bg-gradient-to-br from-slate-700 to-slate-900"
+            <h1 className="text-xl font-bold text-foreground">{titleCase(t("library.title"))}</h1>
+            <Avatar
+              className="w-10 h-10 cursor-pointer ring-2 ring-white/60 shadow-md"
               onClick={() => navigate("/settings/profile")}
-            />
+            >
+              <AvatarImage src={avatarUrl || undefined} alt={displayName || "Profile"} />
+              <AvatarFallback className="bg-gradient-to-br from-slate-700 to-slate-900 text-white font-display font-bold">
+                {(displayName || user?.email || "U").charAt(0).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
           </div>
 
           {/* Mood filter — above search */}
@@ -136,7 +160,7 @@ const LibraryPage = () => {
           <div className="glass-premium px-4 py-3 flex items-center gap-3">
             <Search className="w-5 h-5 text-muted-foreground" />
             <input
-              placeholder="Search"
+              placeholder={t("common.search")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="flex-1 bg-transparent outline-none text-base placeholder:text-muted-foreground"
@@ -174,7 +198,7 @@ const LibraryPage = () => {
                 onClick={clearFilters}
                 className="text-xs text-muted-foreground hover:text-foreground ml-auto"
               >
-                Clear all
+                {t("common.clearAll")}
               </button>
             </div>
           )}
@@ -197,20 +221,20 @@ const LibraryPage = () => {
               <FileText className="w-8 h-8 text-muted-foreground" />
             </div>
             <h3 className="font-semibold text-foreground mb-2">
-              {hasFilters ? "No entries found" : "No entries yet"}
+              {hasFilters ? t("library.noneFound") : t("library.noneYet")}
             </h3>
             <p className="text-sm text-muted-foreground mb-4">
               {hasFilters
-                ? "Try adjusting your filters or search terms."
-                : "Record your first journal entry to see it here."}
+                ? t("library.adjustFilters")
+                : t("library.recordFirst")}
             </p>
             {hasFilters ? (
               <Button variant="outline" onClick={clearFilters}>
-                Clear Filters
+                {t("common.clearFilters")}
               </Button>
             ) : (
               <Button onClick={() => navigate("/record")} className="gradient-amber">
-                Create Entry
+                {t("library.createEntry")}
               </Button>
             )}
           </motion.div>
@@ -251,7 +275,7 @@ const LibraryPage = () => {
                             <div className="flex items-center gap-2 min-w-0">
                               <span className="text-xl">{emoji}</span>
                               <h4 className="font-bold text-foreground truncate text-base">
-                                {entry.title || "Untitled Entry"}
+                                {titleCase(entry.title || t("entry.untitled"))}
                               </h4>
                             </div>
                             <span className="text-xs text-muted-foreground shrink-0 font-medium">
@@ -282,7 +306,7 @@ const LibraryPage = () => {
                                     "linear-gradient(135deg, hsl(211 90% 55%), hsl(220 85% 45%))",
                                 }}
                               >
-                                🎙 Audio
+                                🎙 {t("entry.audio")}
                               </span>
                             )}
                           </div>

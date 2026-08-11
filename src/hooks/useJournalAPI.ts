@@ -3,7 +3,10 @@ import { getLanguageName, type AppLanguage } from "@/contexts/LanguageContext";
 
 export const useJournalAPI = (appLanguage?: AppLanguage) => {
   const langName = getLanguageName(appLanguage || "en");
-  const transcribeAudio = async (audioBlob: Blob): Promise<string> => {
+  const transcribeAudio = async (
+    audioBlob: Blob,
+    languageOverride?: string
+  ): Promise<{ text: string; detectedLanguage: string | null }> => {
     // Convert blob to base64
     const reader = new FileReader();
     const base64Promise = new Promise<string>((resolve, reject) => {
@@ -16,15 +19,30 @@ export const useJournalAPI = (appLanguage?: AppLanguage) => {
     reader.readAsDataURL(audioBlob);
     const base64Audio = await base64Promise;
 
+    // NOTE: we intentionally do NOT send the app UI language. The transcript must
+    // stay in the language actually spoken; translation happens later on demand.
     const { data, error } = await supabase.functions.invoke('transcribe-audio', {
-      body: { audio: base64Audio, language: appLanguage || 'en' },
+      body: { audio: base64Audio, languageOverride },
     });
 
-    if (error) throw new Error(error.message);
-    if (data.error) throw new Error(data.error);
-    
-    return data.text;
+    if (error) {
+      let message = error.message;
+      try {
+        const ctx = (error as any)?.context;
+        if (ctx) {
+          const body = await ctx.clone?.().json?.();
+          if (body?.error) message = body.error;
+        }
+      } catch {
+        /* keep default message */
+      }
+      throw new Error(message);
+    }
+    if (data?.error) throw new Error(data.error);
+
+    return { text: data.text, detectedLanguage: data.language ?? null };
   };
+
 
   const fetchStyleSamples = async (): Promise<string[]> => {
     try {
@@ -238,7 +256,9 @@ export const useJournalAPI = (appLanguage?: AppLanguage) => {
     location?: any;
     timeOfDay?: string | null;
     durationSeconds?: number | null;
+    detectedLanguage?: string | null;
   }) => {
+
     const { data, error } = await supabase
       .from('journal_entries')
       .insert({
@@ -255,6 +275,7 @@ export const useJournalAPI = (appLanguage?: AppLanguage) => {
         location: entry.location ?? null,
         time_of_day: entry.timeOfDay ?? null,
         duration_seconds: entry.durationSeconds ?? null,
+        detected_language: entry.detectedLanguage ?? null,
       } as any)
       .select()
       .single();
