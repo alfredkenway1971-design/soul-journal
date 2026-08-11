@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Check } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
@@ -15,11 +16,11 @@ interface CoverTemplatesProps {
 }
 
 const templates: { id: CoverTemplate; name: string; description: string }[] = [
-  { id: "nebula", name: "The Nebula", description: "High-contrast lavender & pink gradients" },
-  { id: "minimalist", name: "The Minimalist", description: "Clean white with gold foil text" },
-  { id: "botanical", name: "The Botanical", description: "Soft floral line art" },
-  { id: "midnight", name: "The Midnight", description: "Deep indigo with starfield accents" },
-  { id: "sunrise", name: "The Sunrise", description: "Warm amber to coral gradient" },
+  { id: "nebula", name: "cover.nebula", description: "cover.nebulaDesc" },
+  { id: "minimalist", name: "cover.minimalist", description: "cover.minimalistDesc" },
+  { id: "botanical", name: "cover.botanical", description: "cover.botanicalDesc" },
+  { id: "midnight", name: "cover.midnight", description: "cover.midnightDesc" },
+  { id: "sunrise", name: "cover.sunrise", description: "cover.sunriseDesc" },
 ];
 
 const coverStyles: Record<CoverTemplate, React.CSSProperties> = {
@@ -122,6 +123,7 @@ export const CoverPreview = ({
 };
 
 const CoverTemplates = ({ selected, onSelect, userName, yearRange, avatarUrl, showAvatar, onToggleAvatar }: CoverTemplatesProps) => {
+  const { t } = useLanguage();
   return (
     <div className="space-y-5">
       {/* Template Grid */}
@@ -148,7 +150,7 @@ const CoverTemplates = ({ selected, onSelect, userName, yearRange, avatarUrl, sh
                 <Check className="w-3 h-3 text-primary-foreground" />
               </div>
             )}
-            <p className="text-[9px] font-medium text-center py-1 bg-card">{t.name}</p>
+            <p className="text-[9px] font-medium text-center py-1 bg-card">{t(t.name)}</p>
           </motion.button>
         ))}
       </div>
@@ -166,8 +168,8 @@ const CoverTemplates = ({ selected, onSelect, userName, yearRange, avatarUrl, sh
           <AvatarFallback className="bg-muted text-muted-foreground text-sm">{userName.charAt(0)}</AvatarFallback>
         </Avatar>
         <div className="flex-1 text-left">
-          <p className="text-sm font-medium text-foreground">Soul Avatar on Cover</p>
-          <p className="text-xs text-muted-foreground">Display profile picture</p>
+          <p className="text-sm font-medium text-foreground">{t("cover.soulAvatar")}</p>
+          <p className="text-xs text-muted-foreground">{t("cover.displayProfile")}</p>
         </div>
         <div className={`w-10 h-6 rounded-full transition-colors ${showAvatar ? "bg-primary" : "bg-muted"} relative`}>
           <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${showAvatar ? "translate-x-4" : "translate-x-0.5"}`} />

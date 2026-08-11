@@ -330,7 +330,7 @@ const EntryDetailPage = () => {
                 ) : (
                   <div className="flex items-center gap-2">
                     <h1 className="text-lg font-semibold text-foreground truncate">
-                      {entry.title || "Journal Entry"}
+                      {entry.title || t("entry.untitled")}
                     </h1>
                     <Button
                       variant="ghost"

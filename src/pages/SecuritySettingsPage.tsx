@@ -6,11 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 
 const PIN_LENGTH = 8;
 
 const SecuritySettingsPage = () => {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
@@ -270,7 +272,7 @@ const SecuritySettingsPage = () => {
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div>
-              <h1 className="text-lg font-semibold text-foreground">Security</h1>
+              <h1 className="text-lg font-semibold text-foreground">{t("security.title")}</h1>
               <p className="text-sm text-muted-foreground">
                 {step === "view" && "Protect your journal"}
                 {step === "set" && "Enter new 8-digit PIN"}
@@ -296,7 +298,7 @@ const SecuritySettingsPage = () => {
                   <Lock className="w-6 h-6 text-primary" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-medium text-foreground">PIN Lock</h3>
+                  <h3 className="font-medium text-foreground">{t("security.pinLock")}</h3>
                   <p className="text-sm text-muted-foreground">
                     Require 8-digit PIN to open journal
                   </p>
@@ -336,7 +338,7 @@ const SecuritySettingsPage = () => {
                   <ScanFace className="w-6 h-6 text-accent-foreground" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-medium text-foreground">Biometric Unlock</h3>
+                  <h3 className="font-medium text-foreground">{t("security.biometric")}</h3>
                   <p className="text-sm text-muted-foreground">
                     Use Face ID or Fingerprint
                   </p>

@@ -173,7 +173,7 @@ const HomePage = () => {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <Flame className="w-5 h-5 text-orange-500" />
-              <span className="text-lg font-bold text-foreground">Your Journey So Far</span>
+              <span className="text-lg font-bold text-foreground">{t("home.journey")}</span>
             </div>
           </div>
           <div className="grid grid-cols-3 gap-4 text-center">
@@ -182,14 +182,14 @@ const HomePage = () => {
                 <Flame className={`w-4 h-4 ${currentStreak > 0 ? 'text-orange-500' : 'text-muted-foreground'}`} />
                 <span className="text-2xl font-bold text-foreground">{currentStreak}</span>
               </div>
-              <p className="text-xs text-muted-foreground">Day Streak</p>
+              <p className="text-xs text-muted-foreground">{t("home.dayStreak")}</p>
             </div>
             <div>
               <div className="flex items-center justify-center gap-1 mb-1">
                 <TrendingUp className="w-4 h-4 text-emerald-500" />
                 <span className="text-2xl font-bold text-foreground">{entries.length}</span>
               </div>
-              <p className="text-xs text-muted-foreground">Total Entries</p>
+              <p className="text-xs text-muted-foreground">{t("home.totalEntries")}</p>
             </div>
             <div>
               <div className="flex items-center justify-center gap-1 mb-1">
@@ -199,17 +199,17 @@ const HomePage = () => {
                 </span>
               </div>
               <p className="text-xs text-muted-foreground">
-                {entries.length >= 10 ? "Book Builder" : entries.length >= 5 ? "Coaching" : entries.length >= 3 ? "AI Insights" : "Getting Started"}
+                {entries.length >= 10 ? t("home.bookBuilder") : entries.length >= 5 ? t("home.coaching") : entries.length >= 3 ? t("home.aiInsights") : t("home.gettingStarted")}
               </p>
             </div>
           </div>
           {/* Progressive unlock hint */}
           <div className="mt-3 pt-3 border-t border-border/50">
             <p className="text-xs text-muted-foreground text-center">
-              {entries.length < 3 ? `✨ ${3 - entries.length} more entries to unlock AI Insights` :
-               entries.length < 5 ? `✨ ${5 - entries.length} more entries to unlock Coaching` :
-               entries.length < 10 ? `✨ ${10 - entries.length} more entries to unlock Book Builder` :
-               "🎉 All features unlocked!"}
+              {entries.length < 3 ? `✨ ${3 - entries.length} ${t("home.unlockAIInsights")}` :
+               entries.length < 5 ? `✨ ${5 - entries.length} ${t("home.unlockCoaching")}` :
+               entries.length < 10 ? `✨ ${10 - entries.length} ${t("home.unlockBookBuilder")}` :
+               `🎉 ${t("home.allUnlocked")}`}
             </p>
           </div>
         </motion.div>

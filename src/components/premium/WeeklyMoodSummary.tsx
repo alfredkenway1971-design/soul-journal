@@ -47,7 +47,7 @@ const moodLabels: Record<Mood, string> = {
 
 const WeeklyMoodSummary = () => {
   const { user } = useAuth();
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   const [summary, setSummary] = useState<WeeklySummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
@@ -207,7 +207,7 @@ const WeeklyMoodSummary = () => {
   if (!summary) {
     return (
       <div className="glass-card rounded-2xl p-6 text-center">
-        <p className="text-muted-foreground text-sm">Start journaling to see your weekly mood summary</p>
+        <p className="text-muted-foreground text-sm">{t("weekly.startJournaling")}</p>
       </div>
     );
   }
@@ -223,8 +223,8 @@ const WeeklyMoodSummary = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="font-semibold text-foreground">Weekly Mood Report</h3>
-          <p className="text-sm text-muted-foreground">Last 7 days</p>
+          <h3 className="font-semibold text-foreground">{t("weekly.report")}</h3>
+          <p className="text-sm text-muted-foreground">{t("weekly.last7Days")}</p>
         </div>
         <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/50">
           {getTrendIcon()}
@@ -236,18 +236,18 @@ const WeeklyMoodSummary = () => {
       <div className="flex items-center gap-4 p-4 rounded-xl bg-primary/10">
         <span className="text-4xl">{summary.dominantMood ? moodEmojis[summary.dominantMood] : "😐"}</span>
         <div>
-          <p className="text-sm text-muted-foreground">Most felt mood</p>
-          <p className="font-semibold text-lg">{summary.dominantMood ? moodLabels[summary.dominantMood] : "N/A"}</p>
+          <p className="text-sm text-muted-foreground">{t("weekly.mostFelt")}</p>
+          <p className="font-semibold text-lg">{summary.dominantMood ? t("weekly.mood." + summary.dominantMood) : "N/A"}</p>
         </div>
         <div className="ml-auto text-right">
           <p className="text-2xl font-bold text-primary">{summary.totalEntries}</p>
-          <p className="text-xs text-muted-foreground">entries</p>
+          <p className="text-xs text-muted-foreground">{t("calendar.entries")}</p>
         </div>
       </div>
 
       {/* Mood Distribution */}
       <div className="space-y-2">
-        <p className="text-sm font-medium text-muted-foreground">Mood Distribution</p>
+        <p className="text-sm font-medium text-muted-foreground">{t("weekly.distribution")}</p>
         <div className="space-y-2">
           {(Object.keys(summary.moodDistribution) as Mood[]).map((mood) => {
             const count = summary.moodDistribution[mood];
@@ -274,7 +274,7 @@ const WeeklyMoodSummary = () => {
       <div className="p-4 rounded-xl bg-muted/50 space-y-3">
         <div className="flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-primary" />
-          <span className="text-sm font-medium">Insight</span>
+          <span className="text-sm font-medium">{t("weekly.insight")}</span>
         </div>
         <p className="text-sm text-muted-foreground leading-relaxed">{summary.insight}</p>
         <Button

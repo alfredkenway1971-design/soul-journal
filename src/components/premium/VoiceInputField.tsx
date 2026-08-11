@@ -196,7 +196,7 @@ const VoiceInputField = ({
                   variant="outline"
                   className="rounded-full h-8 w-8"
                   onClick={startRecording}
-                  title="Record voice"
+                  title={t("voiceInput.record")}
                 >
                   <Mic className="w-4 h-4" />
                 </Button>
@@ -207,7 +207,7 @@ const VoiceInputField = ({
           {summarize && (
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <Sparkles className="w-3 h-3" />
-              <span>AI</span>
+              <span>{t("common.ai")}</span>
             </div>
           )}
         </div>

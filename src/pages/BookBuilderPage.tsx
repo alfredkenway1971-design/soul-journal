@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import UpgradePrompt from "@/components/premium/UpgradePrompt";
@@ -24,10 +25,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 type Step = 1 | 2 | 3 | 4;
 
 const stepInfo = [
-  { num: 1, label: "Date Range", icon: Calendar },
-  { num: 2, label: "Cover & Title", icon: Palette },
-  { num: 3, label: "Font & Layout", icon: Type },
-  { num: 4, label: "Preview & Generate", icon: Sparkles },
+  { num: 1, label: "bookBuilder.step1", icon: Calendar },
+  { num: 2, label: "bookBuilder.step2", icon: Palette },
+  { num: 3, label: "bookBuilder.step3", icon: Type },
+  { num: 4, label: "bookBuilder.step4", icon: Sparkles },
 ];
 
 const fontSizeLabels: Record<FontSize, string> = {
@@ -37,6 +38,7 @@ const fontSizeLabels: Record<FontSize, string> = {
 };
 
 const BookBuilderPage = () => {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -256,7 +258,7 @@ const BookBuilderPage = () => {
               <Button variant="ghost" size="icon" className="rounded-full" onClick={() => navigate(-1)}>
                 <ArrowLeft className="w-5 h-5" />
               </Button>
-              <h1 className="text-lg font-semibold text-foreground">Soul Book Builder</h1>
+              <h1 className="text-lg font-semibold text-foreground">{t("bookBuilder.title")}</h1>
             </div>
           </div>
         </header>
@@ -281,8 +283,8 @@ const BookBuilderPage = () => {
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div className="flex-1">
-              <h1 className="text-lg font-semibold text-foreground">Soul Book Builder</h1>
-              <p className="text-sm text-muted-foreground">Step {step} of 4 — {stepInfo[step - 1].label}</p>
+              <h1 className="text-lg font-semibold text-foreground">{t("bookBuilder.title")}</h1>
+              <p className="text-sm text-muted-foreground">Step {step} of 4 — {t(stepInfo[step - 1].label)}</p>
             </div>
           </div>
           {/* Progress */}
@@ -305,13 +307,13 @@ const BookBuilderPage = () => {
               <div className="glass-premium p-6 space-y-5">
                 <div className="text-center">
                   <span className="text-4xl mb-3 block">📅</span>
-                  <h2 className="text-xl font-display font-semibold text-foreground">Select Date Range</h2>
-                  <p className="text-sm text-muted-foreground mt-1">Choose which entries to include in your book</p>
+                  <h2 className="text-xl font-display font-semibold text-foreground">{t("bookBuilder.selectRange")}</h2>
+                  <p className="text-sm text-muted-foreground mt-1">{t("bookBuilder.chooseEntries")}</p>
                 </div>
 
                 <div className="space-y-4">
                   <div>
-                    <label className="text-sm font-medium text-foreground block mb-1.5">From</label>
+                    <label className="text-sm font-medium text-foreground block mb-1.5">{t("bookBuilder.from")}</label>
                     <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="rounded-xl" />
                   </div>
                   <div>
@@ -339,8 +341,8 @@ const BookBuilderPage = () => {
               <div className="glass-premium p-6 space-y-5">
                 <div className="text-center">
                   <span className="text-4xl mb-3 block">🎨</span>
-                  <h2 className="text-xl font-display font-semibold text-foreground">Cover Design</h2>
-                  <p className="text-sm text-muted-foreground mt-1">Choose your book's first impression</p>
+                  <h2 className="text-xl font-display font-semibold text-foreground">{t("bookBuilder.coverDesign")}</h2>
+                  <p className="text-sm text-muted-foreground mt-1">{t("bookBuilder.coverDesc")}</p>
                 </div>
 
                 <div>
@@ -372,7 +374,7 @@ const BookBuilderPage = () => {
               <div className="glass-premium p-6 space-y-5">
                 <div className="text-center">
                   <span className="text-4xl mb-3 block">✍️</span>
-                  <h2 className="text-xl font-display font-semibold text-foreground">Voice of the Book</h2>
+                  <h2 className="text-xl font-display font-semibold text-foreground">{t("bookBuilder.voiceOfBook")}</h2>
                   <p className="text-sm text-muted-foreground mt-1">Select typography and page design</p>
                 </div>
 
@@ -385,7 +387,7 @@ const BookBuilderPage = () => {
                 <div>
                   <p className="text-sm font-medium text-foreground mb-3 flex items-center gap-2">
                     <Type className="w-4 h-4" />
-                    Font Size: <span className="text-primary">{fontSizeLabels[fontSize]}</span>
+                    Font Size: <span className="text-primary">{t("fonts." + fontSize)}</span>
                   </p>
                   <Slider
                     value={[fontSizeSliderValue]}
@@ -438,8 +440,8 @@ const BookBuilderPage = () => {
               <div className="glass-premium p-6 space-y-5">
                 <div className="text-center">
                   <span className="text-4xl mb-3 block">📖</span>
-                  <h2 className="text-xl font-display font-semibold text-foreground">Your Soul Book</h2>
-                  <p className="text-sm text-muted-foreground mt-1">Preview before generating</p>
+                  <h2 className="text-xl font-display font-semibold text-foreground">{t("bookBuilder.yourBook")}</h2>
+                  <p className="text-sm text-muted-foreground mt-1">{t("bookBuilder.previewBefore")}</p>
                 </div>
 
                 <BookPreview

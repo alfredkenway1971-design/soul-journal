@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 
 interface ReminderSettings {
@@ -34,6 +35,7 @@ const TIME_OPTIONS = [
 ];
 
 const RemindersSettingsPage = () => {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
@@ -185,8 +187,8 @@ const RemindersSettingsPage = () => {
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div>
-              <h1 className="text-lg font-semibold text-foreground">Reminders</h1>
-              <p className="text-sm text-muted-foreground">Daily journaling prompts</p>
+              <h1 className="text-lg font-semibold text-foreground">{t("reminders.title")}</h1>
+              <p className="text-sm text-muted-foreground">{t("reminders.dailyPrompts")}</p>
             </div>
           </div>
         </div>
@@ -206,8 +208,8 @@ const RemindersSettingsPage = () => {
                 <Bell className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <Label className="text-base font-medium">Daily Reminders</Label>
-                <p className="text-sm text-muted-foreground">Get notified to journal</p>
+                <Label className="text-base font-medium">{t("reminders.daily")}</Label>
+                <p className="text-sm text-muted-foreground">{t("reminders.getNotified")}</p>
               </div>
             </div>
             <Switch
@@ -238,7 +240,7 @@ const RemindersSettingsPage = () => {
           >
             <div className="flex items-center gap-3 mb-4">
               <Clock className="w-5 h-5 text-primary" />
-              <Label className="text-base font-medium">Reminder Time</Label>
+              <Label className="text-base font-medium">{t("reminders.time")}</Label>
             </div>
             
             <Select
@@ -269,7 +271,7 @@ const RemindersSettingsPage = () => {
           >
             <div className="flex items-center gap-3 mb-4">
               <Calendar className="w-5 h-5 text-primary" />
-              <Label className="text-base font-medium">Active Days</Label>
+              <Label className="text-base font-medium">{t("reminders.activeDays")}</Label>
             </div>
             
             <div className="flex flex-wrap gap-2">
@@ -302,8 +304,8 @@ const RemindersSettingsPage = () => {
                   <Sparkles className="w-5 h-5 text-primary" />
                 </div>
                 <div>
-                  <Label className="text-base font-medium">Contextual reminders</Label>
-                  <p className="text-sm text-muted-foreground">Personalize messages with your last mood</p>
+                  <Label className="text-base font-medium">{t("reminders.contextual")}</Label>
+                  <p className="text-sm text-muted-foreground">{t("reminders.personalize")}</p>
                 </div>
               </div>
               <Switch

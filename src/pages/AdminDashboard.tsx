@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -26,6 +27,7 @@ interface UserData {
 }
 
 const AdminDashboard = () => {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const { isAdmin } = useAuth();
   const { toast } = useToast();
@@ -127,14 +129,14 @@ const AdminDashboard = () => {
   );
 
   const getStatusBadge = (user: UserData) => {
-    if (!user.subscription) return <Badge variant="outline">Free</Badge>;
+    if (!user.subscription) return <Badge variant="outline">{t("admin.free")}</Badge>;
     if (user.subscription.is_manual_grant)
-      return <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30">Manual Grant</Badge>;
+      return <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30">{t("admin.manualGrant")}</Badge>;
     if (user.subscription.status === "active")
-      return <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">Active</Badge>;
+      return <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">{t("admin.active")}</Badge>;
     if (user.subscription.status === "cancelled")
-      return <Badge className="bg-orange-500/20 text-orange-400 border-orange-500/30">Cancelled</Badge>;
-    return <Badge variant="outline">Inactive</Badge>;
+      return <Badge className="bg-orange-500/20 text-orange-400 border-orange-500/30">{t("admin.cancelled")}</Badge>;
+    return <Badge variant="outline">{t("admin.inactive")}</Badge>;
   };
 
   // Mock revenue figures derived from subscription counts (placeholder until Stripe webhooks populate real data)
@@ -161,7 +163,7 @@ const AdminDashboard = () => {
               <h1 className="text-xl font-display font-semibold text-foreground flex items-center justify-center gap-2">
                 Admin Dashboard <Crown className="w-5 h-5 text-primary" />
               </h1>
-              <p className="text-xs text-muted-foreground">Revenue Metrics</p>
+              <p className="text-xs text-muted-foreground">{t("admin.revenueMetrics")}</p>
             </div>
             <Button
               variant="ghost"
@@ -260,11 +262,11 @@ const AdminDashboard = () => {
                   "0 18px 50px -18px hsl(215 60% 30% / 0.3), inset 0 1px 0 rgba(255,255,255,0.85)",
               }}
             >
-              <p className="text-base text-foreground/80 mb-1">Total Revenue</p>
+              <p className="text-base text-foreground/80 mb-1">{t("admin.totalRevenue")}</p>
               <p className="text-6xl font-bold text-primary tracking-tight leading-none my-2">
                 {fmtUSD(totalRevenueThisMonth)}
               </p>
-              <p className="text-sm text-muted-foreground mt-1">This Month</p>
+              <p className="text-sm text-muted-foreground mt-1">{t("admin.thisMonth")}</p>
             </motion.div>
 
             <div className="grid grid-cols-2 gap-3">
@@ -305,19 +307,19 @@ const AdminDashboard = () => {
                   "0 10px 30px -12px hsl(215 60% 30% / 0.22), inset 0 1px 0 rgba(255,255,255,0.85)",
               }}
             >
-              <p className="text-sm text-foreground/80 mb-2">Manual Grants</p>
+              <p className="text-sm text-foreground/80 mb-2">{t("admin.manualGrants")}</p>
               <p className="text-4xl font-bold text-primary tracking-tight">{manualGrants.length}</p>
             </motion.div>
 
             <p className="text-xs text-muted-foreground text-center px-4 pt-1">
-              Revenue metrics will populate once Stripe is connected and subscriptions are active.
+              {t("admin.revenueNote")}
             </p>
           </TabsContent>
 
           {/* Manual Access Tab */}
           <TabsContent value="grants" className="space-y-4">
             <div className="glass-card rounded-xl p-5 space-y-4">
-              <h3 className="font-semibold text-foreground">Grant Free Access</h3>
+              <h3 className="font-semibold text-foreground">{t("admin.grantFreeAccess")}</h3>
               <p className="text-sm text-muted-foreground">
                 Enter the email of a registered user to give them full app access without payment.
               </p>
@@ -329,15 +331,15 @@ const AdminDashboard = () => {
                   className="flex-1"
                 />
                 <Button onClick={handleGrantAccess} disabled={granting || !grantEmail.trim()}>
-                  {granting ? "Granting..." : "Grant Access"}
+                  {granting ? t("admin.granting") : t("admin.grantAccess")}
                 </Button>
               </div>
             </div>
 
             <div className="space-y-2">
-              <h3 className="font-semibold text-foreground">Users with Manual Access</h3>
+              <h3 className="font-semibold text-foreground">{t("admin.usersWithManualAccess")}</h3>
               {manualGrants.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No manual grants yet.</p>
+                <p className="text-sm text-muted-foreground">{t("admin.noManualGrants")}</p>
               ) : (
                 manualGrants.map((user) => (
                   <div key={user.id} className="glass-card rounded-xl p-4 flex items-center gap-4">

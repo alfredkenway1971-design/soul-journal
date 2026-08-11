@@ -255,7 +255,7 @@ const ProfileSettingsPage = () => {
             <p className="text-xs text-muted-foreground uppercase tracking-wider">{t("profile.entries")}</p>
           </div>
           <div className="vitality-card p-4 text-center">
-            <p className="text-2xl font-semibold text-foreground capitalize">Top</p>
+            <p className="text-2xl font-semibold text-foreground capitalize">{t("profile.top")}</p>
             <p className="text-xs text-muted-foreground uppercase tracking-wider">{t("profile.mood")}</p>
           </div>
         </motion.div>

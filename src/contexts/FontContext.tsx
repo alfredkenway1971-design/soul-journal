@@ -67,6 +67,8 @@ const applyFontGlobally = (fontId: string, size: number) => {
   root.style.setProperty("--app-display-font", displayFamily);
   root.style.fontSize = `${size}px`;
   root.setAttribute("data-font", fontId);
+  // Flag cursive fonts so headings can be rendered in Title Case (see index.css)
+  root.setAttribute("data-cursive", opt.cursive ? "true" : "false");
 };
 
 export const FontProvider = ({ children }: { children: ReactNode }) => {

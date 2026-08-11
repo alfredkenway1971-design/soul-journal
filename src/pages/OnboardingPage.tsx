@@ -496,7 +496,7 @@ const OnboardingPage = () => {
           >
             <Clock className="w-8 h-8 text-primary" />
           </motion.div>
-          <h2 className="text-2xl font-bold font-serif text-foreground mb-2 text-center">
+          <h2 className="text-2xl font-bold font-display text-foreground mb-2 text-center">
             When should we remind you to journal?
           </h2>
           <p className="text-muted-foreground text-sm mb-8 text-center max-w-xs">

@@ -145,6 +145,16 @@ body { font-family: inherit; }
   .font-journal {
     font-family: var(--app-display-font, 'Crimson Pro', Georgia, serif);
   }
+
+  /* When a cursive/script font is active, render headings in Title Case
+     so the script typeface reads like a polished title. */
+  html[data-cursive="true"] h1,
+  html[data-cursive="true"] h2,
+  html[data-cursive="true"] h3,
+  html[data-cursive="true"] h4,
+  html[data-cursive="true"] .font-display {
+    text-transform: capitalize;
+  }
 }
 
 @layer components {

@@ -1,8 +1,10 @@
 import { motion } from "framer-motion";
 import { Mic } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const QuickCapture = () => {
+  const { t } = useLanguage();
   const navigate = useNavigate();
 
   return (
@@ -27,9 +29,9 @@ const QuickCapture = () => {
         <Mic className="w-9 h-9 text-primary" strokeWidth={2} />
       </div>
       <div className="flex flex-col">
-        <p className="text-sm text-muted-foreground">Quick Capture</p>
-        <p className="font-bold text-2xl text-foreground leading-tight">Voice Note</p>
-        <p className="text-sm text-muted-foreground">Tap to record your thoughts</p>
+        <p className="text-sm text-muted-foreground">{t("quickCapture.title")}</p>
+        <p className="font-bold text-2xl text-foreground leading-tight">{t("quickCapture.voiceNote")}</p>
+        <p className="text-sm text-muted-foreground">{t("quickCapture.tapToRecord")}</p>
       </div>
     </motion.button>
   );

@@ -6,11 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import UpgradePrompt from "@/components/premium/UpgradePrompt";
 
 const VoiceSettingsPage = () => {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
@@ -274,7 +276,7 @@ const VoiceSettingsPage = () => {
               <Button variant="ghost" size="icon" className="rounded-full" onClick={() => navigate("/settings")}>
                 <ArrowLeft className="w-5 h-5" />
               </Button>
-              <h1 className="text-lg font-semibold text-foreground">Voice Clone</h1>
+              <h1 className="text-lg font-semibold text-foreground">{t("voice.clone")}</h1>
             </div>
           </div>
         </header>
@@ -312,8 +314,8 @@ const VoiceSettingsPage = () => {
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div>
-              <h1 className="text-lg font-semibold text-foreground">Voice Clone</h1>
-              <p className="text-sm text-muted-foreground">Create your voice clone</p>
+              <h1 className="text-lg font-semibold text-foreground">{t("voice.clone")}</h1>
+              <p className="text-sm text-muted-foreground">{t("voice.createClone")}</p>
             </div>
           </div>
         </div>
@@ -333,7 +335,7 @@ const VoiceSettingsPage = () => {
                 <Check className="w-6 h-6 text-primary" />
               </div>
               <div className="flex-1">
-                <h3 className="font-medium text-foreground">Voice Clone Active</h3>
+                <h3 className="font-medium text-foreground">{t("voice.cloneActive")}</h3>
                 <p className="text-sm text-muted-foreground">
                   Your cloned voice is being used for playback
                 </p>
@@ -401,7 +403,7 @@ const VoiceSettingsPage = () => {
             {isRecording && (
               <div className="mb-6">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium">Recording...</span>
+                  <span className="text-sm font-medium">{t("record.recording")}</span>
                   <span className="text-sm text-muted-foreground">
                     {formatTime(recordingTime)} / {formatTime(MAX_RECORDING_TIME)}
                   </span>
@@ -434,7 +436,7 @@ const VoiceSettingsPage = () => {
                     )}
                   </Button>
                   <div className="flex-1">
-                    <p className="font-medium text-sm">Recording Preview</p>
+                    <p className="font-medium text-sm">{t("voice.recordingPreview")}</p>
                     <p className="text-muted-foreground text-xs">
                       {formatTime(recordingTime)} recorded
                     </p>

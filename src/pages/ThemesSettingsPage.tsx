@@ -4,6 +4,7 @@ import { ArrowLeft, Palette, Check, Image, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const THEME_OPTIONS = [
   { id: "warm", name: "Warm Amber", description: "Cozy and inviting", colors: ["hsl(35, 90%, 55%)", "hsl(42, 95%, 60%)"] },
@@ -20,6 +21,7 @@ const BACKGROUND_OPTIONS = [
 ];
 
 const ThemesSettingsPage = () => {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -120,7 +122,7 @@ const ThemesSettingsPage = () => {
             </Button>
             <div>
               <h1 className="text-lg font-semibold text-foreground">Themes & Backgrounds</h1>
-              <p className="text-sm text-muted-foreground">Personalize your journal</p>
+              <p className="text-sm text-muted-foreground">{t("themes.personalize")}</p>
             </div>
           </div>
         </div>
@@ -136,7 +138,7 @@ const ThemesSettingsPage = () => {
         >
           <div className="flex items-center gap-2 mb-2">
             <Palette className="w-5 h-5 text-primary" />
-            <h2 className="font-semibold text-foreground">Color Theme</h2>
+            <h2 className="font-semibold text-foreground">{t("themes.colorTheme")}</h2>
           </div>
           
           <div className="grid grid-cols-1 gap-3">
@@ -181,7 +183,7 @@ const ThemesSettingsPage = () => {
         >
           <div className="flex items-center gap-2 mb-2">
             <Image className="w-5 h-5 text-primary" />
-            <h2 className="font-semibold text-foreground">Background Style</h2>
+            <h2 className="font-semibold text-foreground">{t("themes.background")}</h2>
           </div>
           
           <div className="grid grid-cols-3 gap-3">
@@ -229,7 +231,7 @@ const ThemesSettingsPage = () => {
               <Sparkles className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <h3 className="font-medium text-foreground text-sm">Coming Soon</h3>
+              <h3 className="font-medium text-foreground text-sm">{t("themes.comingSoon")}</h3>
               <p className="text-xs text-muted-foreground mt-1">
                 More themes and custom backgrounds will be available in future updates.
               </p>

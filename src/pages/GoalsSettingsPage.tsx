@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import VoiceInputField from "@/components/premium/VoiceInputField";
 
@@ -61,6 +62,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
 };
 
 const GoalsSettingsPage = () => {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
@@ -209,7 +211,7 @@ const GoalsSettingsPage = () => {
             </Button>
             <div>
               <h1 className="text-lg font-semibold text-foreground">Goals & Interests</h1>
-              <p className="text-sm text-muted-foreground">Personalize your AI coach</p>
+              <p className="text-sm text-muted-foreground">{t("goals.personalize")}</p>
             </div>
           </div>
         </div>
@@ -225,7 +227,7 @@ const GoalsSettingsPage = () => {
         >
           <div className="flex items-center gap-2 mb-2">
             <Target className="w-5 h-5 text-primary" />
-            <h2 className="font-semibold text-foreground">Your Goals</h2>
+            <h2 className="font-semibold text-foreground">{t("goals.yourGoals")}</h2>
           </div>
           <p className="text-sm text-muted-foreground">
             Define what you're working towards. Your AI coach will analyze entries with these goals in mind.
@@ -312,7 +314,7 @@ const GoalsSettingsPage = () => {
         >
           <div className="flex items-center gap-2 mb-2">
             <Sparkles className="w-5 h-5 text-primary" />
-            <h2 className="font-semibold text-foreground">Your Interests</h2>
+            <h2 className="font-semibold text-foreground">{t("goals.yourInterests")}</h2>
           </div>
           <p className="text-sm text-muted-foreground">
             Select topics you care about or add your own for more relevant insights.
@@ -389,7 +391,7 @@ const GoalsSettingsPage = () => {
         >
           <div className="flex items-center gap-2 mb-2">
             <Shield className="w-5 h-5 text-primary" />
-            <h2 className="font-semibold text-foreground">Your Strengths</h2>
+            <h2 className="font-semibold text-foreground">{t("goals.yourStrengths")}</h2>
           </div>
           <p className="text-sm text-muted-foreground">
             What are your core strengths? Your Soul Mirror will remind you of these when you need it most.
@@ -447,7 +449,7 @@ const GoalsSettingsPage = () => {
         >
           <div className="flex items-center gap-2 mb-2">
             <AlertTriangle className="w-5 h-5 text-primary" />
-            <h2 className="font-semibold text-foreground">Your Fears</h2>
+            <h2 className="font-semibold text-foreground">{t("goals.yourFears")}</h2>
           </div>
           <p className="text-sm text-muted-foreground">
             What holds you back? Naming your fears helps your Soul Mirror address them with wisdom.
@@ -505,7 +507,7 @@ const GoalsSettingsPage = () => {
         >
           <div className="flex items-center gap-2 mb-2">
             <Globe className="w-5 h-5 text-primary" />
-            <h2 className="font-semibold text-foreground">Your Worldview</h2>
+            <h2 className="font-semibold text-foreground">{t("goals.yourWorldview")}</h2>
           </div>
           <p className="text-sm text-muted-foreground">
             Your Soul Mirror will draw wisdom from your faith or philosophical tradition.
@@ -556,7 +558,7 @@ const GoalsSettingsPage = () => {
               <Brain className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <h3 className="font-medium text-foreground text-sm">How it works</h3>
+              <h3 className="font-medium text-foreground text-sm">{t("goals.howItWorks")}</h3>
               <p className="text-xs text-muted-foreground mt-1">
                 Your AI coach analyzes journal entries through the lens of your goals, 
                 providing personalized insights, actionable challenges, and wellness alerts 

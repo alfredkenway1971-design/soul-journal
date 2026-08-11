@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { format, differenceInCalendarYears } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -15,6 +16,7 @@ interface PastEntry {
 }
 
 const OnThisDayCard = () => {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [memories, setMemories] = useState<PastEntry[]>([]);
@@ -73,7 +75,7 @@ const OnThisDayCard = () => {
     >
       <div className="flex items-center gap-2 mb-3">
         <Clock className="w-4 h-4 text-primary" />
-        <h2 className="section-label !mb-0">On This Day</h2>
+        <h2 className="section-label !mb-0">{t("onThisDay.title")}</h2>
       </div>
       <div className="space-y-3">
         {memories.map((m) => (
