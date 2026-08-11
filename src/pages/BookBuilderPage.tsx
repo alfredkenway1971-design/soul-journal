@@ -119,11 +119,6 @@ const BookBuilderPage = () => {
       } catch (err) {
         console.error("Entry count failed:", err);
         setEntryCount(null);
-        toast({
-          title: "Could not check entries",
-          description: "Check your connection and try again.",
-          variant: "destructive",
-        });
       } finally {
         setCountingEntries(false);
       }
@@ -260,18 +255,16 @@ const BookBuilderPage = () => {
 
   const handleContinue = () => {
     if (step === 1) {
-      if (countingEntries) {
-        toast({ title: "Checking entries…", description: "Please wait a moment." });
+      if (!user) {
+        toast({ title: "Session expired", description: "Please log in again to continue.", variant: "destructive" });
+        navigate("/auth");
         return;
       }
-      if (entryCount === null) {
-        toast({ title: "Could not check entries", description: "Tap Continue again to retry.", variant: "destructive" });
+      if (!startDate || !endDate) {
+        toast({ title: "Select your date range", description: "Choose both a From and To date.", variant: "destructive" });
         return;
       }
-      if (entryCount === 0) {
-        toast({ title: "No entries in this range", description: "Adjust your date range — no journal entries were found.", variant: "destructive" });
-        return;
-      }
+      // Entry count is informational only — it never blocks the flow.
     }
     setStep((step + 1) as Step);
   };
@@ -366,20 +359,32 @@ const BookBuilderPage = () => {
                 )}
                 {!countingEntries && entryCount !== null && (
                   <motion.div
-                    className={`p-3 rounded-xl text-center text-sm font-medium ${entryCount > 0 ? "bg-primary/10 text-primary" : "bg-destructive/10 text-destructive"}`}
+                    className={`p-3 rounded-xl text-center text-sm font-medium ${entryCount > 0 ? "bg-primary/10 text-primary" : "bg-amber-500/10 text-amber-600"}`}
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                   >
-                    {entryCount > 0 ? `${entryCount} entries found` : "No entries in this range"}
+                    {entryCount > 0 ? `${entryCount} entries found` : "No entries in this range — you can still continue"}
                   </motion.div>
                 )}
-                {!countingEntries && entryCount === null && (
+                {!countingEntries && entryCount === null && user && (
                   <motion.div
-                    className="p-3 rounded-xl text-center text-sm font-medium bg-destructive/10 text-destructive"
+                    className="p-3 rounded-xl text-center text-sm font-medium bg-muted/50 text-muted-foreground"
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                   >
-                    Couldn't check entries — tap Continue to retry
+                    Couldn't verify entry count — Continue anyway
+                  </motion.div>
+                )}
+                {!countingEntries && entryCount === null && !user && (
+                  <motion.div
+                    className="p-3 rounded-xl text-center text-sm font-medium bg-destructive/10 text-destructive space-y-2"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                  >
+                    <p>Your session expired — please log in again.</p>
+                    <Button size="sm" className="rounded-full" onClick={() => navigate("/auth")}>
+                      Log in
+                    </Button>
                   </motion.div>
                 )}
               </div>
