@@ -16,10 +16,12 @@ interface RecentEntryCardProps {
 const moodEmoji: Record<string, string> = {
   happy: "😄",
   good: "😊",
+  excited: "🤩",
   fine: "🙂",
   calm: "😌",
   sad: "😔",
   anxious: "😰",
+  angry: "😠",
   unhappy: "😢",
 };
 

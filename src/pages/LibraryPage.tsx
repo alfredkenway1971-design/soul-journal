@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { BookOpen, Search, CalendarIcon, X, FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { format, isSameDay, startOfDay, endOfDay } from "date-fns";
+import { format, isSameDay } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +14,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import BottomNav from "@/components/BottomNav";
 import MoodFilterBar, { type MoodFilterValue } from "@/components/MoodFilterBar";
+import RecentEntryCard from "@/components/premium/RecentEntryCard";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useTitleCase } from "@/hooks/useTitleCase";
 import type { Mood } from "@/components/MoodSelector";
@@ -28,14 +29,11 @@ interface JournalEntry {
   audio_url: string | null;
 }
 
-const moodEmojis: Record<string, string> = {
-  happy: "😊",
-  excited: "🤩",
-  calm: "😌",
-  fine: "🙂",
-  anxious: "😰",
-  sad: "😢",
-  angry: "😠",
+const fmtDur = (s?: number | null) => {
+  if (!s || s <= 0) return undefined;
+  const m = Math.floor(s / 60);
+  const sec = s % 60;
+  return `${m}:${sec.toString().padStart(2, "0")}`;
 };
 
 const LibraryPage = () => {
@@ -75,7 +73,7 @@ const LibraryPage = () => {
     try {
       const { data, error } = await supabase
         .from("journal_entries")
-        .select("id, title, enhanced_text, original_transcription, mood, created_at, audio_url")
+        .select("id, title, enhanced_text, original_transcription, mood, created_at, audio_url, duration_seconds")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
 
@@ -113,17 +111,6 @@ const LibraryPage = () => {
 
     return result;
   }, [entries, selectedDate, searchQuery, moodFilter]);
-
-  // Group entries by date
-  const groupedEntries = useMemo(() => {
-    const groups: Record<string, JournalEntry[]> = {};
-    filteredEntries.forEach((entry) => {
-      const dateKey = format(new Date(entry.created_at), "yyyy-MM-dd");
-      if (!groups[dateKey]) groups[dateKey] = [];
-      groups[dateKey].push(entry);
-    });
-    return groups;
-  }, [filteredEntries]);
 
   const clearFilters = () => {
     setSelectedDate(undefined);
@@ -239,83 +226,33 @@ const LibraryPage = () => {
             )}
           </motion.div>
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-3 pt-1">
             <AnimatePresence>
-              {Object.entries(groupedEntries).map(([dateKey, dayEntries], groupIndex) => (
-                <motion.div
-                  key={dateKey}
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: groupIndex * 0.05 }}
-                >
-                  <h3 className="text-base font-semibold text-foreground mb-3 px-1">
-                    {format(new Date(dateKey), "EEEE, MMMM d, yyyy")}
-                  </h3>
-                  <div className="space-y-3">
-                    {dayEntries.map((entry, i) => {
-                      const preview =
-                        entry.enhanced_text ||
-                        entry.original_transcription ||
-                        "";
-                      const emoji = entry.mood
-                        ? moodEmojis[entry.mood] || "🙂"
-                        : "📝";
+              {filteredEntries.map((entry, i) => {
+                const preview =
+                  entry.enhanced_text ||
+                  entry.original_transcription ||
+                  "";
 
-                      return (
-                        <motion.button
-                          key={entry.id}
-                          className="w-full glass-premium p-4 text-left"
-                          onClick={() => navigate(`/entry/${entry.id}`)}
-                          whileTap={{ scale: 0.99 }}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: groupIndex * 0.05 + i * 0.03 }}
-                        >
-                          <div className="flex items-center justify-between gap-2 mb-1.5">
-                            <div className="flex items-center gap-2 min-w-0">
-                              <span className="text-xl">{emoji}</span>
-                              <h4 className="font-bold text-foreground truncate text-base">
-                                {titleCase(entry.title || t("entry.untitled"))}
-                              </h4>
-                            </div>
-                            <span className="text-xs text-muted-foreground shrink-0 font-medium">
-                              {format(new Date(entry.created_at), "h:mm a")}
-                            </span>
-                          </div>
-                          <p className="text-sm text-foreground/80 line-clamp-2 mb-3">
-                            {preview.substring(0, 120)}
-                            {preview.length > 120 ? "..." : ""}
-                          </p>
-                          <div className="flex items-center gap-2">
-                            {entry.mood && (
-                              <span
-                                className="text-xs font-medium capitalize px-3 py-1 rounded-full text-white"
-                                style={{
-                                  background:
-                                    "linear-gradient(135deg, hsl(211 90% 55%), hsl(220 85% 45%))",
-                                }}
-                              >
-                                {entry.mood}
-                              </span>
-                            )}
-                            {entry.audio_url && (
-                              <span
-                                className="text-xs font-medium px-3 py-1 rounded-full text-white inline-flex items-center gap-1"
-                                style={{
-                                  background:
-                                    "linear-gradient(135deg, hsl(211 90% 55%), hsl(220 85% 45%))",
-                                }}
-                              >
-                                🎙 {t("entry.audio")}
-                              </span>
-                            )}
-                          </div>
-                        </motion.button>
-                      );
-                    })}
-                  </div>
-                </motion.div>
-              ))}
+                return (
+                  <motion.div
+                    key={entry.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: Math.min(i * 0.03, 0.3) }}
+                  >
+                    <RecentEntryCard
+                      id={entry.id}
+                      title={entry.title || t("entry.untitled")}
+                      preview={preview}
+                      date={new Date(entry.created_at)}
+                      duration={fmtDur(entry.duration_seconds)}
+                      mood={entry.mood || "fine"}
+                      onClick={() => navigate(`/entry/${entry.id}`)}
+                    />
+                  </motion.div>
+                );
+              })}
             </AnimatePresence>
           </div>
         )}

@@ -160,9 +160,10 @@ body { font-family: inherit; }
 @layer components {
   /* Premium glass card */
   .glass-card {
-    background: linear-gradient(135deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.3) 100%);
-    @apply backdrop-blur-xl border border-white/50;
-    box-shadow: 0 6px 28px -10px hsl(215 50% 20% / 0.12), inset 0 1px 0 rgba(255,255,255,0.55);
+    background: linear-gradient(135deg, rgba(255,255,255,0.62) 0%, rgba(255,255,255,0.42) 100%);
+    @apply backdrop-blur-xl border;
+    border-color: hsl(215 40% 78% / 0.5);
+    box-shadow: 0 10px 30px -10px hsl(215 50% 25% / 0.22), inset 0 1px 0 rgba(255,255,255,0.6);
     border-radius: 1.5rem;
   }
 
@@ -175,17 +176,17 @@ body { font-family: inherit; }
 
   /* Premium glassmorphism — frosted sky */
   .glass-premium {
-    background: linear-gradient(135deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.35) 100%);
+    background: linear-gradient(135deg, rgba(255,255,255,0.68) 0%, rgba(255,255,255,0.5) 100%);
     backdrop-filter: blur(24px) saturate(140%);
     -webkit-backdrop-filter: blur(24px) saturate(140%);
-    border: 1px solid rgba(255, 255, 255, 0.55);
-    box-shadow: 0 8px 32px -8px hsl(215 60% 30% / 0.18), inset 0 1px 0 rgba(255,255,255,0.6);
+    border: 1px solid hsl(215 40% 78% / 0.5);
+    box-shadow: 0 10px 30px -10px hsl(215 50% 25% / 0.25), inset 0 1px 0 rgba(255,255,255,0.65);
     border-radius: 1.5rem;
   }
 
   .dark .glass-premium {
-    background: linear-gradient(135deg, rgba(30,50,80,0.55) 0%, rgba(20,35,60,0.4) 100%);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: linear-gradient(135deg, rgba(30,50,80,0.6) 0%, rgba(20,35,60,0.45) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.18);
   }
 
   /* Insight card gradient */
