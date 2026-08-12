@@ -9,7 +9,7 @@ const FISH_KEY = process.env.FISH_AUDIO_API_KEY || "";
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || "";
 const SUPABASE_ANON = process.env.VITE_SUPABASE_PUBLISHABLE_KEY || "";
 
-export const config = { maxDuration: 60 };
+export const config = { maxDuration: 300 };
 
 async function requireUser(authHeader: string | undefined) {
   if (!authHeader?.startsWith("Bearer ")) return null;
