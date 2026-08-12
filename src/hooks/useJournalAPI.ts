@@ -173,11 +173,20 @@ export const useJournalAPI = (appLanguage?: AppLanguage) => {
       }
     }
 
-    const { data, error } = await supabase.functions.invoke('generate-voice', {
-      body: { text, voiceId: selectedVoiceId, entryId, textType, language: appLanguage || 'en', gender: userGender },
+    const { data: { session } } = await supabase.auth.getSession();
+    const accessToken = session?.access_token;
+
+    const response = await fetch('/api/generate-voice', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+      },
+      body: JSON.stringify({ text, voiceId: selectedVoiceId, language: appLanguage || 'en', gender: userGender }),
     });
 
-    if (error) throw new Error(error.message);
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Voice generation failed');
     if (data.error) throw new Error(data.error);
     
     return `data:audio/mpeg;base64,${data.audioContent}`;

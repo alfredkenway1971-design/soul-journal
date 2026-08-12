@@ -184,15 +184,24 @@ const VoiceSettingsPage = () => {
       reader.readAsDataURL(audioBlob);
       const base64Audio = await base64Promise;
       
-      // Call edge function to create voice clone
-      const { data, error } = await supabase.functions.invoke('create-voice-clone', {
-        body: { 
+      // Call Vercel function to create voice clone
+      const { data: { session } } = await supabase.auth.getSession();
+      const accessToken = session?.access_token;
+
+      const response = await fetch('/api/create-voice-clone', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+        },
+        body: JSON.stringify({ 
           audio: base64Audio,
           name: `Voice Clone - ${user.email}`,
-        },
+        }),
       });
-      
-      if (error) throw error;
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Voice cloning failed');
       if (data.error) throw new Error(data.error);
       
       // Save voice clone ID to profile
