@@ -62,12 +62,13 @@ export default async function handler(req: any, res: any) {
     const { text, voiceId, language } = req.body || {};
     if (!text) throw new Error("No text provided");
 
-    // User's cloned voice (Fish model id) or the built-in default voice
+    // User's cloned voice (stored as dashed UUID -> strip dashes for Fish) or the built-in default
     const effectiveVoiceId = voiceId || "default";
+    const fishVoiceId = effectiveVoiceId === "default" ? "default" : effectiveVoiceId.replace(/-/g, "");
 
     let audioBytes: Uint8Array;
     try {
-      audioBytes = await generateWithFish(text, effectiveVoiceId);
+      audioBytes = await generateWithFish(text, fishVoiceId);
     } catch (fishError) {
       console.warn("Fish Audio failed, retrying with default voice:", fishError);
       try {

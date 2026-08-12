@@ -17,6 +17,14 @@ async function requireUser(authHeader: string | undefined) {
   return data.user;
 }
 
+// Fish model ids are 32-char hex; profiles.voice_clone_id (live DB) only accepts
+// dashed UUIDs. Format as UUID for storage; generate-voice strips dashes before
+// calling Fish again.
+const toUuid = (id: string): string =>
+  /^[0-9a-f]{32}$/i.test(id)
+    ? `${id.slice(0, 8)}-${id.slice(8, 12)}-${id.slice(12, 16)}-${id.slice(16, 20)}-${id.slice(20)}`
+    : id;
+
 export default async function handler(req: any, res: any) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -61,7 +69,7 @@ export default async function handler(req: any, res: any) {
     }
 
     const result = await response.json();
-    const voiceId = result._id;
+    const voiceId = toUuid(result._id);
     console.log("Voice clone created:", voiceId, "state:", result.state);
 
     return res.status(200).json({
