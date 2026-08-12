@@ -185,7 +185,12 @@ export const useJournalAPI = (appLanguage?: AppLanguage) => {
       body: JSON.stringify({ text, voiceId: selectedVoiceId, language: appLanguage || 'en', gender: userGender }),
     });
 
-    const data = await response.json();
+    let data: any;
+    try {
+      data = await response.json();
+    } catch {
+      data = { error: response.ok ? "Voice generation failed" : `Voice generation failed (${response.status})` };
+    }
     if (!response.ok) throw new Error(data.error || 'Voice generation failed');
     if (data.error) throw new Error(data.error);
     

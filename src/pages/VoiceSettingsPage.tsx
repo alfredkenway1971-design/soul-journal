@@ -200,8 +200,13 @@ const VoiceSettingsPage = () => {
         }),
       });
 
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Voice cloning failed');
+      let data: any;
+      try {
+        data = await response.json();
+      } catch {
+        data = { error: response.ok ? "Voice cloning failed" : `Voice cloning failed (${response.status})` };
+      }
+      if (!response.ok) throw new Error(data.error || "Voice cloning failed");
       if (data.error) throw new Error(data.error);
       
       // Save voice clone ID to profile
