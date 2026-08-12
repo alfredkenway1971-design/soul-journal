@@ -35,15 +35,15 @@ serve(async (req) => {
       );
     }
 
-    const elevenLabsApiKey = Deno.env.get('ELEVENLABS_API_KEY');
-    if (!elevenLabsApiKey) {
+    const fishApiKey = Deno.env.get('FISH_AUDIO_API_KEY');
+    if (!fishApiKey) {
       return new Response(
-        JSON.stringify({ error: 'ElevenLabs API key not configured' }),
+        JSON.stringify({ error: 'Fish Audio API key not configured' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Convert base64 to blob
+    // Convert base64 to blob (browser MediaRecorder produces webm/opus — Fish accepts it)
     const binaryString = atob(audio);
     const bytes = new Uint8Array(binaryString.length);
     for (let i = 0; i < binaryString.length; i++) {
@@ -51,25 +51,30 @@ serve(async (req) => {
     }
     const audioBlob = new Blob([bytes], { type: 'audio/webm' });
 
-    // Create form data for ElevenLabs Voice Clone (Instant Voice Cloning)
+    // Fish Audio: create a reusable voice model from the sample (fast training)
     const formData = new FormData();
-    formData.append('files', audioBlob, 'voice_sample.webm');
-    formData.append('name', name || 'My Voice Clone');
+    formData.append('type', 'tts');
+    formData.append('title', name || 'My Voice Clone');
     formData.append('description', 'Voice clone created from journal app');
+    formData.append('visibility', 'private');
+    formData.append('train_mode', 'fast');
+    formData.append('voices', audioBlob, 'voice_sample.webm');
 
-    console.log('Creating voice clone with ElevenLabs...');
+    console.log('Creating voice clone with Fish Audio...');
 
-    const response = await fetch('https://api.elevenlabs.io/v1/voices/add', {
+    const authHeaderValue = "Bearer" + " " + fishApiKey;
+
+    const response = await fetch('https://api.fish.audio/model', {
       method: 'POST',
       headers: {
-        'xi-api-key': elevenLabsApiKey,
+        Authorization: authHeaderValue,
       },
       body: formData,
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('ElevenLabs API error:', response.status, errorText);
+      console.error('Fish Audio API error:', response.status, errorText);
       return new Response(
         JSON.stringify({ error: 'Voice cloning service unavailable' }),
         { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -77,11 +82,27 @@ serve(async (req) => {
     }
 
     const result = await response.json();
-    console.log('Voice clone created:', result.voice_id);
+    const voiceId = result._id;
+    console.log('Voice clone created:', voiceId, 'state:', result.state);
+
+    // train_mode=fast usually returns 'trained'; poll briefly if still training
+    if (voiceId && result.state && result.state !== 'trained' && result.state !== 'failed') {
+      for (let i = 0; i < 5; i++) {
+        await new Promise((r) => setTimeout(r, 3000));
+        const pollResponse = await fetch(`https://api.fish.audio/model/${voiceId}`, {
+          headers: { Authorization: authHeaderValue },
+        });
+        if (pollResponse.ok) {
+          const pollResult = await pollResponse.json();
+          console.log('Voice clone state poll:', pollResult.state);
+          if (pollResult.state === 'trained' || pollResult.state === 'failed') break;
+        }
+      }
+    }
 
     return new Response(
       JSON.stringify({ 
-        voiceId: result.voice_id,
+        voiceId,
         message: 'Voice clone created successfully'
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

@@ -15,59 +15,42 @@ async function requireUser(req: Request) {
   return data.user;
 }
 
-// Gender-based voice IDs for ElevenLabs
-const VOICE_IDS = {
-  en: {
-    male: 'Cz0K1kOv9tD8l0b5Qu53',   // Jon – Canadian English male
-    female: 'TgnhEILA8UwUqIMi20rp',   // Jenna – Canadian English female
-  },
-  fr: {
-    male: '6aRkp7Pz4MBOSpUyJCTO',    // Rafiki – French male
-    female: 'HuLbOdhRlvQQN8oPP0AJ',   // Claire – French female
-  },
-};
-
-function pickDefaultVoiceId(language: string, gender: string): string {
-  const lang = language?.startsWith('fr') ? 'fr' : 'en';
-  const g = gender === 'female' ? 'female' : 'male';
-  return VOICE_IDS[lang][g];
+// Fish Audio: 'default' uses the model's built-in multilingual voice;
+// a user's cloned voice (Fish model id) is passed through as-is.
+function pickDefaultVoiceId(_language: string, _gender: string): string {
+  return 'default';
 }
 
-async function generateWithElevenLabs(text: string, voiceId: string): Promise<Uint8Array> {
-  const elevenLabsApiKey = Deno.env.get('ELEVENLABS_API_KEY');
-  if (!elevenLabsApiKey) throw new Error('ElevenLabs API key not configured');
+async function generateWithFish(text: string, voiceId: string): Promise<Uint8Array> {
+  const fishApiKey = Deno.env.get('FISH_AUDIO_API_KEY');
+  if (!fishApiKey) throw new Error('Fish Audio API key not configured');
 
-  console.log('Generating voice with ElevenLabs, voice ID:', voiceId);
+  console.log('Generating voice with Fish Audio, voice ID:', voiceId);
 
+  // ElevenLabs-compatible endpoint; the free model (s2.1-pro-free) costs $0
   const response = await fetch(
-    `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=mp3_44100_128`,
+    `https://api.fish.audio/compat/elevenlabs/v1/text-to-speech/${voiceId}?output_format=mp3_44100_128`,
     {
       method: 'POST',
       headers: {
-        'xi-api-key': elevenLabsApiKey,
+        'xi-api-key': fishApiKey,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         text,
-        model_id: 'eleven_flash_v2_5',
-        voice_settings: {
-          stability: 0.5,
-          similarity_boost: 0.75,
-          style: 0.5,
-          use_speaker_boost: true,
-        },
+        model_id: 'fish-audio/s2.1-pro-free',
       }),
     }
   );
 
   if (!response.ok) {
     const errorText = await response.text();
-    console.error('ElevenLabs API error:', response.status, errorText);
+    console.error('Fish Audio API error:', response.status, errorText);
     throw new Error('UPSTREAM_TTS_ERROR');
   }
 
   const audioBuffer = await response.arrayBuffer();
-  console.log('ElevenLabs voice generation successful');
+  console.log('Fish Audio voice generation successful');
   return new Uint8Array(audioBuffer);
 }
 
@@ -134,13 +117,18 @@ serve(async (req) => {
     // 2. Otherwise pick gender+language default
     const effectiveVoiceId = voiceId || pickDefaultVoiceId(language || 'en', gender || 'male');
 
-    // Generate audio bytes
+    // Generate audio bytes (Fish Audio primary, default-voice retry, Cartesia fallback)
     let audioBytes: Uint8Array;
     try {
-      audioBytes = await generateWithElevenLabs(text, effectiveVoiceId);
-    } catch (elevenLabsError) {
-      console.warn('ElevenLabs failed, switching to Cartesia fallback:', elevenLabsError);
-      audioBytes = await generateWithCartesia(text, language || 'en');
+      audioBytes = await generateWithFish(text, effectiveVoiceId);
+    } catch (fishError) {
+      console.warn('Fish Audio failed, retrying with default voice:', fishError);
+      try {
+        audioBytes = await generateWithFish(text, 'default');
+      } catch (retryError) {
+        console.warn('Fish Audio retry failed, switching to Cartesia fallback:', retryError);
+        audioBytes = await generateWithCartesia(text, language || 'en');
+      }
     }
 
     // If entryId provided, cache to storage and update DB (verify ownership first)
