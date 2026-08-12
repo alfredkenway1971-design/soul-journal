@@ -12,6 +12,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage, LANGUAGES } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useSubscription } from "@/contexts/SubscriptionContext";
+import LockedInsightCard from "@/components/premium/LockedInsightCard";
 
 const ONBOARDING_QUESTIONS = [
   {
@@ -82,6 +84,7 @@ const OnboardingPage = () => {
   const { user } = useAuth();
   const { t, language, setLanguage } = useLanguage();
   const { toast } = useToast();
+  const { isPremium } = useSubscription();
 
   const [step, setStep] = useState<Step>(0);
   const [direction, setDirection] = useState(1);
@@ -648,6 +651,9 @@ const OnboardingPage = () => {
               <p className="text-sm text-muted-foreground">{soulProfile.personality_type}</p>
             </motion.div>
           )}
+
+          {/* Premium locked preview */}
+          {!isPremium && <LockedInsightCard />}
         </div>
       );
     }

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useJournalAPI } from "@/hooks/useJournalAPI";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -9,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import BottomNav from "@/components/BottomNav";
 import AppLanguageSwitcher from "@/components/AppLanguageSwitcher";
 import QuickCapture from "@/components/premium/QuickCapture";
+import UpgradePrompt from "@/components/premium/UpgradePrompt";
 import RecentEntryCard from "@/components/premium/RecentEntryCard";
 import AIInsightCard from "@/components/premium/AIInsightCard";
 import WeatherBadge from "@/components/WeatherBadge";
@@ -33,6 +35,7 @@ const HomePage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { t, language } = useLanguage();
+  const { isPremium } = useSubscription();
   const api = useJournalAPI(language);
   
   
@@ -124,6 +127,18 @@ const HomePage = () => {
     return streak;
   })();
 
+  // Win-moment upsell: contextual premium prompt after a streak/entry "win", capped at 1x/day
+  const [showWinUpsell, setShowWinUpsell] = useState(false);
+  useEffect(() => {
+    if (isPremium) return;
+    const hasWin = currentStreak >= 2 || entries.length >= 3;
+    if (!hasWin) return;
+    const key = `sj-win-upsell-${new Date().toDateString()}`;
+    if (localStorage.getItem(key)) return;
+    localStorage.setItem(key, "1");
+    setShowWinUpsell(true);
+  }, [isPremium, currentStreak, entries.length]);
+
   return (
     <div className="min-h-screen gradient-warm pb-32">
       {/* Header */}
@@ -214,6 +229,17 @@ const HomePage = () => {
           </div>
         </motion.div>
       </section>
+
+      {/* Win-moment upsell */}
+      {showWinUpsell && (
+        <section className="max-w-lg mx-auto px-5 mt-3">
+          <UpgradePrompt
+            compact
+            feature={currentStreak >= 2 ? t("home.dayStreak") : t("home.totalEntries")}
+            description={currentStreak >= 2 ? t("upgrade.winStreak") : t("upgrade.winEntries")}
+          />
+        </section>
+      )}
 
       {/* Content */}
       <main className="max-w-lg mx-auto px-5 space-y-5">

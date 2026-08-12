@@ -292,6 +292,14 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "Hinduism",
     "onboarding.worldviewSpiritual": "Spiritual",
     "onboarding.worldviewNoPref": "No preference",
+    // Upgrade touchpoints
+    "upgrade.badge": "Upgrade",
+    "upgrade.winStreak": "See deeper patterns in your journey with Premium",
+    "upgrade.winEntries": "Unlock AI insights & mood trends with Premium",
+    "upgrade.lockedTitle": "Your Deeper Soul Map",
+    "upgrade.lockedDesc": "Unlock this deeper analysis of your personality, strengths and hidden patterns",
+    "upgrade.lockedLine1": "Your emotional patterns reveal a quiet strength",
+    "upgrade.lockedLine2": "Hidden theme: you think clearest after rest",
   },
   fr: {
     "nav.home": "Accueil",
@@ -545,6 +553,14 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "Hindouisme",
     "onboarding.worldviewSpiritual": "Spirituel",
     "onboarding.worldviewNoPref": "Pas de préférence",
+    // Upgrade touchpoints
+    "upgrade.badge": "Premium",
+    "upgrade.winStreak": "Voyez des tendances plus profondes dans votre parcours avec Premium",
+    "upgrade.winEntries": "Débloquez les insights IA et les tendances d'humeur avec Premium",
+    "upgrade.lockedTitle": "Votre carte d'âme profonde",
+    "upgrade.lockedDesc": "Débloquez cette analyse plus profonde de votre personnalité, de vos forces et de vos schémas cachés",
+    "upgrade.lockedLine1": "Vos émotions révèlent une force tranquille",
+    "upgrade.lockedLine2": "Thème caché : vous pensez le plus clairement après le repos",
   },
   es: {
     "nav.home": "Inicio",
@@ -798,6 +814,14 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "Hinduismo",
     "onboarding.worldviewSpiritual": "Espiritual",
     "onboarding.worldviewNoPref": "Sin preferencia",
+    // Upgrade touchpoints
+    "upgrade.badge": "Premium",
+    "upgrade.winStreak": "Descubre patrones más profundos en tu camino con Premium",
+    "upgrade.winEntries": "Desbloquea insights de IA y tendencias de humor con Premium",
+    "upgrade.lockedTitle": "Tu mapa del alma profundo",
+    "upgrade.lockedDesc": "Desbloquea este análisis más profundo de tu personalidad, fortalezas y patrones ocultos",
+    "upgrade.lockedLine1": "Tus emociones revelan una fuerza tranquila",
+    "upgrade.lockedLine2": "Tema oculto: piensas con claridad tras descansar",
   },
   ar: {
     "nav.home": "الرئيسية",
@@ -1051,6 +1075,14 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "الهندوسية",
     "onboarding.worldviewSpiritual": "روحاني",
     "onboarding.worldviewNoPref": "بدون تفضيل",
+    // Upgrade touchpoints
+    "upgrade.badge": "الترقية",
+    "upgrade.winStreak": "اكتشف أنماطًا أعمق في رحلتك مع Premium",
+    "upgrade.winEntries": "افتح رؤى الذكاء الاصطناعي واتجاهات المزاج مع Premium",
+    "upgrade.lockedTitle": "خريطة روحك العميقة",
+    "upgrade.lockedDesc": "افتح هذا التحليل الأعمق لشخصيتك ونقاط قوتك وأنماطك المخفية",
+    "upgrade.lockedLine1": "تكشف مشاعرك قوة هادئة",
+    "upgrade.lockedLine2": "موضوع خفي: تفكيرك أوضح بعد الراحة",
   },
   zh: {
     "nav.home": "首页",
@@ -1304,6 +1336,14 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "印度教",
     "onboarding.worldviewSpiritual": "灵性",
     "onboarding.worldviewNoPref": "无偏好",
+    // Upgrade touchpoints
+    "upgrade.badge": "升级",
+    "upgrade.winStreak": "使用 Premium 发现你旅程中更深层的模式",
+    "upgrade.winEntries": "使用 Premium 解锁 AI 洞察与情绪趋势",
+    "upgrade.lockedTitle": "你的深层灵魂地图",
+    "upgrade.lockedDesc": "使用 Premium 解锁对你性格、优势与隐藏模式的更深入分析",
+    "upgrade.lockedLine1": "你的情感模式揭示了一种宁静的力量",
+    "upgrade.lockedLine2": "隐藏主题：休息后你的思维最清晰",
   },
   ja: {
     "nav.home": "ホーム",
@@ -1557,6 +1597,14 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "ヒンドゥー教",
     "onboarding.worldviewSpiritual": "スピリチュアル",
     "onboarding.worldviewNoPref": "特になし",
+    // Upgrade touchpoints
+    "upgrade.badge": "アップグレード",
+    "upgrade.winStreak": "Premiumで旅のより深いパターンを見つけよう",
+    "upgrade.winEntries": "PremiumでAIインサイトと気分の傾向を解放",
+    "upgrade.lockedTitle": "あなたの深層ソウルマップ",
+    "upgrade.lockedDesc": "Premiumで、性格・強み・隠れたパターンのより深い分析を解放",
+    "upgrade.lockedLine1": "感情のパターンが静かな強さを明らかにします",
+    "upgrade.lockedLine2": "隠れたテーマ：休息後に思考が最も明晰に",
   },
   sw: {
     "nav.home": "Nyumbani",
@@ -1810,6 +1858,14 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "Uhindu",
     "onboarding.worldviewSpiritual": "Kiroho",
     "onboarding.worldviewNoPref": "Bila upendeleo",
+    // Upgrade touchpoints
+    "upgrade.badge": "Boresha",
+    "upgrade.winStreak": "Ona mifumo ya ndani zaidi katika safari yako na Premium",
+    "upgrade.winEntries": "Fungua maarifa ya AI na mwenendo wa hisia na Premium",
+    "upgrade.lockedTitle": "Ramani yako ya kina ya roho",
+    "upgrade.lockedDesc": "Fungua uchambuzi huu wa ndani zaidi wa utu wako, nguvu zako na mifumo iliyofichika",
+    "upgrade.lockedLine1": "Hisia zako zinaonyesha nguvu ya utulivu",
+    "upgrade.lockedLine2": "Mada iliyofichika: unafikiri vizuri zaidi baada ya kupumzika",
   },
   de: {
     "nav.home": "Startseite",
@@ -2063,6 +2119,14 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "Hinduismus",
     "onboarding.worldviewSpiritual": "Spirituell",
     "onboarding.worldviewNoPref": "Keine Präferenz",
+    // Upgrade touchpoints
+    "upgrade.badge": "Premium",
+    "upgrade.winStreak": "Entdecke tiefere Muster in deiner Reise mit Premium",
+    "upgrade.winEntries": "Schalte KI-Insights und Stimmungstrends mit Premium frei",
+    "upgrade.lockedTitle": "Deine tiefere Seelenkarte",
+    "upgrade.lockedDesc": "Schalte diese tiefere Analyse deiner Persönlichkeit, Stärken und verborgenen Muster frei",
+    "upgrade.lockedLine1": "Deine Gefühlsmuster offenbaren eine stille Stärke",
+    "upgrade.lockedLine2": "Verstecktes Thema: Nach Ruhe denkst du am klarsten",
   },
 };
 

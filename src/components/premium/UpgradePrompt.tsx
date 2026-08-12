@@ -21,7 +21,7 @@ const UpgradePrompt = ({ feature, description, compact = false }: UpgradePromptP
       >
         <Lock className="w-5 h-5 text-primary shrink-0" />
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-foreground">{feature} is a Premium feature</p>
+          <p className="text-sm font-medium text-foreground">{description || `${feature} is a Premium feature`}</p>
         </div>
         <Button size="sm" onClick={() => navigate("/pricing")} className="shrink-0">
           Upgrade

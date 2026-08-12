@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Home, Calendar, BookOpen, User, Mic } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
+import UpgradeBadge from "@/components/premium/UpgradeBadge";
 
 const BottomNav = () => {
   const location = useLocation();
@@ -28,6 +29,7 @@ const BottomNav = () => {
           borderTop: "1px solid rgba(255,255,255,0.55)",
         }}
       >
+        <UpgradeBadge />
         <div className="flex items-end justify-between relative">
           {navItems.map((item) => {
             const isActive = location.pathname === item.path;
