@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { TrendingUp, TrendingDown, Minus, Sparkles, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { invokeEnhance } from "@/lib/aiText";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage, getLanguageName } from "@/contexts/LanguageContext";
 import type { Mood } from "@/components/MoodSelector";
@@ -164,17 +165,19 @@ const WeeklyMoodSummary = () => {
           .map(e => `Mood: ${e.mood}, Content: ${e.enhanced_text?.slice(0, 200) || 'N/A'}`)
           .join('\n');
 
-        const { data, error } = await supabase.functions.invoke('enhance-text', {
-          body: {
+        try {
+          const data = await invokeEnhance({
             text: entrySummary,
             tone: 'analysis',
             customPrompt: 'Analyze these journal entries from the past week and provide a brief, empathetic 2-sentence insight about the person\'s emotional patterns and one actionable suggestion:',
             language: getLanguageName(language),
-          },
-        });
+          });
 
-        if (!error && data?.enhancedText) {
-          setSummary(prev => prev ? { ...prev, insight: data.enhancedText } : prev);
+          if (data?.enhancedText) {
+            setSummary(prev => prev ? { ...prev, insight: data.enhancedText } : prev);
+          }
+        } catch (insightError) {
+          console.warn('AI insight failed:', insightError);
         }
       }
     } catch (error) {

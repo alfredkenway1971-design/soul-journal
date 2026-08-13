@@ -4,6 +4,7 @@ import { Mic, Square, Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { invokeEnhance } from "@/lib/aiText";
 
 // Local Whisper API endpoint (self-hosted, offline)
 const WHISPER_API_URL = "http://144.91.106.188:8082/inference";
@@ -101,16 +102,17 @@ const VoiceInputField = ({
 
       // Optionally summarize with AI
       if (summarize && resultText) {
-        const { data: enhanceData, error: enhanceError } = await supabase.functions.invoke("enhance-text", {
-          body: { 
+        try {
+          const enhanceData = await invokeEnhance({ 
             text: resultText, 
             tone: 'summary',
             customPrompt: summaryPrompt
-          },
-        });
-
-        if (!enhanceError && enhanceData?.enhancedText) {
-          resultText = enhanceData.enhancedText;
+          });
+          if (enhanceData?.enhancedText) {
+            resultText = enhanceData.enhancedText;
+          }
+        } catch (enhanceError) {
+          console.warn("Enhance failed, using transcription:", enhanceError);
         }
       }
 

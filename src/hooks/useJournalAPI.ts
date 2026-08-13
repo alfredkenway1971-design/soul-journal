@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { getLanguageName, type AppLanguage } from "@/contexts/LanguageContext";
 import { getVoiceProfiles, normalizeLang } from "@/lib/voiceProfiles";
+import { invokeEnhance } from "@/lib/aiText";
 
 export const useJournalAPI = (appLanguage?: AppLanguage) => {
   const langName = getLanguageName(appLanguage || "en");
@@ -66,52 +67,33 @@ export const useJournalAPI = (appLanguage?: AppLanguage) => {
 
   const enhanceText = async (text: string, tone: string = 'natural'): Promise<string> => {
     const styleSamples = await fetchStyleSamples();
-    const { data, error } = await supabase.functions.invoke('enhance-text', {
-      body: { text, tone, language: langName, styleSamples },
-    });
-
-    if (error) throw new Error(error.message);
-    if (data.error) throw new Error(data.error);
+    const data = await invokeEnhance({ text, tone, language: langName, styleSamples });
     
     return data.enhancedText;
   };
 
   const expandText = async (text: string): Promise<string> => {
     const styleSamples = await fetchStyleSamples();
-    const { data, error } = await supabase.functions.invoke('enhance-text', {
-      body: { text, tone: 'expand', language: langName, styleSamples },
-    });
-    if (error) throw new Error(error.message);
-    if (data.error) throw new Error(data.error);
+    const data = await invokeEnhance({ text, tone: 'expand', language: langName, styleSamples });
     return data.enhancedText;
   };
 
   const generateTitle = async (text: string): Promise<string> => {
-    const { data, error } = await supabase.functions.invoke('enhance-text', {
-      body: { 
-        text, 
-        tone: 'title',
-        customPrompt: 'Generate a short, evocative title (3-6 words max) for this journal entry. Return ONLY the title, nothing else:' 
-      },
+    const data = await invokeEnhance({ 
+      text, 
+      tone: 'title',
+      customPrompt: 'Generate a short, evocative title (3-6 words max) for this journal entry. Return ONLY the title, nothing else:' 
     });
-
-    if (error) throw new Error(error.message);
-    if (data.error) throw new Error(data.error);
     
     return data.enhancedText.replace(/["']/g, '').trim();
   };
 
   const detectMood = async (text: string): Promise<string> => {
-    const { data, error } = await supabase.functions.invoke('enhance-text', {
-      body: {
-        text,
-        tone: 'mood-detect',
-        customPrompt: 'Analyze the sentiment of this journal entry and respond with EXACTLY one word from this list: happy, good, fine, sad, unhappy. Nothing else, just the single word:',
-      },
+    const data = await invokeEnhance({
+      text,
+      tone: 'mood-detect',
+      customPrompt: 'Analyze the sentiment of this journal entry and respond with EXACTLY one word from this list: happy, good, fine, sad, unhappy. Nothing else, just the single word:',
     });
-
-    if (error) throw new Error(error.message);
-    if (data.error) throw new Error(data.error);
 
     const mood = data.enhancedText.trim().toLowerCase();
     const validMoods = ['happy', 'good', 'fine', 'sad', 'unhappy'];
