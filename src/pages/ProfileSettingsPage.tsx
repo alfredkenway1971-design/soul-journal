@@ -248,15 +248,15 @@ const ProfileSettingsPage = () => {
         >
           <div className="vitality-card p-4 text-center">
             <p className="text-2xl font-semibold text-foreground">{stats.streak}</p>
-            <p className="text-xs text-muted-foreground uppercase tracking-wider">{t("profile.streak")}</p>
+            <p className="text-xs text-muted-foreground tracking-wider">{t("profile.streak")}</p>
           </div>
           <div className="vitality-card p-4 text-center">
             <p className="text-2xl font-semibold text-foreground">{stats.entries}</p>
-            <p className="text-xs text-muted-foreground uppercase tracking-wider">{t("profile.entries")}</p>
+            <p className="text-xs text-muted-foreground tracking-wider">{t("profile.entries")}</p>
           </div>
           <div className="vitality-card p-4 text-center">
             <p className="text-2xl font-semibold text-foreground capitalize">{t("profile.top")}</p>
-            <p className="text-xs text-muted-foreground uppercase tracking-wider">{t("profile.mood")}</p>
+            <p className="text-xs text-muted-foreground tracking-wider">{t("profile.mood")}</p>
           </div>
         </motion.div>
 

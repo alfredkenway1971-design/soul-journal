@@ -90,7 +90,7 @@ const RelatedEntriesCard = ({ userId, entryId, text }: Props) => {
     >
       <div className="flex items-center gap-2 mb-4">
         <Link2 className="w-4 h-4 text-primary" />
-        <h3 className="text-sm font-semibold text-primary tracking-wide uppercase">
+        <h3 className="text-sm font-semibold text-primary tracking-wide">
           Related Reflections
         </h3>
       </div>

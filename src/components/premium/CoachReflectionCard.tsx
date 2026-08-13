@@ -12,7 +12,7 @@ interface CoachReflectionCardProps {
 }
 
 const CoachReflectionCard = ({
-  title = "INSIGHT FROM YESTERDAY",
+  title = "Insight From Yesterday",
   content = "You noticed a pattern of energy dips around 3PM. Consider scheduling your",
   highlightedText = "Mindful Break",
   readTime = "2 min read",
