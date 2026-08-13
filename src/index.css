@@ -299,7 +299,7 @@ body { font-family: inherit; }
 
   /* Section labels */
   .section-label {
-    @apply text-xs font-semibold uppercase tracking-wider text-muted-foreground;
+    @apply text-xs font-semibold tracking-wider text-muted-foreground;
     letter-spacing: 0.1em;
   }
 
