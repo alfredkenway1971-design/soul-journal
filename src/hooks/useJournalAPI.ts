@@ -2,6 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getLanguageName, type AppLanguage } from "@/contexts/LanguageContext";
 import { getVoiceProfiles, normalizeLang } from "@/lib/voiceProfiles";
 import { invokeEnhance } from "@/lib/aiText";
+import { smartTitleCase } from "@/lib/smartTitleCase";
 
 export const useJournalAPI = (appLanguage?: AppLanguage) => {
   const langName = getLanguageName(appLanguage || "en");
@@ -89,7 +90,7 @@ export const useJournalAPI = (appLanguage?: AppLanguage) => {
       customPrompt: `Generate a short, evocative title (3-6 words max) in ${titleLang} for this journal entry. Return ONLY the title, nothing else:` 
     });
     
-    return data.enhancedText.replace(/["']/g, '').trim();
+    return smartTitleCase(data.enhancedText.replace(/["']/g, '').trim());
   };
 
   const detectMood = async (text: string): Promise<string> => {

@@ -1,19 +1,13 @@
-// Title Case helper. Capitalizes every word except a small set of articles/
-// conjunctions/prepositions (a/an/and/of/the/in/on/at). Always capitalizes the
-// first and last word. Per spec we DO capitalize "From" and "Your".
-const MINOR_WORDS = new Set([
-  "a", "an", "and", "or", "but", "nor",
-  "the", "of", "in", "on", "at", "to", "by", "for",
-]);
-
+// Title Case helper — per Amer's spec: EVERY word gets its first letter
+// capitalized and the rest lowercase ("first letter capital, rest small,
+// after space capital, small letters"). No minor-word exceptions.
 export function smartTitleCase(input?: string | null): string {
   if (!input) return "";
-  const words = input.trim().split(/\s+/);
-  return words
-    .map((word, i) => {
+  return input
+    .trim()
+    .split(/\s+/)
+    .map((word) => {
       const lower = word.toLowerCase();
-      const isFirstOrLast = i === 0 || i === words.length - 1;
-      if (!isFirstOrLast && MINOR_WORDS.has(lower)) return lower;
       return lower.charAt(0).toUpperCase() + lower.slice(1);
     })
     .join(" ");

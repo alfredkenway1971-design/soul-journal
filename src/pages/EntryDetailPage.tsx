@@ -61,6 +61,7 @@ const EntryDetailPage = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   const { language, t } = useLanguage();
+  const titleCase = useTitleCase();
   const api = useJournalAPI(language);
   
   const [entry, setEntry] = useState<EntryData | null>(null);
@@ -137,17 +138,18 @@ const EntryDetailPage = () => {
 
   const handleSaveTitle = async () => {
     if (!id || !editedTitle.trim()) return;
-    
+
+    const cleanTitle = titleCase(editedTitle.trim());
     setIsSavingTitle(true);
     try {
       const { error } = await supabase
         .from('journal_entries')
-        .update({ title: editedTitle.trim() })
+        .update({ title: cleanTitle })
         .eq('id', id);
       
       if (error) throw error;
       
-      setEntry(prev => prev ? { ...prev, title: editedTitle.trim() } : null);
+      setEntry(prev => prev ? { ...prev, title: cleanTitle } : null);
       setIsEditingTitle(false);
       toast({
         title: t("entry.titleUpdated"),
@@ -350,7 +352,7 @@ const EntryDetailPage = () => {
                 ) : (
                   <div className="flex items-center gap-2">
                     <h1 className="text-lg font-semibold text-foreground truncate">
-                      {entry.title || t("entry.untitled")}
+                      {titleCase(entry.title) || t("entry.untitled")}
                     </h1>
                     <Button
                       variant="ghost"
