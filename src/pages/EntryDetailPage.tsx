@@ -175,7 +175,14 @@ const EntryDetailPage = () => {
     try {
       let textForVoice = entry.enhanced_text;
       if (entry.playback_language && entry.playback_language !== 'en') {
-        textForVoice = await api.translateText(entry.enhanced_text, entry.playback_language);
+        try {
+          textForVoice = await api.translateText(entry.enhanced_text, entry.playback_language);
+        } catch (translateError) {
+          // Translation unavailable — Fish Audio is multilingual, so read the
+          // entry in its original language instead of failing playback.
+          console.warn('Translation failed, using original text:', translateError);
+          textForVoice = entry.enhanced_text;
+        }
       }
       
       const audioUrl = await api.generateVoice(textForVoice, undefined, id, 'entry');
