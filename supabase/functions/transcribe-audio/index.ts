@@ -53,7 +53,7 @@ async function transcribeWithWhisper(binaryAudio: Uint8Array, languageOverride?:
   if (!WHISPER_API_KEY) throw new Error('WHISPER_API_KEY is not configured');
 
   const form = new FormData();
-  form.append('file', new Blob([binaryAudio], { type: 'audio/webm' }), 'recording.webm');
+  form.append('file', new Blob([binaryAudio], { type: 'audio/wav' }), 'recording.wav');
   form.append('temperature', '0.0');
   form.append('response_format', 'json');
   if (languageOverride && languageOverride !== 'auto') {

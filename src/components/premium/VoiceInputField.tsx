@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { invokeEnhance } from "@/lib/aiText";
+import { blobToWav } from "@/lib/audioConvert";
 
 // Local Whisper API endpoint (self-hosted, offline)
 const WHISPER_API_URL = "http://144.91.106.188:8082/inference";
@@ -75,10 +76,17 @@ const VoiceInputField = ({
     setIsProcessing(true);
 
     try {
+      // Whisper server can't read webm — convert to WAV first
+      let audioToSend = audioBlob;
+      try {
+        audioToSend = await blobToWav(audioBlob);
+      } catch (e) {
+        console.warn("webm->wav conversion failed, sending original:", e);
+      }
       // Send directly to our local Whisper API server
       const formData = new FormData();
-      const fileName = `recording-${Date.now()}.webm`;
-      formData.append("file", audioBlob, fileName);
+      const fileName = `recording-${Date.now()}.wav`;
+      formData.append("file", audioToSend, fileName);
       formData.append("temperature", "0.0");
       formData.append("temperature_inc", "0.2");
       formData.append("response_format", "json");

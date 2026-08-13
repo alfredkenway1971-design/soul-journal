@@ -3,6 +3,7 @@ import { getLanguageName, type AppLanguage } from "@/contexts/LanguageContext";
 import { getVoiceProfiles, normalizeLang } from "@/lib/voiceProfiles";
 import { invokeEnhance } from "@/lib/aiText";
 import { smartTitleCase } from "@/lib/smartTitleCase";
+import { blobToWav } from "@/lib/audioConvert";
 
 export const useJournalAPI = (appLanguage?: AppLanguage) => {
   const langName = getLanguageName(appLanguage || "en");
@@ -10,6 +11,13 @@ export const useJournalAPI = (appLanguage?: AppLanguage) => {
     audioBlob: Blob,
     languageOverride?: string
   ): Promise<{ text: string; detectedLanguage: string | null }> => {
+    // Whisper server can't read webm — convert to WAV first (fallback: send as-is)
+    let audioToSend = audioBlob;
+    try {
+      audioToSend = await blobToWav(audioBlob);
+    } catch (e) {
+      console.warn("webm->wav conversion failed, sending original:", e);
+    }
     // Convert blob to base64
     const reader = new FileReader();
     const base64Promise = new Promise<string>((resolve, reject) => {
@@ -19,7 +27,7 @@ export const useJournalAPI = (appLanguage?: AppLanguage) => {
       };
       reader.onerror = reject;
     });
-    reader.readAsDataURL(audioBlob);
+    reader.readAsDataURL(audioToSend);
     const base64Audio = await base64Promise;
 
     // NOTE: we intentionally do NOT send the app UI language. The transcript must
