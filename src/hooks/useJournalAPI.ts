@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { getLanguageName, type AppLanguage } from "@/contexts/LanguageContext";
+import { getVoiceProfiles, normalizeLang } from "@/lib/voiceProfiles";
 
 export const useJournalAPI = (appLanguage?: AppLanguage) => {
   const langName = getLanguageName(appLanguage || "en");
@@ -131,10 +132,11 @@ export const useJournalAPI = (appLanguage?: AppLanguage) => {
   const generateVoice = async (text: string, voiceId?: string, entryId?: string, textType?: 'entry' | 'reflection'): Promise<string> => {
     // Check cache first if entryId is provided
     // IMPORTANT: Only use voice-cache/ paths (AI-generated), never raw recordings
+    let entryLang: string | null = null;
     if (entryId) {
       const { data: entry } = await supabase
         .from('journal_entries')
-        .select('audio_url, reflection_audio_url')
+        .select('audio_url, reflection_audio_url, detected_language')
         .eq('id', entryId)
         .single();
 
@@ -151,6 +153,7 @@ export const useJournalAPI = (appLanguage?: AppLanguage) => {
           return signedData.signedUrl;
         }
       }
+      entryLang = normalizeLang((entry as any)?.detected_language);
     }
 
     // Fetch user's voice clone ID and gender preference
@@ -164,7 +167,13 @@ export const useJournalAPI = (appLanguage?: AppLanguage) => {
           .select('voice_clone_id, gender')
           .eq('id', user.id)
           .single();
-        if (profile?.voice_clone_id) {
+        // Per-language voice routing: entry language -> default profile -> legacy DB clone
+        const local = getVoiceProfiles();
+        if (entryLang && local.voices[entryLang]) {
+          selectedVoiceId = local.voices[entryLang];
+        } else if (local.defaultLang && local.voices[local.defaultLang]) {
+          selectedVoiceId = local.voices[local.defaultLang];
+        } else if (profile?.voice_clone_id) {
           selectedVoiceId = profile.voice_clone_id;
         }
         if ((profile as any)?.gender) {

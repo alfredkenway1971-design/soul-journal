@@ -4,9 +4,11 @@ import { ArrowLeft, Play, Pause, Trash2, Volume2, ChevronDown, ChevronUp, Pencil
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useTitleCase } from "@/hooks/useTitleCase";
+import { hasVoiceForLanguage, normalizeLang } from "@/lib/voiceProfiles";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import { useLanguage } from "@/contexts/LanguageContext";
+import { useLanguage, LANGUAGES } from "@/contexts/LanguageContext";
 import { useJournalAPI } from "@/hooks/useJournalAPI";
 import { supabase } from "@/integrations/supabase/client";
 import BottomNav from "@/components/BottomNav";
@@ -69,6 +71,7 @@ const EntryDetailPage = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isGeneratingVoice, setIsGeneratingVoice] = useState(false);
   const [generatedAudioUrl, setGeneratedAudioUrl] = useState<string | null>(null);
+  const [promptLang, setPromptLang] = useState<string | null>(null);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editedTitle, setEditedTitle] = useState("");
   const [isSavingTitle, setIsSavingTitle] = useState(false);
@@ -187,6 +190,16 @@ const EntryDetailPage = () => {
       
       const audioUrl = await api.generateVoice(textForVoice, undefined, id, 'entry');
       setGeneratedAudioUrl(audioUrl);
+
+      // Suggest adding a voice profile for this entry's language (once per language)
+      const langCode = normalizeLang((entry as any)?.detected_language);
+      if (langCode && !hasVoiceForLanguage(langCode)) {
+        const flagKey = `sj-voice-prompt-${langCode}`;
+        if (!localStorage.getItem(flagKey)) {
+          localStorage.setItem(flagKey, "1");
+          setPromptLang(langCode);
+        }
+      }
     } catch (error) {
       console.error('Error generating voice:', error);
       const errorMessage = error instanceof Error ? error.message : "Failed to generate voice";
@@ -473,6 +486,30 @@ const EntryDetailPage = () => {
             </div>
           )}
         </motion.div>
+
+        {/* Per-language voice suggestion */}
+        {promptLang && (
+          <motion.div
+            className="max-w-lg mx-auto px-5"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <div className="glass-premium rounded-2xl p-4 flex items-center gap-3">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-foreground">
+                  {t("voice.promptAddVoice").replace("{lang}", LANGUAGES.find((l) => l.code === promptLang)?.name || promptLang)}
+                </p>
+              </div>
+              <Button
+                size="sm"
+                className="shrink-0"
+                onClick={() => navigate("/settings/voice")}
+              >
+                {t("voice.addVoice")}
+              </Button>
+            </div>
+          </motion.div>
+        )}
 
         {/* Soul Mirror Reflection */}
         {entry.soul_reflection && (() => {
