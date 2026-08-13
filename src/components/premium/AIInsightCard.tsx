@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Sparkles, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { smartTitleCase } from "@/lib/smartTitleCase";
 
 interface AIInsightCardProps {
   insight?: string;
@@ -29,12 +30,12 @@ const AIInsightCard = ({ insight, userName = "there" }: AIInsightCardProps) => {
       
       {/* Insight text */}
       <p className="text-foreground font-medium leading-relaxed mb-4">
-        "{insight || defaultInsight}"
+        "{smartTitleCase(insight || defaultInsight)}"
       </p>
       
       {/* CTA */}
       <div className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
-        <span className="text-sm">Tap to start journaling</span>
+        <span className="text-sm">{smartTitleCase("Tap to start journaling")}</span>
         <ArrowRight className="w-4 h-4" />
       </div>
     </motion.div>
