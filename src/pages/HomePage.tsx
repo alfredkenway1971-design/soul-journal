@@ -44,6 +44,7 @@ const HomePage = () => {
   const [displayName, setDisplayName] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [moodFilter, setMoodFilter] = useState<MoodFilterValue>("all");
+  const [homeInsight, setHomeInsight] = useState<string | null>(null);
   
   
   const currentDate = new Date();
@@ -96,6 +97,19 @@ const HomePage = () => {
         }));
         
         setEntries(formattedEntries);
+
+        // Fetch the latest AI coaching insight for the home card
+        const { data: latestInsight } = await supabase
+          .from('coaching_insights')
+          .select('content')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (latestInsight?.content) {
+          setHomeInsight(latestInsight.content);
+        }
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -247,7 +261,7 @@ const HomePage = () => {
         <QuickCapture />
 
         {/* AI Insight */}
-        <AIInsightCard userName={firstName} />
+        <AIInsightCard insight={homeInsight || undefined} userName={firstName} />
 
         {/* Mood Filter Bar */}
         <section>
