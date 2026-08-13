@@ -124,14 +124,15 @@ export const useJournalAPI = (appLanguage?: AppLanguage) => {
     return data.translatedText;
   };
 
-  const generateVoice = async (text: string, voiceId?: string, entryId?: string, textType?: 'entry' | 'reflection'): Promise<string> => {
+  const generateVoice = async (text: string, voiceId?: string, entryId?: string, textType?: 'entry' | 'reflection', langHint?: string): Promise<string> => {
     // Check cache first if entryId is provided
     // IMPORTANT: Only use voice-cache/ paths (AI-generated), never raw recordings
     let entryLang: string | null = null;
+    let playbackLang: string | null = null;
     if (entryId) {
       const { data: entry } = await supabase
         .from('journal_entries')
-        .select('audio_url, reflection_audio_url, detected_language')
+        .select('audio_url, reflection_audio_url, detected_language, playback_language')
         .eq('id', entryId)
         .single();
 
@@ -149,6 +150,7 @@ export const useJournalAPI = (appLanguage?: AppLanguage) => {
         }
       }
       entryLang = normalizeLang((entry as any)?.detected_language);
+      playbackLang = normalizeLang((entry as any)?.playback_language);
     }
 
     // Fetch user's voice clone ID and gender preference
@@ -162,9 +164,16 @@ export const useJournalAPI = (appLanguage?: AppLanguage) => {
           .select('voice_clone_id, gender')
           .eq('id', user.id)
           .single();
-        // Per-language voice routing: entry language -> default profile -> legacy DB clone
+        // Per-language voice routing, keyed by the language of the text being read:
+        // explicit hint (record-page preview) -> chosen playback language -> the
+        // entry's detected language -> default profile -> legacy DB clone.
+        // (playback_language matters most: the text is translated to it before TTS,
+        // so the voice must match it — not the original spoken language.)
         const local = getVoiceProfiles();
-        if (entryLang && local.voices[entryLang]) {
+        const routeLang = normalizeLang(langHint) || playbackLang || entryLang;
+        if (routeLang && local.voices[routeLang]) {
+          selectedVoiceId = local.voices[routeLang];
+        } else if (entryLang && local.voices[entryLang]) {
           selectedVoiceId = local.voices[entryLang];
         } else if (local.defaultLang && local.voices[local.defaultLang]) {
           selectedVoiceId = local.voices[local.defaultLang];
