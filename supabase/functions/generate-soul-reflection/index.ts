@@ -32,9 +32,11 @@ serve(async (req) => {
       throw new Error('No entry text provided');
     }
 
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY is not configured');
+    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+    const aiBase = Deno.env.get('OPENAI_BASE_URL') || 'https://api.openai.com/v1';
+    const aiModel = Deno.env.get('OPENAI_MODEL') || 'gpt-4o-mini';
+    if (!OPENAI_API_KEY) {
+      throw new Error('OPENAI_API_KEY is not configured');
     }
 
     // Use soul_profile_summary data if available, falling back to individual fields
@@ -95,18 +97,20 @@ Choose your coaching style based on the analysis:
 - Return your response as JSON: {"mode": "nurture" | "challenge" | "blend", "reflection": "your reflection text"}
 - Return ONLY the JSON, no markdown or extra text.`;
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const response = await fetch(`${aiBase}/chat/completions`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Authorization': 'Bearer ' + OPENAI_API_KEY,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-3-flash-preview',
+        model: aiModel,
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: entryText },
         ],
+        max_tokens: 500,
+        temperature: 0.7,
       }),
     });
 

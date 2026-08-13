@@ -31,7 +31,9 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY')!;
+    const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
+    const aiBase = Deno.env.get('OPENAI_BASE_URL') || 'https://api.openai.com/v1';
+    const aiModel = Deno.env.get('OPENAI_MODEL') || 'gpt-4o-mini';
 
     // Verify caller's JWT
     const authHeader = req.headers.get('Authorization');
@@ -213,20 +215,21 @@ Based on your contextual analysis, generate exactly 4 insights in this JSON form
 
 Return ONLY valid JSON, no markdown or explanations.`;
 
-    // Call Lovable AI Gateway
-    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    // Call OpenAI-compatible endpoint (DeepSeek by default)
+    const aiResponse = await fetch(`${aiBase}/chat/completions`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${lovableApiKey}`,
+        'Authorization': 'Bearer ' + openaiApiKey,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-3-flash-preview',
+        model: aiModel,
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
         temperature: 0.7,
+        max_tokens: 1500,
       }),
     });
 

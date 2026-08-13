@@ -3,6 +3,8 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+const aiBase = Deno.env.get('OPENAI_BASE_URL') || 'https://api.openai.com/v1';
+const aiModel = Deno.env.get('OPENAI_MODEL') || 'gpt-4o-mini';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -57,14 +59,14 @@ serve(async (req) => {
     const languageName = languageNames[targetLanguage] || targetLanguage;
     console.log('Translating text to:', languageName);
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetch(`${aiBase}/chat/completions`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${openAIApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: aiModel,
         messages: [
           { 
             role: 'system', 

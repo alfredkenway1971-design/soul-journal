@@ -34,6 +34,8 @@ serve(async (req) => {
     }
 
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+    const aiBase = Deno.env.get('OPENAI_BASE_URL') || 'https://api.openai.com/v1';
+    const aiModel = Deno.env.get('OPENAI_MODEL') || 'gpt-4o-mini';
     if (!OPENAI_API_KEY) throw new Error('OPENAI_API_KEY not configured');
 
     const questionLabels = [
@@ -74,14 +76,14 @@ Guidelines:
 - Be culturally sensitive based on their worldview
 - ${language === 'fr' ? 'Respond in French' : language === 'es' ? 'Respond in Spanish' : language === 'ar' ? 'Respond in Arabic' : language === 'sw' ? 'Respond in Swahili' : language === 'zh' ? 'Respond in Chinese' : language === 'ja' ? 'Respond in Japanese' : language === 'de' ? 'Respond in German' : 'Respond in English'}`;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetch(`${aiBase}/chat/completions`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${OPENAI_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: aiModel,
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: `Here are my onboarding answers:\n\n${answersFormatted}${worldviewContext}` },

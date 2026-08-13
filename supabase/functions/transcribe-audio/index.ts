@@ -47,38 +47,63 @@ class UpstreamError extends Error {
   }
 }
 
-// Primary: built-in Lovable AI speech-to-text (auto-detects the spoken language)
-async function transcribeWithLovableAI(binaryAudio: Uint8Array, languageOverride?: string): Promise<string> {
-  const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-  if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY is not configured');
+// Primary: self-hosted Whisper server on the VPS (free, offline-capable)
+async function transcribeWithWhisper(binaryAudio: Uint8Array, languageOverride?: string): Promise<{ text: string }> {
+  const WHISPER_API_KEY = Deno.env.get('WHISPER_API_KEY');
+  if (!WHISPER_API_KEY) throw new Error('WHISPER_API_KEY is not configured');
 
   const form = new FormData();
   form.append('file', new Blob([binaryAudio], { type: 'audio/webm' }), 'recording.webm');
-  form.append('model', 'openai/gpt-4o-mini-transcribe');
-  // Only pass a language when the caller explicitly forces one; otherwise auto-detect
-  // so the transcript stays in the language actually spoken.
+  form.append('temperature', '0.0');
+  form.append('response_format', 'json');
   if (languageOverride && languageOverride !== 'auto') {
     form.append('language', languageOverride);
   }
 
-  const response = await fetch('https://ai.gateway.lovable.dev/v1/audio/transcriptions', {
+  const response = await fetch('http://144.91.106.188:8082/inference', {
     method: 'POST',
-    headers: { Authorization: `Bearer ${LOVABLE_API_KEY}` },
+    headers: { 'x-api-key': WHISPER_API_KEY },
     body: form,
   });
 
   if (!response.ok) {
     const errorText = await response.text().catch(() => '');
-    console.error('Lovable AI STT error:', response.status, errorText);
+    console.error('Whisper server error:', response.status, errorText);
     if (response.status === 429) throw new UpstreamError('Too many requests right now. Please try again in a moment.', 429);
-    if (response.status === 402) throw new UpstreamError('AI credits exhausted. Please add credits to continue transcribing.', 402);
     if (response.status === 400) throw new UpstreamError('That recording could not be read. Please record again (a bit longer).', 400);
     throw new UpstreamError('Transcription service temporarily unavailable.', 502);
   }
 
   const result = await response.json();
-  console.log('Lovable AI transcription successful');
-  return result.text ?? '';
+  return { text: result.text ?? '' };
+}
+
+// Language detection for Latin-script languages (the script check can't tell
+// French/English/Spanish apart) — one tiny, cheap LLM call.
+async function detectLanguageWithAI(text: string): Promise<string | null> {
+  const aiBase = Deno.env.get('OPENAI_BASE_URL') || 'https://api.openai.com/v1';
+  const aiModel = Deno.env.get('OPENAI_MODEL') || 'gpt-4o-mini';
+  const aiKey = Deno.env.get('OPENAI_API_KEY');
+  if (!aiKey || !text.trim()) return null;
+  try {
+    const response = await fetch(`${aiBase}/chat/completions`, {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + aiKey, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: aiModel,
+        messages: [{ role: 'user', content: `Identify the language of this text and reply with ONLY the 2-letter ISO code (fr, en, es, de, ar, zh, ja, sw, ...). Text: "${text.substring(0, 500)}"` }],
+        max_tokens: 5,
+        temperature: 0,
+      }),
+    });
+    if (!response.ok) return null;
+    const data = await response.json();
+    const code = (data.choices?.[0]?.message?.content || '').trim().toLowerCase().slice(0, 2);
+    return /^[a-z]{2}$/.test(code) ? code : null;
+  } catch (e) {
+    console.warn('AI language detection failed:', e);
+    return null;
+  }
 }
 
 // Swahili-only fallback: ElevenLabs Scribe
@@ -145,20 +170,15 @@ serve(async (req) => {
     const binaryAudio = processBase64Chunks(audio);
 
     let text: string;
-    if (languageOverride === 'sw') {
-      try {
-        text = await transcribeWithElevenLabs(binaryAudio);
-      } catch (err) {
-        console.warn('ElevenLabs Swahili failed, falling back to built-in AI:', err);
-        text = await transcribeWithLovableAI(binaryAudio, 'sw');
-      }
-    } else {
-      text = await transcribeWithLovableAI(binaryAudio, languageOverride);
-    }
+    const r = await transcribeWithWhisper(binaryAudio, languageOverride);
+    text = r.text;
 
-    const detected = languageOverride && languageOverride !== 'auto'
+    let detected = languageOverride && languageOverride !== 'auto'
       ? languageOverride
       : detectLanguage(text);
+    if (!detected && text.trim().length > 10) {
+      detected = await detectLanguageWithAI(text);
+    }
 
     return new Response(
       JSON.stringify({ text, language: detected }),
