@@ -65,9 +65,11 @@ export const useJournalAPI = (appLanguage?: AppLanguage) => {
     }
   };
 
-  const enhanceText = async (text: string, tone: string = 'natural'): Promise<string> => {
+  const enhanceText = async (text: string, tone: string = 'natural', language?: string): Promise<string> => {
     const styleSamples = await fetchStyleSamples();
-    const data = await invokeEnhance({ text, tone, language: langName, styleSamples });
+    // Use the entry's DETECTED language when available (e.g. a French voice
+    // entry must stay French even if the app UI is English).
+    const data = await invokeEnhance({ text, tone, language: language || langName, styleSamples });
     
     return data.enhancedText;
   };
@@ -78,11 +80,13 @@ export const useJournalAPI = (appLanguage?: AppLanguage) => {
     return data.enhancedText;
   };
 
-  const generateTitle = async (text: string): Promise<string> => {
+  const generateTitle = async (text: string, language?: string): Promise<string> => {
+    const titleLang = language || langName;
     const data = await invokeEnhance({ 
       text, 
       tone: 'title',
-      customPrompt: 'Generate a short, evocative title (3-6 words max) for this journal entry. Return ONLY the title, nothing else:' 
+      language: titleLang,
+      customPrompt: `Generate a short, evocative title (3-6 words max) in ${titleLang} for this journal entry. Return ONLY the title, nothing else:` 
     });
     
     return data.enhancedText.replace(/["']/g, '').trim();

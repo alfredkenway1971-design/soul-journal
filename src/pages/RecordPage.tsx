@@ -235,14 +235,15 @@ const RecordPage = () => {
   const handleEnhance = async () => {
     setIsProcessing(true);
     try {
-      const enhanced = await api.enhanceText(transcription);
+      // Keep the entry in its DETECTED language (French stays French, etc.)
+      const enhanced = await api.enhanceText(transcription, 'natural', detectedLanguage || undefined);
       setEnhancedText(enhanced);
       
       // Auto-generate title
       if (!entryTitle) {
         setIsGeneratingTitle(true);
         try {
-          const title = await api.generateTitle(enhanced);
+          const title = await api.generateTitle(enhanced, detectedLanguage || undefined);
           setEntryTitle(title);
         } catch (titleError) {
           console.error('Title generation error:', titleError);
