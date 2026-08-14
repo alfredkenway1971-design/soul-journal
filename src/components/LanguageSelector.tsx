@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Check } from "lucide-react";
+import { FlagIcon } from "@/components/FlagIcon";
 
 export type Language = "en" | "fr" | "es" | "ja" | "zh" | "sw" | "de";
 
@@ -39,7 +40,7 @@ const LanguageSelector = ({ selected, onSelect }: LanguageSelectorProps) => {
             transition={{ delay: index * 0.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            <span className="text-lg">{lang.flag}</span>
+            <FlagIcon code={lang.code} className="w-5 h-5" />
             <div className="text-left">
               <span className="text-sm font-medium">{lang.native}</span>
             </div>

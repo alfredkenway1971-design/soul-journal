@@ -13,6 +13,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { LANGUAGES, useLanguage } from "@/contexts/LanguageContext";
+import { FlagIcon } from "@/components/FlagIcon";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
 
@@ -108,7 +109,7 @@ const AuthPage = () => {
                 <button
                   className="flex items-center gap-1.5 rounded-full bg-white/60 border border-white/70 backdrop-blur-md px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-white/80 transition"
                 >
-                  <span>{currentLang?.flag}</span>
+                  <FlagIcon code={language} className="w-4 h-4" />
                   <span>{currentLang?.native}</span>
                   <ChevronDown className="w-3.5 h-3.5" />
                 </button>
@@ -122,7 +123,7 @@ const AuthPage = () => {
                       language === lang.code ? "bg-primary/10 font-semibold" : ""
                     }`}
                   >
-                    <span className="text-lg">{lang.flag}</span>
+                    <FlagIcon code={lang.code} className="w-5 h-5" />
                     <span className="text-sm">{lang.native}</span>
                   </DropdownMenuItem>
                 ))}

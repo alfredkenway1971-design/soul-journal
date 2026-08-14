@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { useLanguage, LANGUAGES } from "@/contexts/LanguageContext";
+import { FlagIcon } from "@/components/FlagIcon";
 
 const AppLanguageSwitcher = () => {
   const { language, setLanguage } = useLanguage();
@@ -16,7 +17,7 @@ const AppLanguageSwitcher = () => {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="rounded-full w-9 h-9">
-          <span className="text-base">{current?.flag || "🌐"}</span>
+          <FlagIcon code={current?.code} className="w-5 h-5" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-[160px]">
@@ -26,7 +27,7 @@ const AppLanguageSwitcher = () => {
             onClick={() => setLanguage(lang.code)}
             className={`flex items-center gap-2 ${language === lang.code ? "bg-primary/10 font-semibold" : ""}`}
           >
-            <span className="text-base">{lang.flag}</span>
+            <FlagIcon code={lang.code} className="w-5 h-5" />
             <span className="text-sm">{lang.native}</span>
           </DropdownMenuItem>
         ))}

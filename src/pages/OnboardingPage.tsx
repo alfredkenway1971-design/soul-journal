@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage, LANGUAGES } from "@/contexts/LanguageContext";
+import { FlagIcon } from "@/components/FlagIcon";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { blobToWav } from "@/lib/audioConvert";
@@ -466,7 +467,7 @@ const OnboardingPage = () => {
                 onClick={() => setLanguage(lang.code)}
                 whileTap={{ scale: 0.95 }}
               >
-                <span className="text-3xl">{lang.flag}</span>
+                <FlagIcon code={lang.code} className="w-10 h-10" />
                 <span className="text-sm font-medium">{lang.native}</span>
                 {language === lang.code && (
                   <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}>
