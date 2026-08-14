@@ -631,9 +631,9 @@ export const generateBookHTML = (config: BookConfig, entries: JournalEntry[]): s
   body { font-family: ${fontConfig.css}; color: #1a1a1a; }
   .cover-page { width:100%;height:100vh;background:${coverGradient};display:flex;flex-direction:column;align-items:center;justify-content:center;page-break-after:always;position:relative;overflow:hidden; }
   .cover-page .cover-text { color:${coverColor};text-align:center;position:relative;z-index:2; }
-  .cover-page .cover-subtitle { font-size:11px;letter-spacing:0.3em;text-transform:uppercase;opacity:0.7;margin-bottom:8px; }
+  .cover-page .cover-subtitle { font-size:11px;letter-spacing:0.3em;opacity:0.7;margin-bottom:8px; }
   .cover-page .cover-name { font-size:28px;font-weight:600;margin-bottom:4px;${config.cover === "minimalist" ? "font-style:italic;" : ""} }
-  .cover-page .cover-year { font-size:9px;letter-spacing:0.2em;text-transform:uppercase;opacity:0.5;margin-top:12px; }
+  .cover-page .cover-year { font-size:9px;letter-spacing:0.2em;opacity:0.5;margin-top:12px; }
   .cover-avatar { width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid ${config.cover === "minimalist" || config.cover === "botanical" ? "#d6d3d1" : "rgba(255,255,255,0.3)"};margin-bottom:16px; }
   .entry-page { width:100%;min-height:${isOnePerPage ? "100vh" : "auto"};padding:48px 36px;position:relative;background-color:white;${isOnePerPage ? "page-break-after:always;" : ""} }
   .entry-title { font-size:18px;font-weight:600;color:#0a0a0a;margin-bottom:6px; }
@@ -644,7 +644,7 @@ export const generateBookHTML = (config: BookConfig, entries: JournalEntry[]): s
   .back-cover { width:100%;height:100vh;background:#f5f5f4;display:flex;flex-direction:column;align-items:center;justify-content:center;page-break-before:always; }
   .back-quote { font-size:14px;font-style:italic;color:#78716c;text-align:center;max-width:240px;margin-bottom:16px; }
   .back-line { width:40px;height:1px;background:#d6d3d1;margin-bottom:12px; }
-  .back-brand { font-size:8px;color:#a8a29e;text-transform:uppercase;letter-spacing:0.3em; }
+  .back-brand { font-size:8px;color:#a8a29e;letter-spacing:0.3em; }
   @media print { .cover-page{height:100vh;} .entry-page{${isOnePerPage ? "height:100vh;" : ""}} .back-cover{height:100vh;} }
 </style></head><body>`;
 

@@ -107,14 +107,14 @@ export const CoverPreview = ({
           </Avatar>
         )}
         <div>
-          <p className={`${colors} ${small ? "text-[6px]" : "text-xs"} uppercase tracking-[0.3em] opacity-70 font-medium`}>
+          <p className={`${colors} ${small ? "text-[6px]" : "text-xs"} tracking-[0.3em] opacity-70 font-medium`}>
             The Soul Journal of
           </p>
           <h2 className={`${colors} ${small ? "text-[8px]" : "text-lg"} font-display font-semibold ${template === "minimalist" ? "italic" : ""}`}>
             {userName}
           </h2>
         </div>
-        <p className={`${colors} ${small ? "text-[5px]" : "text-[10px]"} uppercase tracking-[0.2em] opacity-50`}>
+        <p className={`${colors} ${small ? "text-[5px]" : "text-[10px]"} tracking-[0.2em] opacity-50`}>
           {yearRange}
         </p>
       </div>
