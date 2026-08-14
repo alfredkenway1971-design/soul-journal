@@ -104,6 +104,9 @@ const OnboardingPage = () => {
   const [worldview, setWorldview] = useState<string | null>(null);
   const [soulProfile, setSoulProfile] = useState<any>(null);
   const [analyzing, setAnalyzing] = useState(false);
+  // Analysis UX: live elapsed counter + friendly retry if the AI is slow
+  const [analyzeSeconds, setAnalyzeSeconds] = useState(0);
+  const [analyzeTimedOut, setAnalyzeTimedOut] = useState(false);
 
   const totalSteps = 11; // 0=lang, 1-6=questions, 7=worldview, 8=reminder, 9=analyzing, 10=results
   const progressPercent = (step / (totalSteps - 1)) * 100;
@@ -224,32 +227,56 @@ const OnboardingPage = () => {
   // ── AI Analysis ──
   const runAnalysis = async () => {
     setAnalyzing(true);
-    setStep(8); // show analyzing screen
+    setAnalyzeTimedOut(false);
+    setAnalyzeSeconds(0);
+    setStep(9); // show analyzing screen
     setDirection(1);
+
+    // Live elapsed counter so the screen never feels frozen
+    const counter = setInterval(() => setAnalyzeSeconds((s) => s + 1), 1000);
 
     try {
       const allAnswers = [...answers];
       if (worldview) allAnswers.push(worldview);
 
-      const { data, error } = await supabase.functions.invoke("analyze-soul-profile", {
+      // Race the edge fn against a 50s soft timeout → offer Retry instead
+      // of spinning forever when the AI provider is slow/hung.
+      const invokePromise = supabase.functions.invoke("analyze-soul-profile", {
         body: { answers: allAnswers, worldview, language },
       });
+      const result = await Promise.race([
+        invokePromise,
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("Analysis timed out")), 50000)
+        ),
+      ]);
+      const { data, error } = result as any;
 
       if (error) throw new Error(error.message);
       if (data.error) throw new Error(data.error);
 
       setSoulProfile(data.profile);
       setDirection(1);
-      setStep(9); // show results
+      setStep(10); // show results
     } catch (error) {
       console.error("Analysis error:", error);
-      toast({
-        title: "Analysis Failed",
-        description: "Could not analyze your profile. Please try again.",
-        variant: "destructive",
-      });
-      setStep(7); // go back to worldview
+      if (error instanceof Error && error.message === "Analysis timed out") {
+        setAnalyzeTimedOut(true); // stay on the analyzing screen, offer Retry
+        toast({
+          title: t("onboarding.analyzingSlow"),
+          description: t("onboarding.analyzingSlowDesc"),
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Analysis Failed",
+          description: "Could not analyze your profile. Please try again.",
+          variant: "destructive",
+        });
+        setStep(8); // go back to reminder
+      }
     } finally {
+      clearInterval(counter);
       setAnalyzing(false);
     }
   };
@@ -552,11 +579,33 @@ const OnboardingPage = () => {
                 animate={{ width: "90%" }}
                 transition={{ duration: 8, ease: "easeOut" }}
               />
-            </motion.div>
-          </div>
-        </div>
-      );
-    }
+              </motion.div>
+              </div>
+              {!analyzeTimedOut && (
+              <p className="text-xs text-muted-foreground mt-4">
+                {t("onboarding.analyzingSeconds").replace("{s}", String(analyzeSeconds))}
+              </p>
+              )}
+              {analyzeTimedOut && (
+              <div className="mt-6 space-y-3">
+                <p className="text-sm text-muted-foreground">{t("onboarding.analyzingSlowDesc")}</p>
+                <Button
+                  className="w-full max-w-xs gap-2"
+                  onClick={runAnalysis}
+                  disabled={analyzing}
+                >
+                  {analyzing ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Sparkles className="w-4 h-4" />
+                  )}
+                  {t("onboarding.retry")}
+                </Button>
+              </div>
+              )}
+              </div>
+              );
+              }
 
     // Step 10: Results
     if (step === 10 && soulProfile) {

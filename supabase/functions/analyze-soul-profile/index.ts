@@ -91,6 +91,8 @@ Guidelines:
         temperature: 0.7,
         response_format: { type: "json_object" },
       }),
+      // Don't let a hung AI provider hang the whole function
+      signal: AbortSignal.timeout(45000),
     });
 
     if (!response.ok) {

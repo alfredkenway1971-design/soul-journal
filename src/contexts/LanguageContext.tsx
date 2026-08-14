@@ -292,6 +292,11 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "Hinduism",
     "onboarding.worldviewSpiritual": "Spiritual",
     "onboarding.worldviewNoPref": "No preference",
+    // Onboarding analysis UX
+    "onboarding.analyzingSeconds": "Analyzing... {s}s",
+    "onboarding.analyzingSlow": "This is taking longer than usual",
+    "onboarding.analyzingSlowDesc": "Your profile is still being prepared — you can wait or try again.",
+    "onboarding.retry": "Retry",
     // Soul Mirror (monthly portrait)
     "soulMirror.title": "Soul Mirror",
     "soulMirror.subtitle": "Your monthly portrait",
@@ -664,6 +669,11 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "Hindouisme",
     "onboarding.worldviewSpiritual": "Spirituel",
     "onboarding.worldviewNoPref": "Pas de préférence",
+    // Onboarding analysis UX
+    "onboarding.analyzingSeconds": "Analyse en cours... {s}s",
+    "onboarding.analyzingSlow": "Cela prend plus de temps que d'habitude",
+    "onboarding.analyzingSlowDesc": "Votre profil est toujours en préparation — vous pouvez attendre ou réessayer.",
+    "onboarding.retry": "Réessayer",
     // Soul Mirror (monthly portrait)
     "soulMirror.title": "Miroir de l'âme",
     "soulMirror.subtitle": "Votre portrait mensuel",
@@ -1036,6 +1046,11 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "Hinduismo",
     "onboarding.worldviewSpiritual": "Espiritual",
     "onboarding.worldviewNoPref": "Sin preferencia",
+    // Onboarding analysis UX
+    "onboarding.analyzingSeconds": "Analizando... {s}s",
+    "onboarding.analyzingSlow": "Está tardando más de lo habitual",
+    "onboarding.analyzingSlowDesc": "Tu perfil aún se está preparando — puedes esperar o intentar de nuevo.",
+    "onboarding.retry": "Reintentar",
     // Soul Mirror (monthly portrait)
     "soulMirror.title": "Espejo del alma",
     "soulMirror.subtitle": "Tu retrato mensual",
@@ -1408,6 +1423,11 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "الهندوسية",
     "onboarding.worldviewSpiritual": "روحاني",
     "onboarding.worldviewNoPref": "بدون تفضيل",
+    // Onboarding analysis UX
+    "onboarding.analyzingSeconds": "جارٍ التحليل... {s}ث",
+    "onboarding.analyzingSlow": "يستغرق هذا وقتًا أطول من المعتاد",
+    "onboarding.analyzingSlowDesc": "لا يزال ملفك قيد الإعداد — يمكنك الانتظار أو المحاولة مرة أخرى.",
+    "onboarding.retry": "إعادة المحاولة",
     // Soul Mirror (monthly portrait)
     "soulMirror.title": "مرآة الروح",
     "soulMirror.subtitle": "صورتك الشهرية",
@@ -1780,6 +1800,11 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "印度教",
     "onboarding.worldviewSpiritual": "灵性",
     "onboarding.worldviewNoPref": "无偏好",
+    // Onboarding analysis UX
+    "onboarding.analyzingSeconds": "分析中... {s}秒",
+    "onboarding.analyzingSlow": "这比平时花费的时间更长",
+    "onboarding.analyzingSlowDesc": "你的档案仍在准备中——你可以等待或重试。",
+    "onboarding.retry": "重试",
     // Soul Mirror (monthly portrait)
     "soulMirror.title": "灵魂之镜",
     "soulMirror.subtitle": "你的月度画像",
@@ -2152,6 +2177,11 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "ヒンドゥー教",
     "onboarding.worldviewSpiritual": "スピリチュアル",
     "onboarding.worldviewNoPref": "特になし",
+    // Onboarding analysis UX
+    "onboarding.analyzingSeconds": "分析中... {s}秒",
+    "onboarding.analyzingSlow": "通常より時間がかかっています",
+    "onboarding.analyzingSlowDesc": "プロフィールはまだ準備中です — 待つか、もう一度お試しください。",
+    "onboarding.retry": "再試行",
     // Soul Mirror (monthly portrait)
     "soulMirror.title": "ソウルミラー",
     "soulMirror.subtitle": "あなたの月間ポートレート",
@@ -2524,6 +2554,11 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "Uhindu",
     "onboarding.worldviewSpiritual": "Kiroho",
     "onboarding.worldviewNoPref": "Bila upendeleo",
+    // Onboarding analysis UX
+    "onboarding.analyzingSeconds": "Inachanganua... {s}s",
+    "onboarding.analyzingSlow": "Inachukua muda mrefu kuliko kawaida",
+    "onboarding.analyzingSlowDesc": "Wasifu wako bado unatayarishwa — unaweza kusubiri au kujaribu tena.",
+    "onboarding.retry": "Jaribu tena",
     // Soul Mirror (monthly portrait)
     "soulMirror.title": "Kioo cha Roho",
     "soulMirror.subtitle": "Picha yako ya mwezi",
@@ -2896,6 +2931,11 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "Hinduismus",
     "onboarding.worldviewSpiritual": "Spirituell",
     "onboarding.worldviewNoPref": "Keine Präferenz",
+    // Onboarding analysis UX
+    "onboarding.analyzingSeconds": "Analyse läuft... {s}s",
+    "onboarding.analyzingSlow": "Das dauert länger als üblich",
+    "onboarding.analyzingSlowDesc": "Dein Profil wird noch erstellt — du kannst warten oder es erneut versuchen.",
+    "onboarding.retry": "Erneut versuchen",
     // Soul Mirror (monthly portrait)
     "soulMirror.title": "Seelenspiegel",
     "soulMirror.subtitle": "Dein monatliches Porträt",
