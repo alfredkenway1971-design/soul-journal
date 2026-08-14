@@ -16,7 +16,19 @@ import {
   Sunrise,
   Edit3,
   FileText,
+  RefreshCcw,
 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { useNavigate } from "react-router-dom";
 import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -111,6 +123,7 @@ const SettingsPage = () => {
   const [dailyReminder, setDailyReminder] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [displayName, setDisplayName] = useState("");
+  const [redoing, setRedoing] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem("darkMode");
@@ -145,6 +158,31 @@ const SettingsPage = () => {
     navigate("/auth");
   };
 
+  const handleRedoOnboarding = async () => {
+    if (!user) return;
+    setRedoing(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          onboarding_completed: false,
+          strengths: [],
+          fears: [],
+          worldview: null,
+          soul_profile_summary: null,
+        } as any)
+        .eq("id", user.id);
+      if (error) throw error;
+      toast({ title: t("settings.redoOnboarding"), description: t("settings.redoConfirmDesc") });
+      navigate("/onboarding");
+    } catch (error) {
+      console.error("Redo onboarding error:", error);
+      toast({ title: t("common.error"), description: t("settings.redoConfirmDesc"), variant: "destructive" });
+    } finally {
+      setRedoing(false);
+    }
+  };
+
   const firstName =
     displayName?.split(" ")[0] ||
     user?.email?.split("@")[0] ||
@@ -177,10 +215,48 @@ const SettingsPage = () => {
           <SectionCard title={t("settings.account")}>
             <div className="flex items-start gap-2">
               <IconTile icon={User} label={t("settings.profile")} onClick={() => navigate("/settings/profile")} />
+              <IconTile icon={PenSquare} label={t("settings.identityPath")} onClick={() => navigate("/settings/goals")} />
               <IconTile icon={CreditCard} label={t("settings.manageSubscription")} onClick={() => navigate("/pricing")} />
               <IconTile icon={Shield} label={t("settings.security")} onClick={() => navigate("/settings/security")} />
               <IconTile icon={Mic} label={t("settings.voice")} onClick={() => navigate("/settings/voice")} />
             </div>
+
+            {/* Redo Onboarding */}
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <button className="w-full flex items-center gap-3 py-2 mt-2">
+                  <div
+                    className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, rgba(255,255,255,0.85), rgba(220,235,250,0.55))",
+                      border: "1px solid rgba(255,255,255,0.6)",
+                    }}
+                  >
+                    <RefreshCcw className="w-[18px] h-[18px] text-primary" strokeWidth={2} />
+                  </div>
+                  <span className="flex-1 text-left text-base font-medium text-foreground">
+                    {t("settings.redoOnboarding")}
+                  </span>
+                </button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>{t("settings.redoConfirmTitle")}</AlertDialogTitle>
+                  <AlertDialogDescription>{t("settings.redoConfirmDesc")}</AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+                  <AlertDialogAction
+                    disabled={redoing}
+                    onClick={handleRedoOnboarding}
+                    className="bg-destructive text-white hover:bg-destructive/90"
+                  >
+                    {t("settings.redoConfirmAction")}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </SectionCard>
         </motion.div>
 

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ChevronLeft, Settings, Plus, Pencil, Check, X } from "lucide-react";
+import { ChevronLeft, Settings, Plus, Pencil, Check, X, Mail, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,6 +28,7 @@ const ProfileSettingsPage = () => {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ streak: 0, entries: 0, topMood: "happy" as Mood });
   const [interests, setInterests] = useState<string[]>([]);
+  const [soulProfile, setSoulProfile] = useState<any>(null);
 
   const interestEmojis: Record<string, string> = {
     "Mindfulness": "🌿",
@@ -45,7 +46,7 @@ const ProfileSettingsPage = () => {
       try {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('display_name, interests, avatar_url, gender, capture_context')
+          .select('display_name, interests, avatar_url, gender, capture_context, soul_profile_summary')
           .eq('id', user.id)
           .single();
 
@@ -54,6 +55,7 @@ const ProfileSettingsPage = () => {
         if (profile?.avatar_url) setAvatarUrl(profile.avatar_url);
         if ((profile as any)?.gender) setGender((profile as any).gender);
         if ((profile as any)?.capture_context) setCaptureContext(true);
+        if ((profile as any)?.soul_profile_summary) setSoulProfile((profile as any).soul_profile_summary);
 
         // Fetch entries for stats
         const { data: entries } = await supabase
@@ -237,6 +239,11 @@ const ProfileSettingsPage = () => {
               <Pencil className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
             </button>
           )}
+          {/* Email */}
+          <div className="flex items-center gap-1.5 text-sm text-muted-foreground mt-1">
+            <Mail className="w-3.5 h-3.5" />
+            <span>{user?.email}</span>
+          </div>
         </motion.div>
 
         {/* Stats */}
@@ -339,6 +346,27 @@ const ProfileSettingsPage = () => {
               <Plus className="w-5 h-5" />
             </button>
           </div>
+        </motion.section>
+
+        {/* Ai Personality Summary */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35 }}
+        >
+          <p className="section-label mb-3">{t("profile.personalitySummary")}</p>
+          {soulProfile?.summary ? (
+            <div className="glass-premium p-5 space-y-3">
+              {soulProfile.personality_type && (
+                <p className="text-sm font-medium text-primary italic">{soulProfile.personality_type}</p>
+              )}
+              <p className="text-foreground leading-relaxed">{soulProfile.summary}</p>
+            </div>
+          ) : (
+            <div className="glass-premium p-5">
+              <p className="text-sm text-muted-foreground">{t("profile.summaryMissing")}</p>
+            </div>
+          )}
         </motion.section>
       </main>
 
