@@ -43,7 +43,11 @@ const LibraryPage = () => {
   const { t } = useLanguage();
   const titleCase = useTitleCase();
 
-  const [entries, setEntries] = useState<JournalEntry[]>([]);
+  const [entries, setEntries] = useState<any[]>([]);
+  const [totalCount, setTotalCount] = useState<number | null>(null);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const PAGE_SIZE = 20;
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
@@ -100,18 +104,49 @@ const LibraryPage = () => {
   const fetchEntries = async () => {
     if (!user) return;
     try {
+      // Lightweight count so the header can show the real total
+      const { count } = await supabase
+        .from("journal_entries")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user.id);
+      setTotalCount(count ?? null);
+
+      // First page only — loading ALL entries' full text on every visit is
+      // what made the Library slow. Older pages load on demand (Load More).
       const { data, error } = await supabase
         .from("journal_entries")
         .select("id, title, enhanced_text, original_transcription, mood, created_at, audio_url, duration_seconds")
         .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .limit(PAGE_SIZE);
 
       if (error) throw error;
       setEntries(data || []);
+      setHasMore((data?.length || 0) >= PAGE_SIZE);
     } catch (error) {
       console.error("Error fetching entries:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadMore = async () => {
+    if (!user || loadingMore) return;
+    setLoadingMore(true);
+    try {
+      const { data, error } = await supabase
+        .from("journal_entries")
+        .select("id, title, enhanced_text, original_transcription, mood, created_at, audio_url, duration_seconds")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .range(entries.length, entries.length + PAGE_SIZE - 1);
+      if (error) throw error;
+      setEntries((prev) => [...prev, ...(data || [])]);
+      setHasMore((data?.length || 0) >= PAGE_SIZE);
+    } catch (error) {
+      console.error("Error loading more entries:", error);
+    } finally {
+      setLoadingMore(false);
     }
   };
 
@@ -223,6 +258,11 @@ const LibraryPage = () => {
 
       {/* Content */}
       <main className="max-w-lg mx-auto px-4 py-4">
+        {totalCount !== null && !loading && (
+          <p className="text-xs text-muted-foreground mb-3">
+            {t("library.entriesCount").replace("{n}", String(totalCount))}
+          </p>
+        )}
         {loading ? (
           <div className="flex justify-center py-16">
             <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
@@ -295,6 +335,23 @@ const LibraryPage = () => {
                 );
               })}
             </AnimatePresence>
+            {hasMore && (
+              <Button
+                variant="outline"
+                className="w-full gap-2 rounded-2xl"
+                onClick={loadMore}
+                disabled={loadingMore}
+              >
+                {loadingMore ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                    {t("library.loadingMore")}
+                  </>
+                ) : (
+                  t("library.loadMore")
+                )}
+              </Button>
+            )}
           </div>
         )}
       </main>

@@ -292,6 +292,10 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "Hinduism",
     "onboarding.worldviewSpiritual": "Spiritual",
     "onboarding.worldviewNoPref": "No preference",
+    // Library pagination
+    "library.entriesCount": "{n} entries",
+    "library.loadMore": "Load more",
+    "library.loadingMore": "Loading...",
     // Onboarding analysis UX
     "onboarding.analyzingSeconds": "Analyzing... {s}s",
     "onboarding.analyzingSlow": "This is taking longer than usual",
@@ -669,6 +673,10 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "Hindouisme",
     "onboarding.worldviewSpiritual": "Spirituel",
     "onboarding.worldviewNoPref": "Pas de préférence",
+    // Library pagination
+    "library.entriesCount": "{n} entrées",
+    "library.loadMore": "Charger plus",
+    "library.loadingMore": "Chargement...",
     // Onboarding analysis UX
     "onboarding.analyzingSeconds": "Analyse en cours... {s}s",
     "onboarding.analyzingSlow": "Cela prend plus de temps que d'habitude",
@@ -1046,6 +1054,10 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "Hinduismo",
     "onboarding.worldviewSpiritual": "Espiritual",
     "onboarding.worldviewNoPref": "Sin preferencia",
+    // Library pagination
+    "library.entriesCount": "{n} entradas",
+    "library.loadMore": "Cargar más",
+    "library.loadingMore": "Cargando...",
     // Onboarding analysis UX
     "onboarding.analyzingSeconds": "Analizando... {s}s",
     "onboarding.analyzingSlow": "Está tardando más de lo habitual",
@@ -1423,6 +1435,10 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "الهندوسية",
     "onboarding.worldviewSpiritual": "روحاني",
     "onboarding.worldviewNoPref": "بدون تفضيل",
+    // Library pagination
+    "library.entriesCount": "{n} مدخلات",
+    "library.loadMore": "تحميل المزيد",
+    "library.loadingMore": "جارٍ التحميل...",
     // Onboarding analysis UX
     "onboarding.analyzingSeconds": "جارٍ التحليل... {s}ث",
     "onboarding.analyzingSlow": "يستغرق هذا وقتًا أطول من المعتاد",
@@ -1800,6 +1816,10 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "印度教",
     "onboarding.worldviewSpiritual": "灵性",
     "onboarding.worldviewNoPref": "无偏好",
+    // Library pagination
+    "library.entriesCount": "{n} 条日记",
+    "library.loadMore": "加载更多",
+    "library.loadingMore": "加载中...",
     // Onboarding analysis UX
     "onboarding.analyzingSeconds": "分析中... {s}秒",
     "onboarding.analyzingSlow": "这比平时花费的时间更长",
@@ -2177,6 +2197,10 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "ヒンドゥー教",
     "onboarding.worldviewSpiritual": "スピリチュアル",
     "onboarding.worldviewNoPref": "特になし",
+    // Library pagination
+    "library.entriesCount": "{n}件のエントリー",
+    "library.loadMore": "もっと見る",
+    "library.loadingMore": "読み込み中...",
     // Onboarding analysis UX
     "onboarding.analyzingSeconds": "分析中... {s}秒",
     "onboarding.analyzingSlow": "通常より時間がかかっています",
@@ -2554,6 +2578,10 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "Uhindu",
     "onboarding.worldviewSpiritual": "Kiroho",
     "onboarding.worldviewNoPref": "Bila upendeleo",
+    // Library pagination
+    "library.entriesCount": "Maingizo {n}",
+    "library.loadMore": "Pakia zaidi",
+    "library.loadingMore": "Inapakia...",
     // Onboarding analysis UX
     "onboarding.analyzingSeconds": "Inachanganua... {s}s",
     "onboarding.analyzingSlow": "Inachukua muda mrefu kuliko kawaida",
@@ -2931,6 +2959,10 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "Hinduismus",
     "onboarding.worldviewSpiritual": "Spirituell",
     "onboarding.worldviewNoPref": "Keine Präferenz",
+    // Library pagination
+    "library.entriesCount": "{n} Einträge",
+    "library.loadMore": "Mehr laden",
+    "library.loadingMore": "Wird geladen...",
     // Onboarding analysis UX
     "onboarding.analyzingSeconds": "Analyse läuft... {s}s",
     "onboarding.analyzingSlow": "Das dauert länger als üblich",
