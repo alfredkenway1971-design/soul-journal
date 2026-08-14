@@ -292,6 +292,14 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "Hinduism",
     "onboarding.worldviewSpiritual": "Spiritual",
     "onboarding.worldviewNoPref": "No preference",
+    // Smart Journaling Prompts + Writing Block Breaker
+    "record.promptsTitle": "Need Inspiration?",
+    "record.promptsRefresh": "Refresh",
+    "record.promptsGenerating": "Generating prompts...",
+    "record.blockBreakerTitle": "Stuck? Try one of these",
+    "record.blockStarter": "Sentence starter",
+    "record.blockPhoto": "Write about a photo",
+    "record.blockWord": "One word",
     // Identity & Path + Redo onboarding
     "settings.identityPath": "Identity & Path",
     "settings.redoOnboarding": "Redo Onboarding",
@@ -568,6 +576,14 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "Hindouisme",
     "onboarding.worldviewSpiritual": "Spirituel",
     "onboarding.worldviewNoPref": "Pas de préférence",
+    // Smart Journaling Prompts + Writing Block Breaker
+    "record.promptsTitle": "Besoin d'inspiration ?",
+    "record.promptsRefresh": "Actualiser",
+    "record.promptsGenerating": "Génération des suggestions...",
+    "record.blockBreakerTitle": "Blocage ? Essayez ceci",
+    "record.blockStarter": "Début de phrase",
+    "record.blockPhoto": "Écrire à propos d'une photo",
+    "record.blockWord": "Un mot",
     // Identity & Path + Redo onboarding
     "settings.identityPath": "Identité & Parcours",
     "settings.redoOnboarding": "Refaire l'intégration",
@@ -844,6 +860,14 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "Hinduismo",
     "onboarding.worldviewSpiritual": "Espiritual",
     "onboarding.worldviewNoPref": "Sin preferencia",
+    // Smart Journaling Prompts + Writing Block Breaker
+    "record.promptsTitle": "¿Necesitas inspiración?",
+    "record.promptsRefresh": "Actualizar",
+    "record.promptsGenerating": "Generando sugerencias...",
+    "record.blockBreakerTitle": "¿Atascado? Prueba esto",
+    "record.blockStarter": "Inicio de frase",
+    "record.blockPhoto": "Escribe sobre una foto",
+    "record.blockWord": "Una palabra",
     // Identity & Path + Redo onboarding
     "settings.identityPath": "Identidad y Camino",
     "settings.redoOnboarding": "Rehacer incorporación",
@@ -1120,6 +1144,14 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "الهندوسية",
     "onboarding.worldviewSpiritual": "روحاني",
     "onboarding.worldviewNoPref": "بدون تفضيل",
+    // Smart Journaling Prompts + Writing Block Breaker
+    "record.promptsTitle": "بحاجة إلى إلهام؟",
+    "record.promptsRefresh": "تحديث",
+    "record.promptsGenerating": "جارٍ إنشاء الاقتراحات...",
+    "record.blockBreakerTitle": "عالق؟ جرّب هذا",
+    "record.blockStarter": "بداية جملة",
+    "record.blockPhoto": "اكتب عن صورة",
+    "record.blockWord": "كلمة واحدة",
     // Identity & Path + Redo onboarding
     "settings.identityPath": "الهوية والمسار",
     "settings.redoOnboarding": "إعادة الإعداد",
@@ -1396,6 +1428,14 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "印度教",
     "onboarding.worldviewSpiritual": "灵性",
     "onboarding.worldviewNoPref": "无偏好",
+    // Smart Journaling Prompts + Writing Block Breaker
+    "record.promptsTitle": "需要灵感吗？",
+    "record.promptsRefresh": "刷新",
+    "record.promptsGenerating": "正在生成提示...",
+    "record.blockBreakerTitle": "卡住了？试试这些",
+    "record.blockStarter": "句子开头",
+    "record.blockPhoto": "写一张照片",
+    "record.blockWord": "一个词",
     // Identity & Path + Redo onboarding
     "settings.identityPath": "身份与路径",
     "settings.redoOnboarding": "重新引导",
@@ -1672,6 +1712,14 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "ヒンドゥー教",
     "onboarding.worldviewSpiritual": "スピリチュアル",
     "onboarding.worldviewNoPref": "特になし",
+    // Smart Journaling Prompts + Writing Block Breaker
+    "record.promptsTitle": "インスピレーションが必要？",
+    "record.promptsRefresh": "更新",
+    "record.promptsGenerating": "プロンプトを生成中...",
+    "record.blockBreakerTitle": "行き詰まった？試してみて",
+    "record.blockStarter": "文の出だし",
+    "record.blockPhoto": "写真について書く",
+    "record.blockWord": "一言",
     // Identity & Path + Redo onboarding
     "settings.identityPath": "アイデンティティと道",
     "settings.redoOnboarding": "セットアップをやり直す",
@@ -1948,6 +1996,14 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "Uhindu",
     "onboarding.worldviewSpiritual": "Kiroho",
     "onboarding.worldviewNoPref": "Bila upendeleo",
+    // Smart Journaling Prompts + Writing Block Breaker
+    "record.promptsTitle": "Unahitaji msukumo?",
+    "record.promptsRefresh": "Onyesha upya",
+    "record.promptsGenerating": "Inatengeneza mapendekezo...",
+    "record.blockBreakerTitle": "Umekwama? Jaribu hizi",
+    "record.blockStarter": "Mwanzo wa sentensi",
+    "record.blockPhoto": "Andika kuhusu picha",
+    "record.blockWord": "Neno moja",
     // Identity & Path + Redo onboarding
     "settings.identityPath": "Utambulisho na Njia",
     "settings.redoOnboarding": "Rudia Kuongozwa",
@@ -2224,6 +2280,14 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "Hinduismus",
     "onboarding.worldviewSpiritual": "Spirituell",
     "onboarding.worldviewNoPref": "Keine Präferenz",
+    // Smart Journaling Prompts + Writing Block Breaker
+    "record.promptsTitle": "Brauchst du Inspiration?",
+    "record.promptsRefresh": "Aktualisieren",
+    "record.promptsGenerating": "Vorschläge werden generiert...",
+    "record.blockBreakerTitle": "Festgefahren? Versuch das",
+    "record.blockStarter": "Satzanfang",
+    "record.blockPhoto": "Über ein Foto schreiben",
+    "record.blockWord": "Ein Wort",
     // Identity & Path + Redo onboarding
     "settings.identityPath": "Identität & Weg",
     "settings.redoOnboarding": "Onboarding wiederholen",

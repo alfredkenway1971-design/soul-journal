@@ -133,6 +133,90 @@ export const useJournalAPI = (appLanguage?: AppLanguage) => {
     return (data as any)?.insightsCount || 0;
   };
 
+  // Feature: Smart Journaling Prompts — 3 personalized prompts grounded in
+  // recent entries + goals, in the user's language and calibrated voice.
+  const generateJournalingPrompts = async (): Promise<string[]> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return [];
+
+    // Recent entries (last 7, keep the 5 non-empty)
+    const { data: entries } = await supabase
+      .from('journal_entries')
+      .select('enhanced_text, original_transcription')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(7);
+    const recentEntries = (entries || [])
+      .map((r: any) => r.enhanced_text || r.original_transcription || '')
+      .filter((t: string) => t && t.trim().length > 10)
+      .slice(0, 5);
+
+    // Goals
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('goals')
+      .eq('id', user.id)
+      .maybeSingle();
+    const goals = ((profile as any)?.goals || []).map((g: any) => g?.title || g).filter(Boolean) as string[];
+
+    const styleSamples = await fetchStyleSamples();
+
+    const response = await fetch("/api/journaling-prompts", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(user ? { Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}` } : {}),
+      },
+      body: JSON.stringify({ recentEntries, goals, language: langName, styleSamples }),
+    });
+
+    let data: any;
+    try {
+      data = await response.json();
+    } catch {
+      data = {};
+    }
+    if (!response.ok) throw new Error(data.error || "Prompts generation failed");
+    if (data.error) throw new Error(data.error);
+    return (data.prompts || []).slice(0, 3);
+  };
+
+  // Feature: Writing Block Breaker — a sentence starter in the user's voice
+  const generateStarter = async (): Promise<string> => {
+    const styleSamples = await fetchStyleSamples();
+    const data = await invokeEnhance({
+      text: "Generate one sentence starter now.",
+      tone: 'natural',
+      language: langName,
+      styleSamples,
+      customPrompt: `Write a single natural sentence starter (3-8 words) in ${langName} that the user can complete to begin a journal entry. Mirror their voice. Return ONLY the starter, no quotes, no punctuation at the end.`,
+    });
+    return (data.enhancedText || "").replace(/["']/g, "").trim();
+  };
+
+  // Feature: Writing Block Breaker — one word tied to their recent emotional state
+  const generateOneWordPrompt = async (): Promise<string> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return "";
+    const { data: entries } = await supabase
+      .from('journal_entries')
+      .select('enhanced_text, original_transcription')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(3);
+    const recent = (entries || [])
+      .map((r: any) => r.enhanced_text || r.original_transcription || '')
+      .filter((t: string) => t && t.trim().length > 5)
+      .join(" ");
+    const data = await invokeEnhance({
+      text: recent || "No entries yet.",
+      tone: 'natural',
+      language: langName,
+      customPrompt: `Based on this person's recent journal entries, give ONE single word (in ${langName}) that resonates with their current emotional state and could inspire them to write. Return ONLY that one word.`,
+    });
+    return (data.enhancedText || "").replace(/["']/g, "").trim();
+  };
+
   const generateVoice = async (text: string, voiceId?: string, entryId?: string, textType?: 'entry' | 'reflection', langHint?: string): Promise<string> => {
     // Check cache first if entryId is provided
     // IMPORTANT: Only use voice-cache/ paths (AI-generated), never raw recordings
@@ -407,6 +491,9 @@ export const useJournalAPI = (appLanguage?: AppLanguage) => {
     detectMood,
     translateText,
     generateCoachingInsights,
+    generateJournalingPrompts,
+    generateStarter,
+    generateOneWordPrompt,
     generateVoice,
     generateSoulReflection,
     uploadAudio,

@@ -1,4 +1,4 @@
-const CACHE_NAME = "soul-journal-v9";
+const CACHE_NAME = "soul-journal-v10";
 const OFFLINE_URL = "/offline.html";
 const APP_SHELL = [
   "/",

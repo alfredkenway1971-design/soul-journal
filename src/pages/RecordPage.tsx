@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { X, Type, Smile, Sparkles, Wand2, Play, Volume2, Camera, ImagePlus, Trash2, PartyPopper, Star } from "lucide-react";
+import { X, Type, Smile, Sparkles, Wand2, Play, Volume2, Camera, ImagePlus, Trash2, PartyPopper, Star, RefreshCcw, Lightbulb } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -52,6 +52,15 @@ const RecordPage = () => {
   const [generatedAudioUrl, setGeneratedAudioUrl] = useState<string | null>(null);
   const [postInsight, setPostInsight] = useState<string | null>(null);
   const [insightLoading, setInsightLoading] = useState(false);
+  // Smart Journaling Prompts (Feature: personalized prompts on the write screen)
+  const [prompts, setPrompts] = useState<string[]>([]);
+  const [promptsLoading, setPromptsLoading] = useState(false);
+  const [promptsHidden, setPromptsHidden] = useState(false);
+  const promptsFetchedRef = useRef(false);
+  // Writing Block Breaker (Feature: 30s inactivity nudge, once per session)
+  const [blockNudge, setBlockNudge] = useState<{ starter?: string; word?: string } | null>(null);
+  const blockShownRef = useRef(false);
+  const lastTypedRef = useRef(Date.now());
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [photos, setPhotos] = useState<File[]>([]);
   const [photoPreviewUrls, setPhotoPreviewUrls] = useState<string[]>([]);
@@ -309,6 +318,50 @@ const RecordPage = () => {
     } catch (error) {
       console.error("Failed to fetch latest insight:", error);
     }
+  };
+
+  // Smart Journaling Prompts — generate once when the write step opens
+  useEffect(() => {
+    if (step !== "write" || promptsFetchedRef.current) return;
+    promptsFetchedRef.current = true;
+    setPromptsLoading(true);
+    api.generateJournalingPrompts()
+      .then((p) => setPrompts(Array.isArray(p) ? p : []))
+      .catch((err) => { console.warn("Journaling prompts failed:", err); setPrompts([]); })
+      .finally(() => setPromptsLoading(false));
+  }, [step]);
+
+  // Writing Block Breaker — nudge after 30s of inactivity on a blank write screen
+  useEffect(() => {
+    if (step !== "write" || blockShownRef.current) return;
+    const interval = setInterval(() => {
+      if (blockShownRef.current) return;
+      if (Date.now() - lastTypedRef.current < 30000) return;
+      if (transcription || richContent) return; // only on a blank screen
+      blockShownRef.current = true;
+      setBlockNudge({});
+      api.generateStarter().then((s) => s && setBlockNudge((p) => ({ ...p, starter: s }))).catch(() => {});
+      api.generateOneWordPrompt().then((w) => w && setBlockNudge((p) => ({ ...p, word: w }))).catch(() => {});
+    }, 10000);
+    return () => clearInterval(interval);
+  }, [step, transcription, richContent]);
+
+  const escapeHtml = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+  const insertIntoEntry = (text: string) => {
+    const clean = (richContent || "").replace(/<br\s*\/?>\s*$/g, "");
+    const next = clean ? `${clean}<div>${escapeHtml(text)}</div>` : `<div>${escapeHtml(text)}</div>`;
+    setRichContent(next);
+    setTranscription((transcription + " " + text).trim());
+    lastTypedRef.current = Date.now();
+  };
+
+  const refreshPrompts = () => {
+    setPromptsLoading(true);
+    api.generateJournalingPrompts()
+      .then((p) => setPrompts(Array.isArray(p) ? p : []))
+      .catch((err) => { console.warn("Journaling prompts failed:", err); setPrompts([]); })
+      .finally(() => setPromptsLoading(false));
   };
 
   const handleSave = async () => {
@@ -578,11 +631,99 @@ const RecordPage = () => {
               value={richContent}
               placeholder={t("record.whatsOnMind")}
               onChange={(html, plain) => {
+                lastTypedRef.current = Date.now();
+                if (blockNudge) setBlockNudge(null);
                 setRichContent(html);
                 setTranscription(plain);
               }}
               minHeight={220}
             />
+
+            {/* Smart Journaling Prompts */}
+            {!promptsHidden && (prompts.length > 0 || promptsLoading) && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-primary" />
+                    {t("record.promptsTitle")}
+                  </p>
+                  <div className="flex items-center gap-0.5">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      onClick={refreshPrompts}
+                      disabled={promptsLoading}
+                      aria-label={t("record.promptsRefresh")}
+                    >
+                      <RefreshCcw className={`w-3.5 h-3.5 ${promptsLoading ? "animate-spin" : ""}`} />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      onClick={() => setPromptsHidden(true)}
+                      aria-label={t("common.cancel")}
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                </div>
+                {promptsLoading ? (
+                  <p className="text-sm text-muted-foreground">{t("record.promptsGenerating")}</p>
+                ) : (
+                  <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+                    {prompts.map((p, i) => (
+                      <button
+                        key={i}
+                        onClick={() => insertIntoEntry(p)}
+                        className="shrink-0 max-w-[260px] text-left text-sm bg-white/70 dark:bg-white/10 border border-border/50 rounded-2xl px-3 py-2.5 hover:border-primary/50 hover:bg-primary/5 transition-colors text-foreground"
+                      >
+                        {p}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Writing Block Breaker */}
+            {blockNudge && (
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="rounded-2xl border border-primary/30 bg-primary/5 p-4 space-y-2"
+              >
+                <p className="text-xs font-medium text-primary flex items-center gap-1.5">
+                  <Lightbulb className="w-3.5 h-3.5" />
+                  {t("record.blockBreakerTitle")}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {blockNudge.starter && (
+                    <button
+                      onClick={() => insertIntoEntry(blockNudge.starter!)}
+                      className="text-sm bg-white/80 dark:bg-white/10 border border-border/50 rounded-xl px-3 py-2 hover:border-primary/50 transition-colors text-left"
+                    >
+                      ✍️ {t("record.blockStarter")}: {blockNudge.starter}
+                    </button>
+                  )}
+                  <button
+                    onClick={() => galleryInputRef.current?.click()}
+                    className="text-sm bg-white/80 dark:bg-white/10 border border-border/50 rounded-xl px-3 py-2 hover:border-primary/50 transition-colors text-left"
+                  >
+                    📷 {t("record.blockPhoto")}
+                  </button>
+                  {blockNudge.word && (
+                    <button
+                      onClick={() => insertIntoEntry(blockNudge.word!)}
+                      className="text-sm bg-white/80 dark:bg-white/10 border border-border/50 rounded-xl px-3 py-2 hover:border-primary/50 transition-colors text-left"
+                    >
+                      ✨ {t("record.blockWord")}: {blockNudge.word}
+                    </button>
+                  )}
+                </div>
+              </motion.div>
+            )}
             <div className="flex gap-3">
               <Button
                 variant="outline"
