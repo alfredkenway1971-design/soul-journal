@@ -297,6 +297,31 @@ export const useJournalAPI = (appLanguage?: AppLanguage) => {
     };
   };
 
+  // Feature: Relationship Emotional Tracker — private relations scan
+  const scanRelations = async (entries: { id: string; text: string; mood: string }[], languageName: string): Promise<{ name: string; count: number; trend: string; insight: string; entryIndexes: number[] }[]> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user || entries.length === 0) return [];
+
+    const response = await fetch("/api/relations-scan", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(user ? { Authorization: " Bearer " + (await supabase.auth.getSession()).data.session?.access_token } : {}),
+      },
+      body: JSON.stringify({ entries, language: languageName }),
+    });
+
+    let data: any;
+    try {
+      data = await response.json();
+    } catch {
+      data = {};
+    }
+    if (!response.ok) throw new Error(data.error || "Relations scan failed");
+    if (data.error) throw new Error(data.error);
+    return Array.isArray(data.relations) ? data.relations : [];
+  };
+
   const generateVoice = async (text: string, voiceId?: string, entryId?: string, textType?: 'entry' | 'reflection', langHint?: string): Promise<string> => {
     // Check cache first if entryId is provided
     // IMPORTANT: Only use voice-cache/ paths (AI-generated), never raw recordings
@@ -637,6 +662,7 @@ export const useJournalAPI = (appLanguage?: AppLanguage) => {
     scanGoalMentions,
     scanGratitude,
     forecastEmotion,
+    scanRelations,
     generateVoice,
     generateSoulReflection,
     uploadAudio,

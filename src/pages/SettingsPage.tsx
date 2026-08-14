@@ -19,6 +19,7 @@ import {
   RefreshCcw,
   Sparkles,
   Heart,
+  Users,
 } from "lucide-react";
 import { loadAIPrefs, saveAIPrefs, type AIPrefs } from "@/lib/goalAccountability";
 import {
@@ -344,6 +345,21 @@ const SettingsPage = () => {
               }
             />
             <p className="text-xs text-muted-foreground px-1 -mt-1">{t("settings.emotionalForecastDesc")}</p>
+            <Row
+              icon={Users}
+              label={t("settings.relationsTracker")}
+              right={
+                <Switch
+                  checked={aiPrefs.relationsTracker}
+                  onCheckedChange={(checked) => {
+                    const next = { ...aiPrefs, relationsTracker: checked };
+                    setAiPrefs(next);
+                    saveAIPrefs(next);
+                  }}
+                />
+              }
+            />
+            <p className="text-xs text-muted-foreground px-1 -mt-1">{t("settings.relationsTrackerDesc")}</p>
           </SectionCard>
         </motion.div>
 
