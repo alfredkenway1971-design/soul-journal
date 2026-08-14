@@ -47,23 +47,25 @@ class UpstreamError extends Error {
   }
 }
 
-// Primary: self-hosted Whisper server on the VPS (free, offline-capable)
+// Primary: self-hosted Whisper via the ffmpeg converter on the VPS (8086).
+// The converter normalizes ANY audio format (wav/m4a/webm/mp3) to WAV for
+// whisper.cpp — web sends wav, native app sends m4a.
 async function transcribeWithWhisper(binaryAudio: Uint8Array, languageOverride?: string): Promise<{ text: string }> {
   const WHISPER_API_KEY = Deno.env.get('WHISPER_API_KEY');
   if (!WHISPER_API_KEY) throw new Error('WHISPER_API_KEY is not configured');
 
-  const form = new FormData();
-  form.append('file', new Blob([binaryAudio], { type: 'audio/wav' }), 'recording.wav');
-  form.append('temperature', '0.0');
-  form.append('response_format', 'json');
+  const headers: Record<string, string> = {
+    'x-api-key': WHISPER_API_KEY,
+    'Content-Type': 'application/octet-stream',
+  };
   if (languageOverride && languageOverride !== 'auto') {
-    form.append('language', languageOverride);
+    headers['x-whisper-language'] = languageOverride;
   }
 
-  const response = await fetch('http://144.91.106.188:8082/inference', {
+  const response = await fetch('http://144.91.106.188:8086/transcribe', {
     method: 'POST',
-    headers: { 'x-api-key': WHISPER_API_KEY },
-    body: form,
+    headers,
+    body: binaryAudio,
   });
 
   if (!response.ok) {
