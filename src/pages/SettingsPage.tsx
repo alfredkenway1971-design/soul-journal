@@ -17,7 +17,9 @@ import {
   Edit3,
   FileText,
   RefreshCcw,
+  Sparkles,
 } from "lucide-react";
+import { loadAIPrefs, saveAIPrefs, type AIPrefs } from "@/lib/goalAccountability";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -121,6 +123,7 @@ const SettingsPage = () => {
   const { t } = useLanguage();
   const [darkMode, setDarkMode] = useState(false);
   const [dailyReminder, setDailyReminder] = useState(false);
+  const [aiPrefs, setAiPrefs] = useState<AIPrefs>(() => loadAIPrefs());
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [displayName, setDisplayName] = useState("");
   const [redoing, setRedoing] = useState(false);
@@ -274,6 +277,27 @@ const SettingsPage = () => {
             />
             
             <Row icon={Sunrise} label={t("settings.morningReflection")} onClick={() => navigate("/settings/reminders")} />
+          </SectionCard>
+        </motion.div>
+
+        {/* AI Preferences */}
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
+          <SectionCard title={t("settings.aiPrefs")}>
+            <Row
+              icon={Sparkles}
+              label={t("settings.goalAccountability")}
+              right={
+                <Switch
+                  checked={aiPrefs.goalAccountability}
+                  onCheckedChange={(checked) => {
+                    const next = { ...aiPrefs, goalAccountability: checked };
+                    setAiPrefs(next);
+                    saveAIPrefs(next);
+                  }}
+                />
+              }
+            />
+            <p className="text-xs text-muted-foreground px-1 -mt-1">{t("settings.goalAccountabilityDesc")}</p>
           </SectionCard>
         </motion.div>
 

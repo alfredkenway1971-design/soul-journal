@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ChevronLeft, Settings, Plus, Pencil, Check, X, Mail, Sparkles } from "lucide-react";
+import { ChevronLeft, Settings, Plus, Pencil, Check, X, Mail, Sparkles, Target } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,14 +9,20 @@ import BottomNav from "@/components/BottomNav";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useJournalAPI } from "@/hooks/useJournalAPI";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  loadAIPrefs, scanFreshToday, loadScan, saveScan, computeGoalStatuses,
+  type GoalScanResult, type GoalStatus,
+} from "@/lib/goalAccountability";
 import type { Mood } from "@/components/MoodSelector";
 
 const ProfileSettingsPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const api = useJournalAPI(language);
   
   const [displayName, setDisplayName] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -29,6 +35,9 @@ const ProfileSettingsPage = () => {
   const [stats, setStats] = useState({ streak: 0, entries: 0, topMood: "happy" as Mood });
   const [interests, setInterests] = useState<string[]>([]);
   const [soulProfile, setSoulProfile] = useState<any>(null);
+  // Goal Accountability Partner — goals + statuses for the Goals section
+  const [goals, setGoals] = useState<string[]>([]);
+  const [goalStatuses, setGoalStatuses] = useState<Record<string, GoalStatus> | null>(null);
 
   const interestEmojis: Record<string, string> = {
     "Mindfulness": "🌿",
@@ -46,12 +55,13 @@ const ProfileSettingsPage = () => {
       try {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('display_name, interests, avatar_url, gender, capture_context, soul_profile_summary')
+          .select('display_name, interests, goals, avatar_url, gender, capture_context, soul_profile_summary')
           .eq('id', user.id)
           .single();
 
         if (profile?.display_name) setDisplayName(profile.display_name);
         if (profile?.interests) setInterests(profile.interests);
+        if ((profile as any)?.goals) setGoals(((profile as any).goals as any[]).map((g: any) => g?.title || g).filter(Boolean));
         if (profile?.avatar_url) setAvatarUrl(profile.avatar_url);
         if ((profile as any)?.gender) setGender((profile as any).gender);
         if ((profile as any)?.capture_context) setCaptureContext(true);
@@ -109,6 +119,37 @@ const ProfileSettingsPage = () => {
     
     fetchProfile();
   }, [user]);
+
+  // Goal Accountability Partner — goals status (shares the 1x/day scan cache)
+  useEffect(() => {
+    const loadGoalStatuses = async () => {
+      if (!user || goals.length === 0) return;
+      if (!loadAIPrefs().goalAccountability) return;
+      let results: GoalScanResult[] | null = scanFreshToday() ? loadScan() : null;
+      if (!results) {
+        const cutoff = new Date(Date.now() - 7 * 86400000).toISOString();
+        const { data: entries } = await supabase
+          .from('journal_entries')
+          .select('enhanced_text, original_transcription')
+          .eq('user_id', user.id)
+          .gte('created_at', cutoff)
+          .order('created_at', { ascending: false })
+          .limit(15);
+        const texts = (entries || [])
+          .map((r: any) => r.enhanced_text || r.original_transcription || '')
+          .filter((t: string) => t && t.trim().length > 5);
+        try {
+          results = await api.scanGoalMentions(goals, texts);
+          saveScan(results);
+        } catch (err) {
+          console.warn('Goal scan failed:', err);
+          results = loadScan();
+        }
+      }
+      if (results) setGoalStatuses(computeGoalStatuses(goals, results));
+    };
+    loadGoalStatuses();
+  }, [user, goals]);
 
   const handleGenderChange = async (newGender: string) => {
     if (!user) return;
@@ -339,7 +380,7 @@ const ProfileSettingsPage = () => {
                 {interest}
               </span>
             ))}
-            <button 
+            <button
               className="w-10 h-10 rounded-full bg-white/60 dark:bg-white/10 border border-border/50 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
               onClick={() => navigate("/settings/goals")}
             >
@@ -347,6 +388,62 @@ const ProfileSettingsPage = () => {
             </button>
           </div>
         </motion.section>
+
+        {/* Goals (Goal Accountability Partner) */}
+        {goals.length > 0 && (
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.35 }}
+          >
+            <div className="flex items-center gap-2 mb-3">
+              <Target className="w-4 h-4 text-primary" />
+              <p className="section-label">{t("profile.goalsTitle")}</p>
+            </div>
+            <div className="space-y-2">
+              {goals.map((goal) => {
+                const status = goalStatuses?.[goal] || "onTrack";
+                const styles =
+                  status === "celebrating"
+                    ? "border-emerald-300/60 bg-emerald-50/70 dark:bg-emerald-950/20"
+                    : status === "needsAttention"
+                    ? "border-amber-200/70 bg-amber-50/70 dark:bg-amber-950/20"
+                    : "border-border/50 bg-white/60 dark:bg-white/5";
+                const dot =
+                  status === "celebrating"
+                    ? "bg-emerald-500"
+                    : status === "needsAttention"
+                    ? "bg-amber-500"
+                    : "bg-primary";
+                const label =
+                  status === "celebrating"
+                    ? t("profile.goalCelebrating")
+                    : status === "needsAttention"
+                    ? t("profile.goalAttention")
+                    : t("profile.goalOnTrack");
+                return (
+                  <div
+                    key={goal}
+                    className={`flex items-center justify-between gap-2 rounded-xl border px-3.5 py-2.5 ${styles}`}
+                  >
+                    <span className="text-sm font-medium text-foreground truncate">{goal}</span>
+                    <span className="flex items-center gap-1.5 text-xs text-muted-foreground shrink-0">
+                      <span className={`w-2 h-2 rounded-full ${dot}`} />
+                      {label}
+                      {status === "celebrating" && " 🎉"}
+                    </span>
+                  </div>
+                );
+              })}
+              <button
+                className="w-full text-xs font-medium text-primary py-1"
+                onClick={() => navigate("/settings/goals")}
+              >
+                + {t("settings.goals")}
+              </button>
+            </div>
+          </motion.section>
+        )}
 
         {/* Ai Personality Summary */}
         <motion.section

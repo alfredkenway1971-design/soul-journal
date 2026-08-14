@@ -218,6 +218,31 @@ export const useJournalAPI = (appLanguage?: AppLanguage) => {
     return (data.enhancedText || "").replace(/["']/g, "").trim();
   };
 
+  // Feature: Goal Accountability — scan recent entries for goal mentions
+  const scanGoalMentions = async (goals: string[], entries: string[]): Promise<{ goal: string; count: number; sample: string }[]> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user || goals.length === 0) return [];
+
+    const response = await fetch("/api/goal-scan", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(user ? { Authorization: "Bearer " + (await supabase.auth.getSession()).data.session?.access_token } : {}),
+      },
+      body: JSON.stringify({ goals, entries }),
+    });
+
+    let data: any;
+    try {
+      data = await response.json();
+    } catch {
+      data = {};
+    }
+    if (!response.ok) throw new Error(data.error || "Goal scan failed");
+    if (data.error) throw new Error(data.error);
+    return Array.isArray(data.results) ? data.results : [];
+  };
+
   const generateVoice = async (text: string, voiceId?: string, entryId?: string, textType?: 'entry' | 'reflection', langHint?: string): Promise<string> => {
     // Check cache first if entryId is provided
     // IMPORTANT: Only use voice-cache/ paths (AI-generated), never raw recordings
@@ -555,6 +580,7 @@ export const useJournalAPI = (appLanguage?: AppLanguage) => {
     generateJournalingPrompts,
     generateStarter,
     generateOneWordPrompt,
+    scanGoalMentions,
     generateVoice,
     generateSoulReflection,
     uploadAudio,

@@ -18,7 +18,12 @@ import MoodFilterBar, { type MoodFilterValue } from "@/components/MoodFilterBar"
 import OnThisDayCard from "@/components/OnThisDayCard";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
-import { Flame, TrendingUp, Clock } from "lucide-react";
+import { Flame, TrendingUp, Clock, Target, X } from "lucide-react";
+import {
+  loadAIPrefs, scanFreshToday, loadScan, saveScan, computeGoalStatuses,
+  pickHomeCardItem, registerNudge, markCardSeen, markNotified, wasNotified,
+  nudgesUsedThisWeek, NUDGE_MAX_PER_WEEK, type GoalScanResult, type GoalStatus,
+} from "@/lib/goalAccountability";
 import type { Mood } from "@/components/MoodSelector";
 
 interface Entry {
@@ -45,6 +50,8 @@ const HomePage = () => {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [moodFilter, setMoodFilter] = useState<MoodFilterValue>("all");
   const [homeInsight, setHomeInsight] = useState<string | null>(null);
+  // Goal Accountability Partner card
+  const [goalItem, setGoalItem] = useState<{ goal: string; status: GoalStatus; count: number } | null>(null);
   
   
   const currentDate = new Date();
@@ -119,6 +126,83 @@ const HomePage = () => {
     
     fetchData();
   }, [user]);
+
+  // Goal Accountability Partner — 1 AI scan/day, cached; pick one card item
+  useEffect(() => {
+    const loadGoalCard = async () => {
+      if (!user) return;
+      if (!loadAIPrefs().goalAccountability) return;
+      try {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('goals')
+          .eq('id', user.id)
+          .maybeSingle();
+        const goals = ((profile as any)?.goals || []).map((g: any) => g?.title || g).filter(Boolean) as string[];
+        if (goals.length === 0) return;
+
+        let results: GoalScanResult[] | null = scanFreshToday() ? loadScan() : null;
+        if (!results) {
+          const cutoff = new Date(Date.now() - 7 * 86400000).toISOString();
+          const { data: entries } = await supabase
+            .from('journal_entries')
+            .select('enhanced_text, original_transcription')
+            .eq('user_id', user.id)
+            .gte('created_at', cutoff)
+            .order('created_at', { ascending: false })
+            .limit(15);
+          const texts = (entries || [])
+            .map((r: any) => r.enhanced_text || r.original_transcription || '')
+            .filter((t: string) => t && t.trim().length > 5);
+          try {
+            results = await api.scanGoalMentions(goals, texts);
+            saveScan(results);
+          } catch (err) {
+            console.warn('Goal scan failed:', err);
+            results = loadScan();
+          }
+        }
+        if (!results) return;
+
+        const statuses = computeGoalStatuses(goals, results);
+        const item = pickHomeCardItem(statuses, results, 'sj-goal-');
+        if (!item) return;
+
+        setGoalItem(item);
+        if (item.status === 'needsAttention' && nudgesUsedThisWeek() < NUDGE_MAX_PER_WEEK) {
+          registerNudge();
+          const nKey = 'nudge:' + item.goal;
+          if (!wasNotified(nKey) && 'Notification' in window && Notification.permission === 'granted') {
+            markNotified(nKey);
+            try {
+              new Notification('Soul Journal', {
+                body: t("home.goalNudge").replace("{goal}", item.goal),
+                tag: 'goal-nudge',
+                icon: '/favicon.ico',
+              });
+            } catch {}
+          }
+        }
+      } catch (err) {
+        console.warn('Goal card failed:', err);
+      }
+    };
+    loadGoalCard();
+  }, [user]);
+
+  const goalMessage = (item: { goal: string; status: GoalStatus; count: number }) => {
+    if (item.status === 'celebrating') {
+      return t("home.goalCelebrate").replace("{goal}", item.goal).replace("{count}", String(Math.max(item.count, 3)));
+    }
+    return t("home.goalNudge").replace("{goal}", item.goal);
+  };
+
+  const dismissGoalCard = () => {
+    if (!goalItem) return;
+    const typeKey = goalItem.status === 'celebrating' ? 'celebrate:' : 'nudge:';
+    markCardSeen('sj-goal-' + typeKey + goalItem.goal);
+    setGoalItem(null);
+  };
 
   const firstName = displayName?.split(' ')[0] || user?.user_metadata?.display_name?.split(' ')[0] || user?.email?.split('@')[0] || t("home.friend");
 
@@ -259,6 +343,44 @@ const HomePage = () => {
       <main className="max-w-lg mx-auto px-5 space-y-5">
         {/* AI Insight — primary hook, above Quick Capture */}
         <AIInsightCard insight={homeInsight || undefined} userName={firstName} />
+
+        {/* Goal Accountability Partner — nudge or celebration */}
+        {goalItem && (
+          <div
+            className={`relative rounded-2xl p-4 border ${
+              goalItem.status === "celebrating"
+                ? "border-emerald-300/60 bg-emerald-50/80 dark:bg-emerald-950/20"
+                : "border-amber-200/70 bg-amber-50/80 dark:bg-amber-950/20"
+            }`}
+          >
+            <button
+              className="absolute top-2.5 right-2.5 text-muted-foreground hover:text-foreground transition-colors"
+              onClick={dismissGoalCard}
+              aria-label="Dismiss"
+            >
+              <X className="w-4 h-4" />
+            </button>
+            <div className="flex items-start gap-3 pr-6">
+              <div
+                className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${
+                  goalItem.status === "celebrating" ? "bg-emerald-100 dark:bg-emerald-900/40" : "bg-amber-100 dark:bg-amber-900/40"
+                }`}
+              >
+                <Target className={`w-4.5 h-4.5 ${goalItem.status === "celebrating" ? "text-emerald-600" : "text-amber-600"}`} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold text-foreground">{t("home.goalCheckIn")}</p>
+                <p className="text-sm text-foreground/90 mt-0.5">{goalMessage(goalItem)}</p>
+                <button
+                  className="text-xs font-medium text-primary mt-1.5"
+                  onClick={() => navigate("/settings")}
+                >
+                  {t("home.goalView")} →
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Quick Capture */}
         <QuickCapture />
