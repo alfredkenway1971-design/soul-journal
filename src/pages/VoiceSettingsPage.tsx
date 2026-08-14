@@ -15,6 +15,9 @@ import {
   saveVoiceProfile,
   removeVoiceProfile,
   normalizeLang,
+  fetchDbVoiceProfiles,
+  saveVoiceProfileToDb,
+  removeVoiceProfileFromDb,
 } from "@/lib/voiceProfiles";
 
 const VoiceSettingsPage = () => {
@@ -86,6 +89,22 @@ const VoiceSettingsPage = () => {
           const seeded = saveVoiceProfile(seedLang, dbId, true);
           setProfiles(seeded.voices);
           setDefaultLang(seeded.defaultLang);
+        }
+
+        // Pull per-user clones from the backend so clones survive device or
+        // browser changes (WhatsApp WebView clears localStorage often).
+        const dbVoices = await fetchDbVoiceProfiles(user.id);
+        let merged = local.voices;
+        let added = false;
+        for (const [lang, vid] of Object.entries(dbVoices)) {
+          if (!merged[lang]) {
+            merged = saveVoiceProfile(lang, vid, !merged.defaultLang).voices;
+            added = true;
+          }
+        }
+        if (added) {
+          setProfiles(merged);
+          setDefaultLang(getVoiceProfiles().defaultLang);
         }
       } catch (error) {
         console.error("Error fetching voice clone:", error);
@@ -289,6 +308,9 @@ const VoiceSettingsPage = () => {
       setProfiles(updated.voices);
       setDefaultLang(updated.defaultLang);
 
+      // Persist per-user on the backend (survives device/browser changes)
+      await saveVoiceProfileToDb(user.id, targetLang, data.voiceId);
+
       // Keep the DB column in sync with the default profile (backward compat)
       if (isDefaultTarget) {
         const { error: updateError } = await supabase
@@ -323,6 +345,9 @@ const VoiceSettingsPage = () => {
     const updated = removeVoiceProfile(lang);
     setProfiles(updated.voices);
     setDefaultLang(updated.defaultLang);
+
+    // Remove from the backend too (per-user persistence)
+    await removeVoiceProfileFromDb(user.id, lang);
 
     if (lang === defaultLang || updated.defaultLang !== lang) {
       const { error } = await supabase

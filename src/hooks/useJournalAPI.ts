@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { getLanguageName, type AppLanguage } from "@/contexts/LanguageContext";
-import { getVoiceProfiles, normalizeLang } from "@/lib/voiceProfiles";
+import { getVoiceProfiles, saveVoiceProfile, normalizeLang } from "@/lib/voiceProfiles";
 import { invokeEnhance } from "@/lib/aiText";
 import { smartTitleCase } from "@/lib/smartTitleCase";
 import { blobToWav } from "@/lib/audioConvert";
@@ -450,6 +450,32 @@ export const useJournalAPI = (appLanguage?: AppLanguage) => {
         }
         if ((profile as any)?.gender) {
           userGender = (profile as any).gender;
+        }
+
+        // Per-user backend clones (voice_profiles table) — fallback for devices
+        // or browsers where localStorage hasn't synced yet (clones follow the
+        // user across devices, not the device).
+        if (!selectedVoiceId) {
+          try {
+            const { data: dbVoices } = await (supabase.from("voice_profiles") as any)
+              .select("lang, voice_id")
+              .eq("user_id", user.id);
+            if (dbVoices && dbVoices.length > 0) {
+              const map: Record<string, string> = {};
+              for (const row of dbVoices) map[row.lang] = row.voice_id;
+              const dbRouteLang = normalizeLang(langHint) || playbackLang || entryLang;
+              const dbVoice =
+                (dbRouteLang && map[dbRouteLang]) ||
+                (entryLang && map[entryLang]) ||
+                map[Object.keys(map)[0]];
+              if (dbVoice) {
+                selectedVoiceId = dbVoice;
+                saveVoiceProfile(dbRouteLang || entryLang || Object.keys(map)[0]!, dbVoice);
+              }
+            }
+          } catch (e) {
+            console.warn("voice_profiles fallback failed:", e);
+          }
         }
       }
     }
