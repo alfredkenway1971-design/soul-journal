@@ -305,7 +305,7 @@ const CalendarPage = () => {
             {sentimentLabels.map((item) => (
               <div key={item.key} className="flex items-center gap-1.5">
                 <div className={`w-3 h-3 rounded-full ${item.color}`} />
-                <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">{item.label}</span>
+                <span className="text-[10px] text-muted-foreground font-medium tracking-wide">{item.label}</span>
               </div>
             ))}
           </div>
@@ -353,7 +353,7 @@ const CalendarPage = () => {
 
                   {selectedEntry.entries.length > 1 && (
                     <div className="space-y-2 mb-4">
-                      <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">{t("calendar.allEntries")}</p>
+                      <p className="text-xs text-muted-foreground font-medium tracking-wide">{t("calendar.allEntries")}</p>
                       {selectedEntry.entries.map((e) => (
                         <button
                           key={e.id}
