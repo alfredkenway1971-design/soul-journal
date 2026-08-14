@@ -283,7 +283,7 @@ const RecordPage = () => {
     setIsProcessing(true);
     try {
       let textForVoice = enhancedText;
-      if (selectedLanguage !== 'en') {
+      if (selectedLanguage !== 'en' && detectedLanguage !== selectedLanguage) {
         textForVoice = await api.translateText(enhancedText, selectedLanguage);
       }
       const audioUrl = await api.generateVoice(textForVoice, undefined, undefined, undefined, selectedLanguage);

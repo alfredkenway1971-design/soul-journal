@@ -72,6 +72,7 @@ const EntryDetailPage = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isGeneratingVoice, setIsGeneratingVoice] = useState(false);
   const [generatedAudioUrl, setGeneratedAudioUrl] = useState<string | null>(null);
+  const [genSeconds, setGenSeconds] = useState(0);
   const [promptLang, setPromptLang] = useState<string | null>(null);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editedTitle, setEditedTitle] = useState("");
@@ -172,16 +173,32 @@ const EntryDetailPage = () => {
     setEditedTitle("");
   };
 
+  // Live elapsed counter while voice is generating — makes long entries feel
+  // like progress instead of a hang
+  useEffect(() => {
+    if (!isGeneratingVoice) {
+      setGenSeconds(0);
+      return;
+    }
+    const interval = setInterval(() => setGenSeconds((s) => s + 1), 1000);
+    return () => clearInterval(interval);
+  }, [isGeneratingVoice]);
+
   const handleGenerateVoice = async () => {
     if (!entry || !entry.enhanced_text) return;
     
     setIsGeneratingVoice(true);
     
     try {
+      // Only translate when the playback language differs from the entry's own
+      // language — e.g. French entry + French playback needs NO translation
+      // (a wasted slow AI round-trip before TTS). Fish reads any language.
+      const playbackLang = normalizeLang(entry.playback_language);
+      const entryDetected = normalizeLang((entry as any)?.detected_language);
       let textForVoice = entry.enhanced_text;
-      if (entry.playback_language && entry.playback_language !== 'en') {
+      if (playbackLang && playbackLang !== "en" && (!entryDetected || entryDetected !== playbackLang)) {
         try {
-          textForVoice = await api.translateText(entry.enhanced_text, entry.playback_language);
+          textForVoice = await api.translateText(entry.enhanced_text, entry.playback_language!);
         } catch (translateError) {
           // Translation unavailable — Fish Audio is multilingual, so read the
           // entry in its original language instead of failing playback.
@@ -192,6 +209,13 @@ const EntryDetailPage = () => {
       
       const audioUrl = await api.generateVoice(textForVoice, undefined, id, 'entry');
       setGeneratedAudioUrl(audioUrl);
+      // Auto-play once ready (matches the reflection flow)
+      setTimeout(() => {
+        if (audioRef.current) {
+          audioRef.current.play();
+          setIsPlaying(true);
+        }
+      }, 100);
 
       // Suggest adding a voice profile for this entry's language (once per language)
       const langCode = normalizeLang((entry as any)?.detected_language);
@@ -444,28 +468,35 @@ const EntryDetailPage = () => {
           </h3>
           
           {!generatedAudioUrl ? (
-            <Button
-              variant="outline"
-              className="w-full gap-2 h-12 rounded-xl"
-              onClick={handleGenerateVoice}
-              disabled={isGeneratingVoice}
-            >
-              {isGeneratingVoice ? (
-                <>
-                  <motion.div
-                    className="w-5 h-5 border-2 border-foreground border-t-transparent rounded-full"
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                  />
-                  Generating Voice...
-                </>
-              ) : (
-                <>
-                  <Volume2 className="w-5 h-5" />
-                  Generate Voice Playback
-                </>
+            <>
+              <Button
+                variant="outline"
+                className="w-full gap-2 h-12 rounded-xl"
+                onClick={handleGenerateVoice}
+                disabled={isGeneratingVoice}
+              >
+                {isGeneratingVoice ? (
+                  <>
+                    <motion.div
+                      className="w-5 h-5 border-2 border-foreground border-t-transparent rounded-full"
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    />
+                    Generating Voice...
+                  </>
+                ) : (
+                  <>
+                    <Volume2 className="w-5 h-5" />
+                    Generate Voice Playback
+                  </>
+                )}
+              </Button>
+              {isGeneratingVoice && (
+                <p className="text-xs text-muted-foreground text-center mt-2">
+                  {t("entry.voiceLongHint")} ({genSeconds}s)
+                </p>
               )}
-            </Button>
+            </>
           ) : (
             <div className="flex items-center gap-4">
               <Button

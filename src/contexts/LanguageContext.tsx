@@ -292,6 +292,7 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "Hinduism",
     "onboarding.worldviewSpiritual": "Spiritual",
     "onboarding.worldviewNoPref": "No preference",
+    "entry.voiceLongHint": "This can take up to a minute for longer entries",
     // Smart Journaling Prompts + Writing Block Breaker
     "record.promptsTitle": "Need Inspiration?",
     "record.promptsRefresh": "Refresh",
@@ -576,6 +577,7 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "Hindouisme",
     "onboarding.worldviewSpiritual": "Spirituel",
     "onboarding.worldviewNoPref": "Pas de préférence",
+    "entry.voiceLongHint": "Cela peut prendre jusqu'à une minute pour les longues entrées",
     // Smart Journaling Prompts + Writing Block Breaker
     "record.promptsTitle": "Besoin d'inspiration ?",
     "record.promptsRefresh": "Actualiser",
@@ -860,6 +862,7 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "Hinduismo",
     "onboarding.worldviewSpiritual": "Espiritual",
     "onboarding.worldviewNoPref": "Sin preferencia",
+    "entry.voiceLongHint": "Esto puede tardar hasta un minuto en entradas largas",
     // Smart Journaling Prompts + Writing Block Breaker
     "record.promptsTitle": "¿Necesitas inspiración?",
     "record.promptsRefresh": "Actualizar",
@@ -1144,6 +1147,7 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "الهندوسية",
     "onboarding.worldviewSpiritual": "روحاني",
     "onboarding.worldviewNoPref": "بدون تفضيل",
+    "entry.voiceLongHint": "قد يستغرق هذا ما يصل إلى دقيقة للمدخلات الطويلة",
     // Smart Journaling Prompts + Writing Block Breaker
     "record.promptsTitle": "بحاجة إلى إلهام؟",
     "record.promptsRefresh": "تحديث",
@@ -1428,6 +1432,7 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "印度教",
     "onboarding.worldviewSpiritual": "灵性",
     "onboarding.worldviewNoPref": "无偏好",
+    "entry.voiceLongHint": "较长的日记可能需要最多一分钟",
     // Smart Journaling Prompts + Writing Block Breaker
     "record.promptsTitle": "需要灵感吗？",
     "record.promptsRefresh": "刷新",
@@ -1712,6 +1717,7 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "ヒンドゥー教",
     "onboarding.worldviewSpiritual": "スピリチュアル",
     "onboarding.worldviewNoPref": "特になし",
+    "entry.voiceLongHint": "長いエントリーは最大1分かかることがあります",
     // Smart Journaling Prompts + Writing Block Breaker
     "record.promptsTitle": "インスピレーションが必要？",
     "record.promptsRefresh": "更新",
@@ -1996,6 +2002,7 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "Uhindu",
     "onboarding.worldviewSpiritual": "Kiroho",
     "onboarding.worldviewNoPref": "Bila upendeleo",
+    "entry.voiceLongHint": "Hii inaweza kuchukua hadi dakika moja kwa maingizo marefu",
     // Smart Journaling Prompts + Writing Block Breaker
     "record.promptsTitle": "Unahitaji msukumo?",
     "record.promptsRefresh": "Onyesha upya",
@@ -2280,6 +2287,7 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "Hinduismus",
     "onboarding.worldviewSpiritual": "Spirituell",
     "onboarding.worldviewNoPref": "Keine Präferenz",
+    "entry.voiceLongHint": "Bei längeren Einträgen kann dies bis zu einer Minute dauern",
     // Smart Journaling Prompts + Writing Block Breaker
     "record.promptsTitle": "Brauchst du Inspiration?",
     "record.promptsRefresh": "Aktualisieren",

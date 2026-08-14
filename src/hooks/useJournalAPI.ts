@@ -4,6 +4,7 @@ import { getVoiceProfiles, normalizeLang } from "@/lib/voiceProfiles";
 import { invokeEnhance } from "@/lib/aiText";
 import { smartTitleCase } from "@/lib/smartTitleCase";
 import { blobToWav } from "@/lib/audioConvert";
+import { getCachedAudio, cacheAudio } from "@/lib/audioCache";
 
 export const useJournalAPI = (appLanguage?: AppLanguage) => {
   const langName = getLanguageName(appLanguage || "en");
@@ -282,6 +283,16 @@ export const useJournalAPI = (appLanguage?: AppLanguage) => {
     const { data: { session } } = await supabase.auth.getSession();
     const accessToken = session?.access_token;
 
+    // IndexedDB cache: replays of the same entry+voice are instant (no re-synthesis)
+    const cacheKey = entryId ? `${entryId}:${textType || "entry"}:${selectedVoiceId || "default"}` : null;
+    if (cacheKey) {
+      const cached = await getCachedAudio(cacheKey);
+      if (cached) {
+        console.log("Using cached voice audio:", cacheKey);
+        return cached;
+      }
+    }
+
     const response = await fetch('/api/generate-voice', {
       method: 'POST',
       headers: {
@@ -300,7 +311,11 @@ export const useJournalAPI = (appLanguage?: AppLanguage) => {
     if (!response.ok) throw new Error(data.error || 'Voice generation failed');
     if (data.error) throw new Error(data.error);
     
-    return `data:audio/mpeg;base64,${data.audioContent}`;
+    const dataUrl = `data:audio/mpeg;base64,${data.audioContent}`;
+    if (cacheKey) {
+      cacheAudio(cacheKey, dataUrl).catch(() => {});
+    }
+    return dataUrl;
   };
 
   const generateSoulReflection = async (entryText: string): Promise<string> => {
