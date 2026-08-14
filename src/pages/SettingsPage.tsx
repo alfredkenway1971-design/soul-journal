@@ -329,6 +329,21 @@ const SettingsPage = () => {
               }
             />
             <p className="text-xs text-muted-foreground px-1 -mt-1">{t("settings.gratitudeTimelineDesc")}</p>
+            <Row
+              icon={Sparkles}
+              label={t("settings.emotionalForecast")}
+              right={
+                <Switch
+                  checked={aiPrefs.emotionalForecast}
+                  onCheckedChange={(checked) => {
+                    const next = { ...aiPrefs, emotionalForecast: checked };
+                    setAiPrefs(next);
+                    saveAIPrefs(next);
+                  }}
+                />
+              }
+            />
+            <p className="text-xs text-muted-foreground px-1 -mt-1">{t("settings.emotionalForecastDesc")}</p>
           </SectionCard>
         </motion.div>
 

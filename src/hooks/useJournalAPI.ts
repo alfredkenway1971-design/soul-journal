@@ -268,6 +268,35 @@ export const useJournalAPI = (appLanguage?: AppLanguage) => {
     return Array.isArray(data.items) ? data.items : [];
   };
 
+  // Feature: Emotional Forecasting — 14-day declining trend analysis (1/week)
+  const forecastEmotion = async (entries: { mood: string; text: string }[], languageName: string): Promise<{ declining: boolean; forecast: string; suggestion: string }> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user || entries.length === 0) return { declining: false, forecast: "", suggestion: "" };
+
+    const response = await fetch("/api/emotional-forecast", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(user ? { Authorization: " Bearer " + (await supabase.auth.getSession()).data.session?.access_token } : {}),
+      },
+      body: JSON.stringify({ entries, language: languageName }),
+    });
+
+    let data: any;
+    try {
+      data = await response.json();
+    } catch {
+      data = {};
+    }
+    if (!response.ok) throw new Error(data.error || "Forecast failed");
+    if (data.error) throw new Error(data.error);
+    return {
+      declining: data.declining === true,
+      forecast: typeof data.forecast === "string" ? data.forecast : "",
+      suggestion: typeof data.suggestion === "string" ? data.suggestion : "",
+    };
+  };
+
   const generateVoice = async (text: string, voiceId?: string, entryId?: string, textType?: 'entry' | 'reflection', langHint?: string): Promise<string> => {
     // Check cache first if entryId is provided
     // IMPORTANT: Only use voice-cache/ paths (AI-generated), never raw recordings
@@ -607,6 +636,7 @@ export const useJournalAPI = (appLanguage?: AppLanguage) => {
     generateOneWordPrompt,
     scanGoalMentions,
     scanGratitude,
+    forecastEmotion,
     generateVoice,
     generateSoulReflection,
     uploadAudio,

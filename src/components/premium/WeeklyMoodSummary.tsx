@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { TrendingUp, TrendingDown, Minus, Sparkles, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import EmotionalForecast from "@/components/premium/EmotionalForecast";
 import { supabase } from "@/integrations/supabase/client";
 import { invokeEnhance } from "@/lib/aiText";
 import { useAuth } from "@/contexts/AuthContext";
@@ -272,6 +273,9 @@ const WeeklyMoodSummary = () => {
           })}
         </div>
       </div>
+
+      {/* Emotional Forecasting — Feature 6: inside the Weekly Review only */}
+      <EmotionalForecast />
 
       {/* AI Insight */}
       <div className="p-4 rounded-xl bg-muted/50 space-y-3">

@@ -292,6 +292,11 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "Hinduism",
     "onboarding.worldviewSpiritual": "Spiritual",
     "onboarding.worldviewNoPref": "No preference",
+    // Emotional Forecasting
+    "weekly.forecastTitle": "This Week's Forecast",
+    "weekly.forecastSuggestion": "Suggestion",
+    "settings.emotionalForecast": "Emotional Forecast",
+    "settings.emotionalForecastDesc": "A Monday forecast inside your weekly review when your entries show a declining trend",
     // Gratitude Auto-Detection
     "gratitude.title": "Gratitude Timeline",
     "gratitude.subtitle": "What you were grateful for",
@@ -616,6 +621,11 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "Hindouisme",
     "onboarding.worldviewSpiritual": "Spirituel",
     "onboarding.worldviewNoPref": "Pas de préférence",
+    // Emotional Forecasting
+    "weekly.forecastTitle": "Prévisions de la semaine",
+    "weekly.forecastSuggestion": "Suggestion",
+    "settings.emotionalForecast": "Prévision émotionnelle",
+    "settings.emotionalForecastDesc": "Une prévision du lundi dans votre bilan hebdomadaire lorsque vos entrées montrent une tendance à la baisse",
     // Gratitude Auto-Detection
     "gratitude.title": "Chronologie de gratitude",
     "gratitude.subtitle": "Ce pour quoi vous étiez reconnaissant",
@@ -940,6 +950,11 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "Hinduismo",
     "onboarding.worldviewSpiritual": "Espiritual",
     "onboarding.worldviewNoPref": "Sin preferencia",
+    // Emotional Forecasting
+    "weekly.forecastTitle": "Pronóstico de la semana",
+    "weekly.forecastSuggestion": "Sugerencia",
+    "settings.emotionalForecast": "Pronóstico emocional",
+    "settings.emotionalForecastDesc": "Un pronóstico del lunes dentro de tu revisión semanal cuando tus entradas muestran una tendencia descendente",
     // Gratitude Auto-Detection
     "gratitude.title": "Línea de gratitud",
     "gratitude.subtitle": "Por lo que estuviste agradecido",
@@ -1264,6 +1279,11 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "الهندوسية",
     "onboarding.worldviewSpiritual": "روحاني",
     "onboarding.worldviewNoPref": "بدون تفضيل",
+    // Emotional Forecasting
+    "weekly.forecastTitle": "توقعات هذا الأسبوع",
+    "weekly.forecastSuggestion": "اقتراح",
+    "settings.emotionalForecast": "التوقع العاطفي",
+    "settings.emotionalForecastDesc": "توقع يوم الاثنين داخل مراجعتك الأسبوعية عندما تُظهر مدخلاتك اتجاهًا هبوطيًا",
     // Gratitude Auto-Detection
     "gratitude.title": "خط زمني للامتنان",
     "gratitude.subtitle": "ما كنت ممتنًا له",
@@ -1588,6 +1608,11 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "印度教",
     "onboarding.worldviewSpiritual": "灵性",
     "onboarding.worldviewNoPref": "无偏好",
+    // Emotional Forecasting
+    "weekly.forecastTitle": "本周预测",
+    "weekly.forecastSuggestion": "建议",
+    "settings.emotionalForecast": "情绪预测",
+    "settings.emotionalForecastDesc": "当你的日记显示下降趋势时，每周回顾中会出现周一的预测",
     // Gratitude Auto-Detection
     "gratitude.title": "感恩时间线",
     "gratitude.subtitle": "你感恩的事情",
@@ -1912,6 +1937,11 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "ヒンドゥー教",
     "onboarding.worldviewSpiritual": "スピリチュアル",
     "onboarding.worldviewNoPref": "特になし",
+    // Emotional Forecasting
+    "weekly.forecastTitle": "今週の予報",
+    "weekly.forecastSuggestion": "提案",
+    "settings.emotionalForecast": "感情予報",
+    "settings.emotionalForecastDesc": "エントリーに下降傾向が見られるとき、週次レビュー内に月曜の予報を表示します",
     // Gratitude Auto-Detection
     "gratitude.title": "感謝のタイムライン",
     "gratitude.subtitle": "感謝していたこと",
@@ -2236,6 +2266,11 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "Uhindu",
     "onboarding.worldviewSpiritual": "Kiroho",
     "onboarding.worldviewNoPref": "Bila upendeleo",
+    // Emotional Forecasting
+    "weekly.forecastTitle": "Utabiri wa Wiki Hii",
+    "weekly.forecastSuggestion": "Pendekezo",
+    "settings.emotionalForecast": "Utabiri wa Hisia",
+    "settings.emotionalForecastDesc": "Utabiri wa Jumatatu ndani ya ukaguzi wako wa kila wiki wakati maingizo yako yanaonyesha mwelekeo wa kushuka",
     // Gratitude Auto-Detection
     "gratitude.title": "Mratibu wa Shukrani",
     "gratitude.subtitle": "Mambo uliyoshukuru",
@@ -2560,6 +2595,11 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "Hinduismus",
     "onboarding.worldviewSpiritual": "Spirituell",
     "onboarding.worldviewNoPref": "Keine Präferenz",
+    // Emotional Forecasting
+    "weekly.forecastTitle": "Prognose der Woche",
+    "weekly.forecastSuggestion": "Vorschlag",
+    "settings.emotionalForecast": "Emotionale Prognose",
+    "settings.emotionalForecastDesc": "Eine Montags-Prognose in deiner Wochenübersicht, wenn deine Einträge einen Abwärtstrend zeigen",
     // Gratitude Auto-Detection
     "gratitude.title": "Dankbarkeits-Zeitleiste",
     "gratitude.subtitle": "Wofür du dankbar warst",
