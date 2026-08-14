@@ -184,7 +184,7 @@ const FontSelector = ({ selected, onSelect }: FontSelectorProps) => {
           const catFonts = fonts.filter((f) => f.category === cat);
           return (
             <div key={cat}>
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+              <p className="text-xs font-semibold text-muted-foreground tracking-wider mb-2">
                 {categoryLabels[cat]}
               </p>
               <div className="space-y-2">

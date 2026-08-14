@@ -85,7 +85,7 @@ const OnThisDayCard = () => {
             className="w-full glass-premium p-4 text-left hover:bg-white/70 dark:hover:bg-white/10 transition-colors"
           >
             <div className="flex items-center justify-between mb-1">
-              <span className="text-xs font-medium uppercase tracking-wider text-primary">
+              <span className="text-xs font-medium tracking-wider text-primary">
                 {m.yearsAgo} year{m.yearsAgo > 1 ? "s" : ""} ago
               </span>
               <span className="text-xs text-muted-foreground">

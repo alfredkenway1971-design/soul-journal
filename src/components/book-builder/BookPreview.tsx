@@ -105,7 +105,7 @@ const BookPreview = ({
               "Every page is a piece of your soul."
             </p>
             <div className="w-6 h-px bg-stone-300 mb-2" />
-            <p className="text-[5px] text-stone-400 uppercase tracking-widest">{t("preview.soulJournal")}</p>
+            <p className="text-[5px] text-stone-400 tracking-widest">{t("preview.soulJournal")}</p>
           </div>
           <p className="text-[8px] text-center text-muted-foreground py-1 bg-card">{t("preview.backCover")}</p>
         </motion.div>

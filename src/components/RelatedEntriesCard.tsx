@@ -108,7 +108,7 @@ const RelatedEntriesCard = ({ userId, entryId, text }: Props) => {
               <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
                 {r.preview}
               </p>
-              <p className="text-[10px] text-muted-foreground mt-1 uppercase tracking-wide">
+              <p className="text-[10px] text-muted-foreground mt-1 tracking-wide">
                 {format(new Date(r.created_at), "MMM d, yyyy")}
               </p>
             </div>
