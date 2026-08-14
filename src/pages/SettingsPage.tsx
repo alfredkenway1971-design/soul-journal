@@ -277,6 +277,21 @@ const SettingsPage = () => {
             />
             
             <Row icon={Sunrise} label={t("settings.morningReflection")} onClick={() => navigate("/settings/reminders")} />
+            <Row
+              icon={Sparkles}
+              label={t("settings.predictiveMood")}
+              right={
+                <Switch
+                  checked={aiPrefs.predictiveMood}
+                  onCheckedChange={(checked) => {
+                    const next = { ...aiPrefs, predictiveMood: checked };
+                    setAiPrefs(next);
+                    saveAIPrefs(next);
+                  }}
+                />
+              }
+            />
+            <p className="text-xs text-muted-foreground px-1 -mt-1">{t("settings.predictiveMoodDesc")}</p>
           </SectionCard>
         </motion.div>
 

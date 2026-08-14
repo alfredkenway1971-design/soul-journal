@@ -24,6 +24,7 @@ import {
   pickHomeCardItem, registerNudge, markCardSeen, markNotified, wasNotified,
   nudgesUsedThisWeek, NUDGE_MAX_PER_WEEK, type GoalScanResult, type GoalStatus,
 } from "@/lib/goalAccountability";
+import { analyzeMoodPatterns, alertFiredToday, markAlertFired, weekdayName } from "@/lib/moodAlerts";
 import type { Mood } from "@/components/MoodSelector";
 
 interface Entry {
@@ -203,6 +204,42 @@ const HomePage = () => {
     markCardSeen('sj-goal-' + typeKey + goalItem.goal);
     setGoalItem(null);
   };
+
+  // Predictive Mood Alerts — 90-day pattern analysis, max 1 alert/day.
+  // Notification only (no in-app card, per spec). Pure client-side math.
+  useEffect(() => {
+    const runPredictiveAlert = async () => {
+      if (!user) return;
+      if (!loadAIPrefs().predictiveMood) return;
+      if (alertFiredToday()) return;
+      if (!('Notification' in window) || Notification.permission !== 'granted') return;
+      try {
+        const cutoff = new Date(Date.now() - 90 * 86400000).toISOString();
+        const { data } = await supabase
+          .from('journal_entries')
+          .select('mood, created_at')
+          .eq('user_id', user.id)
+          .gte('created_at', cutoff)
+          .order('created_at', { ascending: false })
+          .limit(200);
+        const points = (data || []).filter((r: any) => r.mood);
+        const pattern = analyzeMoodPatterns(points);
+        if (!pattern) return;
+        const day = weekdayName(pattern.weekday, language);
+        markAlertFired(pattern.weekday);
+        try {
+          new Notification('Soul Journal', {
+            body: t("alert.predictiveBody").replace("{weekday}", day),
+            tag: 'predictive-mood',
+            icon: '/favicon.ico',
+          });
+        } catch {}
+      } catch (err) {
+        console.warn('Predictive mood alert failed:', err);
+      }
+    };
+    runPredictiveAlert();
+  }, [user]);
 
   const firstName = displayName?.split(' ')[0] || user?.user_metadata?.display_name?.split(' ')[0] || user?.email?.split('@')[0] || t("home.friend");
 
