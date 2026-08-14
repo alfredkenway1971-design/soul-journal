@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#CDEEDB"/>
+      <stop offset="1" stop-color="#8FCFA8"/>
+    </linearGradient>
+  </defs>
+  <!-- full-bleed background for maskable (OS mask clips corners) -->
+  <rect x="0" y="0" width="512" height="512" fill="url(#bg)"/>
+  <!-- star above the book -->
+  <path d="M256 136 L267 170 L303 173 L275 196 L284 231 L256 212 L228 231 L237 196 L209 173 L245 170 Z" fill="#2E8B57"/>
+  <!-- open book -->
+  <path d="M256 318 C 208 318 174 324 138 334 L 138 432 C 174 422 208 416 256 416 Z" fill="#1E7A46"/>
+  <path d="M256 318 C 304 318 338 324 374 334 L 374 432 C 338 422 304 416 256 416 Z" fill="#1E7A46"/>
+  <!-- left page lines -->
+  <path d="M170 350 L 240 346" stroke="#ffffff" stroke-width="9" stroke-linecap="round" opacity="0.85"/>
+  <path d="M168 374 L 240 370" stroke="#ffffff" stroke-width="9" stroke-linecap="round" opacity="0.85"/>
+  <path d="M166 398 L 240 394" stroke="#ffffff" stroke-width="9" stroke-linecap="round" opacity="0.85"/>
+  <!-- right page lines -->
+  <path d="M342 350 L 272 346" stroke="#ffffff" stroke-width="9" stroke-linecap="round" opacity="0.85"/>
+  <path d="M344 374 L 272 370" stroke="#ffffff" stroke-width="9" stroke-linecap="round" opacity="0.85"/>
+  <path d="M346 398 L 272 394" stroke="#ffffff" stroke-width="9" stroke-linecap="round" opacity="0.85"/>
+</svg>
