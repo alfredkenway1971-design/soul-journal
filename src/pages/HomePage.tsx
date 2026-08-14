@@ -18,7 +18,7 @@ import MoodFilterBar, { type MoodFilterValue } from "@/components/MoodFilterBar"
 import OnThisDayCard from "@/components/OnThisDayCard";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
-import { Flame, TrendingUp, Clock, Target, X } from "lucide-react";
+import { Flame, TrendingUp, Clock, Target, X, Crown, ChevronRight } from "lucide-react";
 import {
   loadAIPrefs, scanFreshToday, loadScan, saveScan, computeGoalStatuses,
   pickHomeCardItem, registerNudge, markCardSeen, markNotified, wasNotified,
@@ -380,6 +380,26 @@ const HomePage = () => {
       <main className="max-w-lg mx-auto px-5 space-y-5">
         {/* AI Insight — primary hook, above Quick Capture */}
         <AIInsightCard insight={homeInsight || undefined} userName={firstName} />
+
+        {/* Soul Mirror — flagship monthly portrait (premium destination) */}
+        <button
+          className="relative w-full overflow-hidden rounded-2xl p-4 text-left border border-emerald-300/50 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/20"
+          onClick={() => navigate("/soul-mirror")}
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-2xl bg-white/80 dark:bg-white/10 border border-emerald-200/60 flex items-center justify-center text-xl">
+              ✨
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-foreground flex items-center gap-1.5">
+                {t("soulMirror.title")}
+                <Crown className="w-3.5 h-3.5 text-amber-500" />
+              </p>
+              <p className="text-xs text-muted-foreground truncate">{t("soulMirror.homeTagline")}</p>
+            </div>
+            <ChevronRight className="w-4 h-4 text-primary shrink-0" />
+          </div>
+        </button>
 
         {/* Goal Accountability Partner — nudge or celebration */}
         {goalItem && (

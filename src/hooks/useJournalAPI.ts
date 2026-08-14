@@ -358,6 +358,36 @@ export const useJournalAPI = (appLanguage?: AppLanguage) => {
     return typeof data.reflection === "string" ? data.reflection : "";
   };
 
+  // Feature: Soul Mirror — flagship monthly portrait (1x/month, cached client-side)
+  const generateSoulMirror = async (
+    month: string,
+    entries: { id: string; text: string; mood: string; created_at: string }[],
+    goals: string[],
+    languageName: string
+  ): Promise<any> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user || entries.length === 0) return null;
+
+    const response = await fetch("/api/soul-mirror", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(user ? { Authorization: " Bearer " + (await supabase.auth.getSession()).data.session?.access_token } : {}),
+      },
+      body: JSON.stringify({ month, entries, goals, language: languageName }),
+    });
+
+    let data: any;
+    try {
+      data = await response.json();
+    } catch {
+      data = {};
+    }
+    if (!response.ok) throw new Error(data.error || "Soul Mirror failed");
+    if (data.error) throw new Error(data.error);
+    return data.empty ? null : data.portrait;
+  };
+
   const generateVoice = async (text: string, voiceId?: string, entryId?: string, textType?: 'entry' | 'reflection', langHint?: string): Promise<string> => {
     // Check cache first if entryId is provided
     // IMPORTANT: Only use voice-cache/ paths (AI-generated), never raw recordings
@@ -700,6 +730,7 @@ export const useJournalAPI = (appLanguage?: AppLanguage) => {
     forecastEmotion,
     scanRelations,
     reflectOnDream,
+    generateSoulMirror,
     generateVoice,
     generateSoulReflection,
     uploadAudio,

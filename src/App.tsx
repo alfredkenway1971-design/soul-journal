@@ -24,6 +24,7 @@ import FontsSettingsPage from "@/pages/FontsSettingsPage";
 import RemindersSettingsPage from "@/pages/RemindersSettingsPage";
 import GratitudeTimelinePage from "@/pages/GratitudeTimelinePage";
 import RelationsPage from "@/pages/RelationsPage";
+import SoulMirrorPage from "@/pages/SoulMirrorPage";
 import ExportPage from "@/pages/ExportPage";
 import BookBuilderPage from "@/pages/BookBuilderPage";
 import OnboardingPage from "@/pages/OnboardingPage";
@@ -196,6 +197,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <RelationsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/soul-mirror"
+        element={
+          <ProtectedRoute>
+            <SoulMirrorPage />
           </ProtectedRoute>
         }
       />

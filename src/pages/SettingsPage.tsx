@@ -375,6 +375,21 @@ const SettingsPage = () => {
               }
             />
             <p className="text-xs text-muted-foreground px-1 -mt-1">{t("settings.dreamReflectionDesc")}</p>
+            <Row
+              icon={Sparkles}
+              label={t("settings.soulMirror")}
+              right={
+                <Switch
+                  checked={aiPrefs.soulMirror}
+                  onCheckedChange={(checked) => {
+                    const next = { ...aiPrefs, soulMirror: checked };
+                    setAiPrefs(next);
+                    saveAIPrefs(next);
+                  }}
+                />
+              }
+            />
+            <p className="text-xs text-muted-foreground px-1 -mt-1">{t("settings.soulMirrorDesc")}</p>
           </SectionCard>
         </motion.div>
 
