@@ -15,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import BottomNav from "@/components/BottomNav";
 import MoodFilterBar, { type MoodFilterValue } from "@/components/MoodFilterBar";
 import RecentEntryCard from "@/components/premium/RecentEntryCard";
+import AIInsightCard from "@/components/premium/AIInsightCard";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useTitleCase } from "@/hooks/useTitleCase";
 import type { Mood } from "@/components/MoodSelector";
@@ -49,6 +50,34 @@ const LibraryPage = () => {
   const [moodFilter, setMoodFilter] = useState<MoodFilterValue>("all");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [displayName, setDisplayName] = useState<string>("");
+  const [insightCallout, setInsightCallout] = useState<string | null>(null);
+
+  // Occasional "Pattern noticed" callout: once per day, when the library has
+  // enough entries to place it in, surface one real insight tied to recent
+  // entries — never on every entry, to avoid visual noise.
+  useEffect(() => {
+    if (!user) return;
+    if (entries.length < 5) return;
+    const key = `sj-library-insight-${new Date().toDateString()}`;
+    if (localStorage.getItem(key)) return;
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from("coaching_insights")
+          .select("id, content")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(5);
+        if (!data?.length) return;
+        localStorage.setItem(key, "1");
+        // Prefer the 2nd-newest so it differs from the Home card's newest
+        const pick = data[Math.min(1, data.length - 1)] || data[0];
+        setInsightCallout(pick.content);
+      } catch (error) {
+        console.error("Failed to fetch insight callout:", error);
+      }
+    })();
+  }, [user, entries.length]);
 
   useEffect(() => {
     if (user) {
@@ -250,6 +279,18 @@ const LibraryPage = () => {
                       mood={entry.mood || "fine"}
                       onClick={() => navigate(`/entry/${entry.id}`)}
                     />
+
+                    {/* Occasional pattern callout — one per day, after the 4th entry */}
+                    {i === 3 && insightCallout && filteredEntries.length >= 5 && (
+                      <div className="mt-3">
+                        <AIInsightCard
+                          insight={insightCallout}
+                          badgeLabel={t("insight.patternNoticed")}
+                          ctaLabel={t("insight.viewInsights")}
+                          onAction={() => navigate("/coaching")}
+                        />
+                      </div>
+                    )}
                   </motion.div>
                 );
               })}

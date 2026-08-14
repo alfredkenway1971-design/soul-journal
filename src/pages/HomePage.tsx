@@ -257,11 +257,11 @@ const HomePage = () => {
 
       {/* Content */}
       <main className="max-w-lg mx-auto px-5 space-y-5">
+        {/* AI Insight — primary hook, above Quick Capture */}
+        <AIInsightCard insight={homeInsight || undefined} userName={firstName} />
+
         {/* Quick Capture */}
         <QuickCapture />
-
-        {/* AI Insight */}
-        <AIInsightCard insight={homeInsight || undefined} userName={firstName} />
 
         {/* Mood Filter Bar */}
         <section>

@@ -292,6 +292,12 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "Hinduism",
     "onboarding.worldviewSpiritual": "Spiritual",
     "onboarding.worldviewNoPref": "No preference",
+    // Ai Insight card
+    "insight.badge": "Ai Insight",
+    "insight.tapToJournal": "Tap to start journaling",
+    "insight.patternNoticed": "Pattern Noticed",
+    "insight.viewInsights": "View Insights",
+    "record.generatingInsight": "Generating your Ai Insight...",
     // Upgrade touchpoints
     "upgrade.badge": "Upgrade",
     "upgrade.winStreak": "See deeper patterns in your journey with Premium",
@@ -553,6 +559,12 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "Hindouisme",
     "onboarding.worldviewSpiritual": "Spirituel",
     "onboarding.worldviewNoPref": "Pas de préférence",
+    // Ai Insight card
+    "insight.badge": "Ai Insight",
+    "insight.tapToJournal": "Touchez pour commencer",
+    "insight.patternNoticed": "Motif Remarqué",
+    "insight.viewInsights": "Voir Les Aperçus",
+    "record.generatingInsight": "Génération de votre aperçu Ai...",
     // Upgrade touchpoints
     "upgrade.badge": "Premium",
     "upgrade.winStreak": "Voyez des tendances plus profondes dans votre parcours avec Premium",
@@ -814,6 +826,12 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "Hinduismo",
     "onboarding.worldviewSpiritual": "Espiritual",
     "onboarding.worldviewNoPref": "Sin preferencia",
+    // Ai Insight card
+    "insight.badge": "Ai Insight",
+    "insight.tapToJournal": "Toca para empezar",
+    "insight.patternNoticed": "Patrón Detectado",
+    "insight.viewInsights": "Ver Perspectivas",
+    "record.generatingInsight": "Generando tu perspectiva Ai...",
     // Upgrade touchpoints
     "upgrade.badge": "Premium",
     "upgrade.winStreak": "Descubre patrones más profundos en tu camino con Premium",
@@ -1075,6 +1093,12 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "الهندوسية",
     "onboarding.worldviewSpiritual": "روحاني",
     "onboarding.worldviewNoPref": "بدون تفضيل",
+    // Ai Insight card
+    "insight.badge": "Ai Insight",
+    "insight.tapToJournal": "اضغط لبدء الكتابة",
+    "insight.patternNoticed": "نمط ملحوظ",
+    "insight.viewInsights": "عرض الرؤى",
+    "record.generatingInsight": "جارٍ إنشاء رؤية Ai الخاصة بك...",
     // Upgrade touchpoints
     "upgrade.badge": "الترقية",
     "upgrade.winStreak": "اكتشف أنماطًا أعمق في رحلتك مع Premium",
@@ -1336,6 +1360,12 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "印度教",
     "onboarding.worldviewSpiritual": "灵性",
     "onboarding.worldviewNoPref": "无偏好",
+    // Ai Insight card
+    "insight.badge": "Ai Insight",
+    "insight.tapToJournal": "点击开始写日记",
+    "insight.patternNoticed": "发现规律",
+    "insight.viewInsights": "查看洞察",
+    "record.generatingInsight": "正在生成你的 Ai 洞察...",
     // Upgrade touchpoints
     "upgrade.badge": "升级",
     "upgrade.winStreak": "使用 Premium 发现你旅程中更深层的模式",
@@ -1597,6 +1627,12 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "ヒンドゥー教",
     "onboarding.worldviewSpiritual": "スピリチュアル",
     "onboarding.worldviewNoPref": "特になし",
+    // Ai Insight card
+    "insight.badge": "Ai Insight",
+    "insight.tapToJournal": "タップして始める",
+    "insight.patternNoticed": "気づいたパターン",
+    "insight.viewInsights": "インサイトを見る",
+    "record.generatingInsight": "Ai インサイトを生成中...",
     // Upgrade touchpoints
     "upgrade.badge": "アップグレード",
     "upgrade.winStreak": "Premiumで旅のより深いパターンを見つけよう",
@@ -1858,6 +1894,12 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "Uhindu",
     "onboarding.worldviewSpiritual": "Kiroho",
     "onboarding.worldviewNoPref": "Bila upendeleo",
+    // Ai Insight card
+    "insight.badge": "Ai Insight",
+    "insight.tapToJournal": "Gusa kuanza",
+    "insight.patternNoticed": "Muundo Umeonekana",
+    "insight.viewInsights": "Tazama Maarifa",
+    "record.generatingInsight": "Inatengeneza maarifa yako ya Ai...",
     // Upgrade touchpoints
     "upgrade.badge": "Boresha",
     "upgrade.winStreak": "Ona mifumo ya ndani zaidi katika safari yako na Premium",
@@ -2119,6 +2161,12 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "Hinduismus",
     "onboarding.worldviewSpiritual": "Spirituell",
     "onboarding.worldviewNoPref": "Keine Präferenz",
+    // Ai Insight card
+    "insight.badge": "Ai Insight",
+    "insight.tapToJournal": "Tippen zum Starten",
+    "insight.patternNoticed": "Muster Erkannt",
+    "insight.viewInsights": "Einblicke Anzeigen",
+    "record.generatingInsight": "Dein Ai-Einblick wird generiert...",
     // Upgrade touchpoints
     "upgrade.badge": "Premium",
     "upgrade.winStreak": "Entdecke tiefere Muster in deiner Reise mit Premium",

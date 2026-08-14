@@ -10,6 +10,7 @@ import MoodSlider, { moodToScore } from "@/components/MoodSlider";
 import RichTextEditor from "@/components/RichTextToolbar";
 import LanguageSelector, { Language } from "@/components/LanguageSelector";
 import RecentEntryCard from "@/components/premium/RecentEntryCard";
+import AIInsightCard from "@/components/premium/AIInsightCard";
 import { SPOKEN_LANGUAGE_OPTIONS, dirFor } from "@/lib/textDirection";
 import { captureEntryContext } from "@/lib/contextCapture";
 
@@ -29,7 +30,7 @@ const RecordPage = () => {
   const { user } = useAuth();
   const { language, t } = useLanguage();
   const api = useJournalAPI(language);
-  const { canCreateTextEntry, canCreateAudioEntry, textLimitReached, audioLimitReached, textEntriesToday, audioEntriesThisWeek } = useUsageLimits();
+  const { canCreateTextEntry, canCreateAudioEntry, canUseCoaching, textLimitReached, audioLimitReached, textEntriesToday, audioEntriesThisWeek } = useUsageLimits();
   
   const [step, setStep] = useState<RecordingStep>("main");
   const [selectedMood, setSelectedMood] = useState<Mood | null>(null);
@@ -49,6 +50,8 @@ const RecordPage = () => {
   const [captureContext, setCaptureContext] = useState(false);
   const [recentEntry, setRecentEntry] = useState<{ id: string; title: string; preview: string; date: Date; mood: Mood } | null>(null);
   const [generatedAudioUrl, setGeneratedAudioUrl] = useState<string | null>(null);
+  const [postInsight, setPostInsight] = useState<string | null>(null);
+  const [insightLoading, setInsightLoading] = useState(false);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [photos, setPhotos] = useState<File[]>([]);
   const [photoPreviewUrls, setPhotoPreviewUrls] = useState<string[]>([]);
@@ -292,6 +295,22 @@ const RecordPage = () => {
     }
   };
 
+  const loadLatestInsight = async () => {
+    if (!user) return;
+    try {
+      const { data } = await supabase
+        .from("coaching_insights")
+        .select("content")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (data?.content) setPostInsight(data.content);
+    } catch (error) {
+      console.error("Failed to fetch latest insight:", error);
+    }
+  };
+
   const handleSave = async () => {
     if (!user) return;
     setIsProcessing(true);
@@ -363,7 +382,27 @@ const RecordPage = () => {
         title: "Entry Saved! ✨",
         description: "Your journal entry has been saved.",
       });
-      setTimeout(() => navigate("/"), 2000);
+
+      // Reactive AI Insight: generate a fresh insight tied to what was just
+      // written (throttled to 1/day, respects the free-tier coaching cap).
+      // Uses the existing generate-coaching-insights fn — the new entry is
+      // inside its 7-day window, so the insight references this entry.
+      const todayKey = `sj-auto-insight-${new Date().toDateString()}`;
+      const willAutoGenerate = canUseCoaching && !localStorage.getItem(todayKey);
+      if (willAutoGenerate) {
+        localStorage.setItem(todayKey, "1");
+        setInsightLoading(true);
+        api.generateCoachingInsights()
+          .catch((err) => console.warn("Auto insight generation skipped:", err))
+          .finally(() => {
+            loadLatestInsight();
+            setInsightLoading(false);
+          });
+      } else {
+        loadLatestInsight();
+      }
+
+      setTimeout(() => navigate("/"), willAutoGenerate ? 6000 : 2000);
     } catch (error) {
       console.error('Save error:', error);
       toast({
@@ -913,6 +952,18 @@ const RecordPage = () => {
               <p className="text-xs text-emerald-600 font-medium mt-3">
                 Keep going — every entry is a step in your journey ✨
               </p>
+            </div>
+
+            {/* Reactive Ai Insight tied to the entry just saved */}
+            <div className="relative z-10 mt-6 text-left">
+              {insightLoading ? (
+                <div className="flex items-center justify-center gap-2 py-5 text-sm text-muted-foreground">
+                  <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                  {t("record.generatingInsight")}
+                </div>
+              ) : postInsight ? (
+                <AIInsightCard insight={postInsight} static />
+              ) : null}
             </div>
           </motion.div>
         )}

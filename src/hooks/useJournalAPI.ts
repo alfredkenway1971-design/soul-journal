@@ -120,8 +120,17 @@ export const useJournalAPI = (appLanguage?: AppLanguage) => {
 
     if (error) throw new Error(error.message);
     if (data.error) throw new Error(data.error);
-    
+
     return data.translatedText;
+  };
+
+  const generateCoachingInsights = async (): Promise<number> => {
+    const { data, error } = await supabase.functions.invoke("generate-coaching-insights", {
+      body: { language: langName },
+    });
+    if (error) throw new Error(error.message);
+    if ((data as any)?.error) throw new Error((data as any).error);
+    return (data as any)?.insightsCount || 0;
   };
 
   const generateVoice = async (text: string, voiceId?: string, entryId?: string, textType?: 'entry' | 'reflection', langHint?: string): Promise<string> => {
@@ -397,6 +406,7 @@ export const useJournalAPI = (appLanguage?: AppLanguage) => {
     generateTitle,
     detectMood,
     translateText,
+    generateCoachingInsights,
     generateVoice,
     generateSoulReflection,
     uploadAudio,
