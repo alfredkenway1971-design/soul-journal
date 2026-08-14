@@ -12,6 +12,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage, LANGUAGES } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { blobToWav } from "@/lib/audioConvert";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import LockedInsightCard from "@/components/premium/LockedInsightCard";
 
@@ -175,12 +176,20 @@ const OnboardingPage = () => {
   const transcribeAudio = async (audioBlob: Blob, qIndex: number) => {
     setIsTranscribing(true);
     try {
+      // Whisper server can't read webm — convert to WAV first (mirrors
+      // useJournalAPI.transcribeAudio; fallback: send as-is)
+      let audioToSend = audioBlob;
+      try {
+        audioToSend = await blobToWav(audioBlob);
+      } catch (e) {
+        console.warn("webm->wav conversion failed, sending original:", e);
+      }
       const reader = new FileReader();
       const base64Promise = new Promise<string>((resolve, reject) => {
         reader.onloadend = () => resolve((reader.result as string).split(",")[1]);
         reader.onerror = reject;
       });
-      reader.readAsDataURL(audioBlob);
+      reader.readAsDataURL(audioToSend);
       const base64Audio = await base64Promise;
 
       const { data, error } = await supabase.functions.invoke("transcribe-audio", {
