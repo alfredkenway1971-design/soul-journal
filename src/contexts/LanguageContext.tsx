@@ -292,6 +292,12 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "Hinduism",
     "onboarding.worldviewSpiritual": "Spiritual",
     "onboarding.worldviewNoPref": "No preference",
+    // Voice clone upload
+    "voice.uploadFile": "Upload Audio File",
+    "voice.uploadHint": "MP3, WAV, M4A · max 5MB · 30-120s of clear speech works best",
+    "voice.uploadTooLarge": "File is too large — maximum 5MB.",
+    "voice.uploadTooShort": "Audio is too short — please use at least 10 seconds.",
+    "voice.uploadShortWarn": "Short samples can reduce clone quality — 30-120 seconds is ideal.",
     "entry.voiceLongHint": "This can take up to a minute for longer entries",
     // Smart Journaling Prompts + Writing Block Breaker
     "record.promptsTitle": "Need Inspiration?",
@@ -577,6 +583,12 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "Hindouisme",
     "onboarding.worldviewSpiritual": "Spirituel",
     "onboarding.worldviewNoPref": "Pas de préférence",
+    // Voice clone upload
+    "voice.uploadFile": "Importer un fichier audio",
+    "voice.uploadHint": "MP3, WAV, M4A · 5 Mo max · 30 à 120 s de parole claire, idéalement",
+    "voice.uploadTooLarge": "Fichier trop volumineux — 5 Mo maximum.",
+    "voice.uploadTooShort": "Audio trop court — au moins 10 secondes.",
+    "voice.uploadShortWarn": "Un échantillon court peut réduire la qualité — 30 à 120 s, idéalement.",
     "entry.voiceLongHint": "Cela peut prendre jusqu'à une minute pour les longues entrées",
     // Smart Journaling Prompts + Writing Block Breaker
     "record.promptsTitle": "Besoin d'inspiration ?",
@@ -862,6 +874,12 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "Hinduismo",
     "onboarding.worldviewSpiritual": "Espiritual",
     "onboarding.worldviewNoPref": "Sin preferencia",
+    // Voice clone upload
+    "voice.uploadFile": "Subir archivo de audio",
+    "voice.uploadHint": "MP3, WAV, M4A · máx. 5MB · lo ideal es 30-120s de voz clara",
+    "voice.uploadTooLarge": "El archivo es demasiado grande — máximo 5MB.",
+    "voice.uploadTooShort": "El audio es demasiado corto — usa al menos 10 segundos.",
+    "voice.uploadShortWarn": "Las muestras cortas pueden reducir la calidad del clon — 30-120s es lo ideal.",
     "entry.voiceLongHint": "Esto puede tardar hasta un minuto en entradas largas",
     // Smart Journaling Prompts + Writing Block Breaker
     "record.promptsTitle": "¿Necesitas inspiración?",
@@ -1147,6 +1165,12 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "الهندوسية",
     "onboarding.worldviewSpiritual": "روحاني",
     "onboarding.worldviewNoPref": "بدون تفضيل",
+    // Voice clone upload
+    "voice.uploadFile": "رفع ملف صوتي",
+    "voice.uploadHint": "MP3، WAV، M4A · الحد الأقصى 5 م.ب · الأفضل 30-120 ثانية من الكلام الواضح",
+    "voice.uploadTooLarge": "الملف كبير جدًا — الحد الأقصى 5 م.ب.",
+    "voice.uploadTooShort": "الصوت قصير جدًا — استخدم 10 ثوانٍ على الأقل.",
+    "voice.uploadShortWarn": "العينات القصيرة قد تقلل جودة الاستنساخ — 30-120 ثانية مثالية.",
     "entry.voiceLongHint": "قد يستغرق هذا ما يصل إلى دقيقة للمدخلات الطويلة",
     // Smart Journaling Prompts + Writing Block Breaker
     "record.promptsTitle": "بحاجة إلى إلهام؟",
@@ -1432,6 +1456,12 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "印度教",
     "onboarding.worldviewSpiritual": "灵性",
     "onboarding.worldviewNoPref": "无偏好",
+    // Voice clone upload
+    "voice.uploadFile": "上传音频文件",
+    "voice.uploadHint": "MP3、WAV、M4A · 最大5MB · 30-120秒清晰语音效果最佳",
+    "voice.uploadTooLarge": "文件太大 — 最大5MB。",
+    "voice.uploadTooShort": "音频太短 — 请至少使用10秒。",
+    "voice.uploadShortWarn": "较短的样本可能降低克隆质量 — 30-120秒为最佳。",
     "entry.voiceLongHint": "较长的日记可能需要最多一分钟",
     // Smart Journaling Prompts + Writing Block Breaker
     "record.promptsTitle": "需要灵感吗？",
@@ -1717,6 +1747,12 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "ヒンドゥー教",
     "onboarding.worldviewSpiritual": "スピリチュアル",
     "onboarding.worldviewNoPref": "特になし",
+    // Voice clone upload
+    "voice.uploadFile": "音声ファイルをアップロード",
+    "voice.uploadHint": "MP3・WAV・M4A · 最大5MB · 30〜120秒のクリアな音声が最適",
+    "voice.uploadTooLarge": "ファイルが大きすぎます — 最大5MBです。",
+    "voice.uploadTooShort": "音声が短すぎます — 最低10秒以上にしてください。",
+    "voice.uploadShortWarn": "短いサンプルはクローン品質を下げる場合があります — 30〜120秒が理想的です。",
     "entry.voiceLongHint": "長いエントリーは最大1分かかることがあります",
     // Smart Journaling Prompts + Writing Block Breaker
     "record.promptsTitle": "インスピレーションが必要？",
@@ -2002,6 +2038,12 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "Uhindu",
     "onboarding.worldviewSpiritual": "Kiroho",
     "onboarding.worldviewNoPref": "Bila upendeleo",
+    // Voice clone upload
+    "voice.uploadFile": "Pakia faili ya sauti",
+    "voice.uploadHint": "MP3, WAV, M4A · upeo 5MB · sekunde 30-120 za usemi wazi ni bora",
+    "voice.uploadTooLarge": "Faili ni kubwa mno — upeo ni 5MB.",
+    "voice.uploadTooShort": "Sauti ni fupi mno — tafadhali tumia angalau sekunde 10.",
+    "voice.uploadShortWarn": "Sampuli fupi zinaweza kupunguza ubora wa clone — sekunde 30-120 ni bora.",
     "entry.voiceLongHint": "Hii inaweza kuchukua hadi dakika moja kwa maingizo marefu",
     // Smart Journaling Prompts + Writing Block Breaker
     "record.promptsTitle": "Unahitaji msukumo?",
@@ -2287,6 +2329,12 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "Hinduismus",
     "onboarding.worldviewSpiritual": "Spirituell",
     "onboarding.worldviewNoPref": "Keine Präferenz",
+    // Voice clone upload
+    "voice.uploadFile": "Audiodatei hochladen",
+    "voice.uploadHint": "MP3, WAV, M4A · max. 5MB · 30-120 Sekunden klare Sprache sind ideal",
+    "voice.uploadTooLarge": "Die Datei ist zu groß — maximal 5MB.",
+    "voice.uploadTooShort": "Das Audio ist zu kurz — bitte mindestens 10 Sekunden.",
+    "voice.uploadShortWarn": "Kurze Proben können die Klon-Qualität verringern — 30-120 Sekunden sind ideal.",
     "entry.voiceLongHint": "Bei längeren Einträgen kann dies bis zu einer Minute dauern",
     // Smart Journaling Prompts + Writing Block Breaker
     "record.promptsTitle": "Brauchst du Inspiration?",

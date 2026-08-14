@@ -36,14 +36,15 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    const { audio, name } = req.body || {};
+    const { audio, name, audioType = "audio/webm", audioName = "voice_sample.webm" } = req.body || {};
     if (!audio) {
       return res.status(400).json({ error: "Audio data is required" });
     }
 
-    // Decode base64 → blob (browser MediaRecorder produces webm/opus — Fish accepts it)
+    // Decode base64 → blob. Live recordings are webm/opus; uploaded files keep
+    // their real type/name (mp3, wav, m4a — all accepted by Fish).
     const audioBytes = Buffer.from(audio, "base64");
-    const audioBlob = new Blob([audioBytes], { type: "audio/webm" });
+    const audioBlob = new Blob([audioBytes], { type: audioType });
 
     // Fish Audio: create a reusable voice model from the sample (fast training)
     const formData = new FormData();
@@ -52,7 +53,7 @@ export default async function handler(req: any, res: any) {
     formData.append("description", "Voice clone created from journal app");
     formData.append("visibility", "private");
     formData.append("train_mode", "fast");
-    formData.append("voices", audioBlob, "voice_sample.webm");
+    formData.append("voices", audioBlob, audioName);
 
     const response = await fetch("https://api.fish.audio/model", {
       method: "POST",

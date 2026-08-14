@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Mic, Square, Play, Pause, Upload, Check, Trash2, Plus, Languages } from "lucide-react";
+import { ArrowLeft, Mic, Square, Play, Pause, Upload, Check, Trash2, Plus, Languages, FileAudio } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -35,11 +35,16 @@ const VoiceSettingsPage = () => {
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  // Uploaded audio file support (MP3/WAV/M4A instead of live recording)
+  const [uploadedDuration, setUploadedDuration] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const MAX_FILE_SIZE_MB = 5;
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const MIN_RECORDING_TIME = 30;
@@ -169,15 +174,67 @@ const VoiceSettingsPage = () => {
     setAudioBlob(null);
     setAudioUrl(null);
     setRecordingTime(0);
+    setUploadedDuration(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  /** Read audio duration from a file's metadata (seconds). */
+  const getAudioDuration = (file: File): Promise<number> =>
+    new Promise((resolve) => {
+      try {
+        const url = URL.createObjectURL(file);
+        const audio = new Audio();
+        audio.preload = "metadata";
+        audio.onloadedmetadata = () => {
+          resolve(audio.duration || 0);
+          URL.revokeObjectURL(url);
+        };
+        audio.onerror = () => {
+          URL.revokeObjectURL(url);
+          resolve(0);
+        };
+        audio.src = url;
+      } catch {
+        resolve(0);
+      }
+    });
+
+  /** Handle a user-picked audio file (MP3/WAV/M4A) instead of live recording. */
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+
+    // Size limit: 5MB (a 5MB mp3 is ~5 minutes — far more than the 30-120s ideal)
+    if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+      toast({ title: t("voice.uploadTooLarge"), variant: "destructive" });
+      return;
+    }
+
+    const duration = await getAudioDuration(file);
+    if (duration > 0 && duration < 10) {
+      toast({ title: t("voice.uploadTooShort"), variant: "destructive" });
+      return;
+    }
+    if (duration > 0 && duration < 15) {
+      toast({ title: t("voice.uploadShortWarn"), variant: "default" });
+    }
+
+    setUploadedDuration(duration > 0 ? duration : null);
+    setRecordingTime(0);
+    setAudioBlob(file);
+    setAudioUrl(URL.createObjectURL(file));
   };
 
   const handleUpload = async () => {
     if (!audioBlob || !user) return;
 
-    if (recordingTime < MIN_RECORDING_TIME) {
+    const duration = uploadedDuration ?? recordingTime;
+    const minDuration = uploadedDuration !== null ? 10 : MIN_RECORDING_TIME;
+    if (duration < minDuration) {
       toast({
-        title: "Recording Too Short",
-        description: `Please record at least ${MIN_RECORDING_TIME} seconds for best voice cloning results.`,
+        title: uploadedDuration !== null ? t("voice.uploadTooShort") : "Recording Too Short",
+        description: `Please provide at least ${minDuration} seconds for best voice cloning results.`,
         variant: "destructive",
       });
       return;
@@ -211,6 +268,8 @@ const VoiceSettingsPage = () => {
         body: JSON.stringify({
           audio: base64Audio,
           name: `Voice Clone - ${user.email} - ${langName(selectedLang || defaultLang || language || "en")}`,
+          audioType: audioBlob.type || "audio/webm",
+          audioName: audioBlob instanceof File ? audioBlob.name : "voice_sample.webm",
         }),
       });
 
@@ -332,6 +391,15 @@ const VoiceSettingsPage = () => {
           onEnded={() => setIsPlaying(false)}
         />
       )}
+
+      {/* Hidden file input for voice uploads (MP3/WAV/M4A) */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="audio/*,.mp3,.wav,.m4a,.ogg,.aac"
+        className="hidden"
+        onChange={handleFileSelect}
+      />
 
       {/* Header */}
       <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border/50">
@@ -469,6 +537,17 @@ const VoiceSettingsPage = () => {
                 <li>• Record 30 seconds to 2 minutes</li>
               </ul>
             </div>
+
+            {/* Or upload an existing audio file */}
+            <Button
+              variant="outline"
+              className="w-full gap-2 h-12 rounded-2xl mb-3"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <FileAudio className="w-5 h-5" />
+              {t("voice.uploadFile")}
+            </Button>
+            <p className="text-xs text-muted-foreground">{t("voice.uploadHint")}</p>
           </motion.div>
         )}
 
@@ -534,7 +613,9 @@ const VoiceSettingsPage = () => {
                   <div className="flex-1">
                     <p className="font-medium text-sm">{t("voice.recordingPreview")}</p>
                     <p className="text-muted-foreground text-xs">
-                      {formatTime(recordingTime)} recorded
+                      {uploadedDuration !== null
+                        ? `${formatTime(uploadedDuration)} ${audioBlob instanceof File ? "· " + audioBlob.name : ""}`
+                        : `${formatTime(recordingTime)} recorded`}
                     </p>
                   </div>
                 </div>
@@ -544,24 +625,36 @@ const VoiceSettingsPage = () => {
             {/* Controls */}
             <div className="flex gap-3">
               {!audioBlob ? (
-                <Button
-                  className={`flex-1 h-14 rounded-2xl gap-2 ${
-                    isRecording ? "bg-destructive hover:bg-destructive/90" : "gradient-amber"
-                  }`}
-                  onClick={isRecording ? stopRecording : startRecording}
-                >
-                  {isRecording ? (
-                    <>
-                      <Square className="w-5 h-5" />
-                      Stop Recording
-                    </>
-                  ) : (
-                    <>
-                      <Mic className="w-5 h-5" />
-                      Start Recording
-                    </>
+                <>
+                  <Button
+                    className={`flex-1 h-14 rounded-2xl gap-2 ${
+                      isRecording ? "bg-destructive hover:bg-destructive/90" : "gradient-amber"
+                    }`}
+                    onClick={isRecording ? stopRecording : startRecording}
+                  >
+                    {isRecording ? (
+                      <>
+                        <Square className="w-5 h-5" />
+                        Stop Recording
+                      </>
+                    ) : (
+                      <>
+                        <Mic className="w-5 h-5" />
+                        Start Recording
+                      </>
+                    )}
+                  </Button>
+                  {!isRecording && (
+                    <Button
+                      variant="outline"
+                      className="h-14 rounded-2xl gap-2"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      <FileAudio className="w-5 h-5" />
+                      {t("voice.uploadFile")}
+                    </Button>
                   )}
-                </Button>
+                </>
               ) : (
                 <>
                   <Button
@@ -575,10 +668,12 @@ const VoiceSettingsPage = () => {
                   <Button
                     className="flex-1 h-14 rounded-2xl gap-2 gradient-amber"
                     onClick={() => {
-                      if (recordingTime < MIN_RECORDING_TIME) {
+                      const duration = uploadedDuration ?? recordingTime;
+                      const minDuration = uploadedDuration !== null ? 10 : MIN_RECORDING_TIME;
+                      if (duration < minDuration) {
                         toast({
-                          title: "Recording Too Short",
-                          description: `Please record at least ${MIN_RECORDING_TIME} seconds. You recorded ${recordingTime}s.`,
+                          title: uploadedDuration !== null ? t("voice.uploadTooShort") : "Recording Too Short",
+                          description: `Please provide at least ${minDuration} seconds. You provided ${Math.floor(duration)}s.`,
                           variant: "destructive",
                         });
                         return;
