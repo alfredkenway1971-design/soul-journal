@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useLanguage } from "@/contexts/LanguageContext";
-import { X, Type, Smile, Sparkles, Wand2, Play, Volume2, Camera, ImagePlus, Trash2, PartyPopper, Star, RefreshCcw, Lightbulb } from "lucide-react";
+import { useLanguage, getLanguageName } from "@/contexts/LanguageContext";
+import { X, Type, Smile, Sparkles, Wand2, Play, Volume2, Camera, ImagePlus, Trash2, PartyPopper, Star, RefreshCcw, Lightbulb, Check } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -19,6 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useJournalAPI } from "@/hooks/useJournalAPI";
 import { useUsageLimits } from "@/hooks/useUsageLimits";
+import { loadAIPrefs } from "@/lib/goalAccountability";
 import { supabase } from "@/integrations/supabase/client";
 import { Mic, Lock } from "lucide-react";
 
@@ -61,6 +62,10 @@ const RecordPage = () => {
   const [blockNudge, setBlockNudge] = useState<{ starter?: string; word?: string } | null>(null);
   const blockShownRef = useRef(false);
   const lastTypedRef = useRef(Date.now());
+  // Dream Reflection (Feature 8: 🌙 Rêve tag + poetic post-save reflection)
+  const [isDream, setIsDream] = useState(false);
+  const [dreamReflection, setDreamReflection] = useState<string | null>(null);
+  const [dreamLoading, setDreamLoading] = useState(false);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [photos, setPhotos] = useState<File[]>([]);
   const [photoPreviewUrls, setPhotoPreviewUrls] = useState<string[]>([]);
@@ -455,6 +460,23 @@ const RecordPage = () => {
         loadLatestInsight();
       }
 
+      // Dream Reflection (Feature 8): tagged as a dream → poetic reflection
+      // tied to the dream + recent waking-life entries (post-save, once)
+      if (entry?.id && isDream && loadAIPrefs().dreamReflection) {
+        try {
+          const stored = JSON.parse(localStorage.getItem("sj-dream-entries") || "[]");
+          if (!stored.includes(entry.id)) {
+            stored.push(entry.id);
+            localStorage.setItem("sj-dream-entries", JSON.stringify(stored));
+          }
+        } catch {}
+        setDreamLoading(true);
+        api.reflectOnDream(enhancedText, getLanguageName(language))
+          .then((reflection) => setDreamReflection(reflection || null))
+          .catch((err) => console.warn("Dream reflection failed:", err))
+          .finally(() => setDreamLoading(false));
+      }
+
       setTimeout(() => navigate("/"), willAutoGenerate ? 6000 : 2000);
     } catch (error) {
       console.error('Save error:', error);
@@ -771,8 +793,21 @@ const RecordPage = () => {
                 setSelectedMood(mood);
               }}
             />
+
+            {/* Dream tag (Feature 8: 🌙 Rêve) */}
+            <button
+              onClick={() => setIsDream((v) => !v)}
+              className={`mt-4 w-full flex items-center justify-center gap-2 rounded-2xl border px-4 py-3.5 text-sm font-medium transition-colors ${
+                isDream
+                  ? "border-primary/60 bg-primary/10 text-foreground"
+                  : "border-border/50 bg-white/60 dark:bg-white/5 text-muted-foreground"
+              }`}
+            >
+              🌙 {t("record.dreamTag")}
+              {isDream && <Check className="w-4 h-4 text-primary" />}
+            </button>
             <Button
-              className="w-full mt-6 gradient-primary"
+              className="w-full mt-4 gradient-primary"
               onClick={() => setStep("main")}
             >
               {t("common.cancel") /* reuse 'Done' visually */ ? "Done" : "Done"}
@@ -1106,6 +1141,20 @@ const RecordPage = () => {
                 <AIInsightCard insight={postInsight} static />
               ) : null}
             </div>
+
+            {/* Dream Reflection (Feature 8: 🌙 Rêve — poetic, tied to real life) */}
+            {(dreamLoading || dreamReflection) && (
+              <div className="relative z-10 mt-4 text-left">
+                {dreamLoading ? (
+                  <div className="flex items-center justify-center gap-2 py-5 text-sm text-muted-foreground">
+                    <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                    {t("dream.generating")}
+                  </div>
+                ) : dreamReflection ? (
+                  <AIInsightCard insight={dreamReflection} badgeLabel={t("dream.title")} static />
+                ) : null}
+              </div>
+            )}
           </motion.div>
         )}
       </main>

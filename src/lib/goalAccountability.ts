@@ -16,6 +16,7 @@ export interface AIPrefs {
   gratitudeTimeline: boolean;
   emotionalForecast: boolean;
   relationsTracker: boolean;
+  dreamReflection: boolean;
 }
 
 const PREFS_KEY = "sj-ai-prefs";
@@ -26,7 +27,7 @@ const SCAN_WINDOW_DAYS = 7;
 // Card dismissed-per-message tracking
 const SEEN_PREFIX = "sj-goal-seen-";
 
-export const defaultAIPrefs: AIPrefs = { goalAccountability: true, predictiveMood: true, gratitudeTimeline: true, emotionalForecast: true, relationsTracker: true };
+export const defaultAIPrefs: AIPrefs = { goalAccountability: true, predictiveMood: true, gratitudeTimeline: true, emotionalForecast: true, relationsTracker: true, dreamReflection: true };
 
 export const loadAIPrefs = (): AIPrefs => {
   try {

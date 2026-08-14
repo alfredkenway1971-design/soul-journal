@@ -322,6 +322,42 @@ export const useJournalAPI = (appLanguage?: AppLanguage) => {
     return Array.isArray(data.relations) ? data.relations : [];
   };
 
+  // Feature: Dream Reflection — poetic reflection tying the dream to real life
+  const reflectOnDream = async (dreamText: string, languageName: string): Promise<string> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user || !dreamText.trim()) return "";
+
+    // Recent waking-life entries for gentle connections
+    const { data: entries } = await supabase
+      .from('journal_entries')
+      .select('enhanced_text, original_transcription')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(5);
+    const recentEntries = (entries || [])
+      .map((r: any) => r.enhanced_text || r.original_transcription || '')
+      .filter((t: string) => t && t.trim().length > 5);
+
+    const response = await fetch("/api/dream-reflection", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(user ? { Authorization: " Bearer " + (await supabase.auth.getSession()).data.session?.access_token } : {}),
+      },
+      body: JSON.stringify({ dreamText, recentEntries, language: languageName }),
+    });
+
+    let data: any;
+    try {
+      data = await response.json();
+    } catch {
+      data = {};
+    }
+    if (!response.ok) throw new Error(data.error || "Dream reflection failed");
+    if (data.error) throw new Error(data.error);
+    return typeof data.reflection === "string" ? data.reflection : "";
+  };
+
   const generateVoice = async (text: string, voiceId?: string, entryId?: string, textType?: 'entry' | 'reflection', langHint?: string): Promise<string> => {
     // Check cache first if entryId is provided
     // IMPORTANT: Only use voice-cache/ paths (AI-generated), never raw recordings
@@ -663,6 +699,7 @@ export const useJournalAPI = (appLanguage?: AppLanguage) => {
     scanGratitude,
     forecastEmotion,
     scanRelations,
+    reflectOnDream,
     generateVoice,
     generateSoulReflection,
     uploadAudio,

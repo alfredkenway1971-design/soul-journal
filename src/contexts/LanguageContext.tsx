@@ -292,6 +292,12 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "Hinduism",
     "onboarding.worldviewSpiritual": "Spiritual",
     "onboarding.worldviewNoPref": "No preference",
+    // Dream Reflection
+    "record.dreamTag": "Mark as a dream",
+    "dream.title": "🌙 Dream Reflection",
+    "dream.generating": "Reflecting on your dream...",
+    "settings.dreamReflection": "Dream Reflection",
+    "settings.dreamReflectionDesc": "Poetic reflections when you tag an entry as a dream",
     // Relationship Emotional Tracker
     "relations.title": "Relations",
     "relations.private": "Private — only visible to you",
@@ -635,6 +641,12 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "Hindouisme",
     "onboarding.worldviewSpiritual": "Spirituel",
     "onboarding.worldviewNoPref": "Pas de préférence",
+    // Dream Reflection
+    "record.dreamTag": "Marquer comme un rêve",
+    "dream.title": "🌙 Réflexion sur le rêve",
+    "dream.generating": "Réflexion sur votre rêve...",
+    "settings.dreamReflection": "Réflexion sur les rêves",
+    "settings.dreamReflectionDesc": "Réflexions poétiques quand vous marquez une entrée comme rêve",
     // Relationship Emotional Tracker
     "relations.title": "Relations",
     "relations.private": "Privé — visible uniquement par vous",
@@ -978,6 +990,12 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "Hinduismo",
     "onboarding.worldviewSpiritual": "Espiritual",
     "onboarding.worldviewNoPref": "Sin preferencia",
+    // Dream Reflection
+    "record.dreamTag": "Marcar como sueño",
+    "dream.title": "🌙 Reflexión del sueño",
+    "dream.generating": "Reflexionando sobre tu sueño...",
+    "settings.dreamReflection": "Reflexión de sueños",
+    "settings.dreamReflectionDesc": "Reflexiones poéticas cuando marcas una entrada como sueño",
     // Relationship Emotional Tracker
     "relations.title": "Relaciones",
     "relations.private": "Privado — solo visible para ti",
@@ -1321,6 +1339,12 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "الهندوسية",
     "onboarding.worldviewSpiritual": "روحاني",
     "onboarding.worldviewNoPref": "بدون تفضيل",
+    // Dream Reflection
+    "record.dreamTag": "وضع علامة كحلم",
+    "dream.title": "🌙 تأمل الحلم",
+    "dream.generating": "جاري التأمل في حلمك...",
+    "settings.dreamReflection": "تأمل الأحلام",
+    "settings.dreamReflectionDesc": "تأملات شعرية عند وضع علامة حلم على إدخال",
     // Relationship Emotional Tracker
     "relations.title": "العلاقات",
     "relations.private": "خاص — مرئي لك فقط",
@@ -1664,6 +1688,12 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "印度教",
     "onboarding.worldviewSpiritual": "灵性",
     "onboarding.worldviewNoPref": "无偏好",
+    // Dream Reflection
+    "record.dreamTag": "标记为梦境",
+    "dream.title": "🌙 梦境反思",
+    "dream.generating": "正在反思你的梦境...",
+    "settings.dreamReflection": "梦境反思",
+    "settings.dreamReflectionDesc": "当你将日记标记为梦境时，提供诗意反思",
     // Relationship Emotional Tracker
     "relations.title": "关系",
     "relations.private": "私密 — 仅你可见",
@@ -2007,6 +2037,12 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "ヒンドゥー教",
     "onboarding.worldviewSpiritual": "スピリチュアル",
     "onboarding.worldviewNoPref": "特になし",
+    // Dream Reflection
+    "record.dreamTag": "夢としてマーク",
+    "dream.title": "🌙 夢の振り返り",
+    "dream.generating": "夢を振り返っています...",
+    "settings.dreamReflection": "夢の振り返り",
+    "settings.dreamReflectionDesc": "エントリーを夢としてタグ付けしたときに詩的な振り返りを提供",
     // Relationship Emotional Tracker
     "relations.title": "人間関係",
     "relations.private": "プライベート — あなただけに表示",
@@ -2350,6 +2386,12 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "Uhindu",
     "onboarding.worldviewSpiritual": "Kiroho",
     "onboarding.worldviewNoPref": "Bila upendeleo",
+    // Dream Reflection
+    "record.dreamTag": "Weka alama kama ndoto",
+    "dream.title": "🌙 Tafakari ya Ndoto",
+    "dream.generating": "Inatafakari ndoto yako...",
+    "settings.dreamReflection": "Tafakari ya Ndoto",
+    "settings.dreamReflectionDesc": "Tafakari za kishairi unapoweka alama ya ndoto kwenye ingizo",
     // Relationship Emotional Tracker
     "relations.title": "Mahusiano",
     "relations.private": "Faragha — unaona wewe pekee",
@@ -2693,6 +2735,12 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     "onboarding.worldviewHinduism": "Hinduismus",
     "onboarding.worldviewSpiritual": "Spirituell",
     "onboarding.worldviewNoPref": "Keine Präferenz",
+    // Dream Reflection
+    "record.dreamTag": "Als Traum markieren",
+    "dream.title": "🌙 Traum-Reflexion",
+    "dream.generating": "Nachdenken über deinen Traum...",
+    "settings.dreamReflection": "Traum-Reflexion",
+    "settings.dreamReflectionDesc": "Poetische Reflexionen, wenn du einen Eintrag als Traum markierst",
     // Relationship Emotional Tracker
     "relations.title": "Beziehungen",
     "relations.private": "Privat — nur für dich sichtbar",

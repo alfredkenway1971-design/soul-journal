@@ -360,6 +360,21 @@ const SettingsPage = () => {
               }
             />
             <p className="text-xs text-muted-foreground px-1 -mt-1">{t("settings.relationsTrackerDesc")}</p>
+            <Row
+              icon={Moon}
+              label={t("settings.dreamReflection")}
+              right={
+                <Switch
+                  checked={aiPrefs.dreamReflection}
+                  onCheckedChange={(checked) => {
+                    const next = { ...aiPrefs, dreamReflection: checked };
+                    setAiPrefs(next);
+                    saveAIPrefs(next);
+                  }}
+                />
+              }
+            />
+            <p className="text-xs text-muted-foreground px-1 -mt-1">{t("settings.dreamReflectionDesc")}</p>
           </SectionCard>
         </motion.div>
 
