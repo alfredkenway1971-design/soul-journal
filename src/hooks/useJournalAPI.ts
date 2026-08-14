@@ -243,6 +243,31 @@ export const useJournalAPI = (appLanguage?: AppLanguage) => {
     return Array.isArray(data.results) ? data.results : [];
   };
 
+  // Feature: Gratitude Auto-Detection — scan entries for gratitude language
+  const scanGratitude = async (entries: { id: string; text: string }[]): Promise<{ gratitude: string; category: string; entryIndexes: number[] }[]> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user || entries.length === 0) return [];
+
+    const response = await fetch("/api/gratitude-scan", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(user ? { Authorization: "Bearer " + (await supabase.auth.getSession()).data.session?.access_token } : {}),
+      },
+      body: JSON.stringify({ entries }),
+    });
+
+    let data: any;
+    try {
+      data = await response.json();
+    } catch {
+      data = {};
+    }
+    if (!response.ok) throw new Error(data.error || "Gratitude scan failed");
+    if (data.error) throw new Error(data.error);
+    return Array.isArray(data.items) ? data.items : [];
+  };
+
   const generateVoice = async (text: string, voiceId?: string, entryId?: string, textType?: 'entry' | 'reflection', langHint?: string): Promise<string> => {
     // Check cache first if entryId is provided
     // IMPORTANT: Only use voice-cache/ paths (AI-generated), never raw recordings
@@ -581,6 +606,7 @@ export const useJournalAPI = (appLanguage?: AppLanguage) => {
     generateStarter,
     generateOneWordPrompt,
     scanGoalMentions,
+    scanGratitude,
     generateVoice,
     generateSoulReflection,
     uploadAudio,

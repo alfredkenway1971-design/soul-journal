@@ -22,6 +22,7 @@ import LibraryPage from "@/pages/LibraryPage";
 import ThemesSettingsPage from "@/pages/ThemesSettingsPage";
 import FontsSettingsPage from "@/pages/FontsSettingsPage";
 import RemindersSettingsPage from "@/pages/RemindersSettingsPage";
+import GratitudeTimelinePage from "@/pages/GratitudeTimelinePage";
 import ExportPage from "@/pages/ExportPage";
 import BookBuilderPage from "@/pages/BookBuilderPage";
 import OnboardingPage from "@/pages/OnboardingPage";
@@ -178,6 +179,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <GoalsSettingsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/settings/gratitude"
+        element={
+          <ProtectedRoute>
+            <GratitudeTimelinePage />
           </ProtectedRoute>
         }
       />

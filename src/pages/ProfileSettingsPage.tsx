@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ChevronLeft, Settings, Plus, Pencil, Check, X, Mail, Sparkles, Target } from "lucide-react";
+import { ChevronLeft, Settings, Plus, Pencil, Check, X, Mail, Sparkles, Target, Heart, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -307,6 +307,21 @@ const ProfileSettingsPage = () => {
             <p className="text-xs text-muted-foreground tracking-wider">{t("profile.mood")}</p>
           </div>
         </motion.div>
+
+        {/* Gratitude Timeline link */}
+        <motion.button
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="w-full flex items-center gap-3 glass-card rounded-2xl px-4 py-3.5 text-left"
+          onClick={() => navigate("/settings/gratitude")}
+        >
+          <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
+            <Heart className="w-4.5 h-4.5 text-primary" />
+          </div>
+          <span className="flex-1 text-sm font-medium text-foreground">{t("gratitude.title")}</span>
+          <ChevronRight className="w-4 h-4 text-muted-foreground" />
+        </motion.button>
 
         {/* Voice Gender Preference */}
         <motion.section
