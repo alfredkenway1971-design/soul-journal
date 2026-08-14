@@ -48,3 +48,13 @@ export const cacheAudio = async (key: string, dataUrl: string): Promise<void> =>
     /* cache is best-effort — never break playback if it fails */
   }
 };
+
+/** Convert a `data:audio/...;base64,...` URL to a Blob (for storage uploads). */
+export const dataUrlToBlob = (dataUrl: string): Blob => {
+  const [meta, b64] = dataUrl.split(",");
+  const mime = meta.match(/data:([^;]+)/)?.[1] || "audio/mpeg";
+  const bin = atob(b64 || "");
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return new Blob([bytes], { type: mime });
+};

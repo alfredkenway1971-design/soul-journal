@@ -4,7 +4,7 @@ import { getVoiceProfiles, normalizeLang } from "@/lib/voiceProfiles";
 import { invokeEnhance } from "@/lib/aiText";
 import { smartTitleCase } from "@/lib/smartTitleCase";
 import { blobToWav } from "@/lib/audioConvert";
-import { getCachedAudio, cacheAudio } from "@/lib/audioCache";
+import { getCachedAudio, cacheAudio, dataUrlToBlob } from "@/lib/audioCache";
 
 export const useJournalAPI = (appLanguage?: AppLanguage) => {
   const langName = getLanguageName(appLanguage || "en");
@@ -221,14 +221,18 @@ export const useJournalAPI = (appLanguage?: AppLanguage) => {
   const generateVoice = async (text: string, voiceId?: string, entryId?: string, textType?: 'entry' | 'reflection', langHint?: string): Promise<string> => {
     // Check cache first if entryId is provided
     // IMPORTANT: Only use voice-cache/ paths (AI-generated), never raw recordings
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    const userId = authUser?.id || null;
     let entryLang: string | null = null;
     let playbackLang: string | null = null;
+    let entryRow: any = null;
     if (entryId) {
       const { data: entry } = await supabase
         .from('journal_entries')
         .select('audio_url, reflection_audio_url, detected_language, playback_language')
         .eq('id', entryId)
         .single();
+      entryRow = entry;
 
       const cachedPath = textType === 'reflection' 
         ? (entry as any)?.reflection_audio_url 
@@ -293,6 +297,25 @@ export const useJournalAPI = (appLanguage?: AppLanguage) => {
       }
     }
 
+    // Durable storage cache: if AI audio was already SAVED for this entry, serve
+    // the saved file instantly — no re-synthesis, works on any device, survives
+    // browser cache clears.
+    if (entryId && userId) {
+      const fileName = `${entryId}-${textType || 'entry'}.mp3`;
+      const { data: existing } = await supabase.storage
+        .from('journal-audio')
+        .list(`voice-cache/${userId}`, { search: fileName, limit: 1 });
+      if (existing && existing.length > 0) {
+        const { data: signedData } = await supabase.storage
+          .from('journal-audio')
+          .createSignedUrl(`voice-cache/${userId}/${fileName}`, 3600);
+        if (signedData?.signedUrl) {
+          console.log('Using saved AI voice from storage:', fileName);
+          return signedData.signedUrl;
+        }
+      }
+    }
+
     const response = await fetch('/api/generate-voice', {
       method: 'POST',
       headers: {
@@ -314,6 +337,29 @@ export const useJournalAPI = (appLanguage?: AppLanguage) => {
     const dataUrl = `data:audio/mpeg;base64,${data.audioContent}`;
     if (cacheKey) {
       cacheAudio(cacheKey, dataUrl).catch(() => {});
+    }
+    // Persist to Supabase storage so future visits (any device) load it instantly
+    if (entryId && userId) {
+      const fileName = `${entryId}-${textType || 'entry'}.mp3`;
+      const storagePath = `voice-cache/${userId}/${fileName}`;
+      try {
+        const { error: upErr } = await supabase.storage
+          .from('journal-audio')
+          .upload(storagePath, dataUrlToBlob(dataUrl), { contentType: 'audio/mpeg', upsert: true });
+        if (!upErr) {
+          // Record the path on the entry — but never clobber a raw recording link
+          const col = textType === 'reflection' ? 'reflection_audio_url' : 'audio_url';
+          const current = textType === 'reflection' ? entryRow?.reflection_audio_url : entryRow?.audio_url;
+          if (!current || String(current).startsWith('voice-cache/')) {
+            await supabase
+              .from('journal_entries')
+              .update({ [col]: storagePath } as any)
+              .eq('id', entryId);
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to persist voice audio to storage:', e);
+      }
     }
     return dataUrl;
   };
