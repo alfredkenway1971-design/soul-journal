@@ -47,7 +47,7 @@ const LibraryPage = () => {
   const [totalCount, setTotalCount] = useState<number | null>(null);
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
-  const PAGE_SIZE = 20;
+  const PAGE_SIZE = 50;
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
@@ -296,29 +296,23 @@ const LibraryPage = () => {
           </motion.div>
         ) : (
           <div className="space-y-3 pt-1">
-            <AnimatePresence>
-              {filteredEntries.map((entry, i) => {
-                const preview =
-                  entry.enhanced_text ||
-                  entry.original_transcription ||
-                  "";
+            {filteredEntries.map((entry, i) => {
+              const preview =
+                entry.enhanced_text ||
+                entry.original_transcription ||
+                "";
 
-                return (
-                  <motion.div
-                    key={entry.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: Math.min(i * 0.03, 0.3) }}
-                  >
-                    <RecentEntryCard
-                      id={entry.id}
-                      title={entry.title || t("entry.untitled")}
-                      preview={preview}
-                      date={new Date(entry.created_at)}
-                      duration={fmtDur(entry.duration_seconds)}
-                      mood={entry.mood || "fine"}
-                      onClick={() => navigate(`/entry/${entry.id}`)}
-                    />
+              return (
+                <div key={entry.id}>
+                  <RecentEntryCard
+                    id={entry.id}
+                    title={entry.title || t("entry.untitled")}
+                    preview={preview}
+                    date={new Date(entry.created_at)}
+                    duration={fmtDur(entry.duration_seconds)}
+                    mood={entry.mood || "fine"}
+                    onClick={() => navigate(`/entry/${entry.id}`)}
+                  />
 
                     {/* Occasional pattern callout — one per day, after the 4th entry */}
                     {i === 3 && insightCallout && filteredEntries.length >= 5 && (
@@ -331,10 +325,9 @@ const LibraryPage = () => {
                         />
                       </div>
                     )}
-                  </motion.div>
+                  </div>
                 );
               })}
-            </AnimatePresence>
             {hasMore && (
               <Button
                 variant="outline"

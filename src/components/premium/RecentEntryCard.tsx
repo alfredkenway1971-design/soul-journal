@@ -58,7 +58,7 @@ const RecentEntryCard = ({
       <h3 className="font-semibold text-foreground text-base mb-1">
         {titleCase(title)} <span className="ml-1">{moodEmoji[mood] || "🙂"}</span>
       </h3>
-      <p className="text-sm text-muted-foreground line-clamp-2">{preview}</p>
+      <p className="text-sm text-muted-foreground line-clamp-2 min-h-[2.5rem]">{preview}</p>
     </motion.button>
   );
 };
