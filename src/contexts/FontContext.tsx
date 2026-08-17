@@ -86,7 +86,10 @@ export const FontProvider = ({ children }: { children: ReactNode }) => {
     applyFontGlobally(font, fontSize);
   }, [font, fontSize]);
 
-  // Load from DB once user is available
+  // Load from DB once user is available. The device's OWN saved choice is the
+  // newest user action and wins — the DB is only a fallback for devices that
+  // have never saved a choice. If the DB disagrees with the local value (e.g.
+  // an earlier write failed silently), push the local value back to heal it.
   useEffect(() => {
     if (!user) return;
     (async () => {
@@ -95,17 +98,44 @@ export const FontProvider = ({ children }: { children: ReactNode }) => {
         .select("app_font, app_font_size")
         .eq("id", user.id)
         .single();
-      if (data) {
-        const dbFont = (data as any).app_font as string | null;
-        const dbSize = (data as any).app_font_size as number | null;
-        if (dbFont) {
-          setFontState(dbFont);
-          localStorage.setItem("app-font", dbFont);
+      if (!data) return;
+      const dbFont = (data as any).app_font as string | null;
+      const dbSize = (data as any).app_font_size as number | null;
+
+      const localFont = localStorage.getItem("app-font");
+      const localSize = localStorage.getItem("app-font-size");
+
+      if (localFont) {
+        if (dbFont && dbFont !== localFont) {
+          try {
+            await supabase
+              .from("profiles")
+              .update({ app_font: localFont } as any)
+              .eq("id", user.id);
+          } catch (err) {
+            console.warn("Font DB sync failed:", err);
+          }
         }
-        if (dbSize) {
-          setFontSizeState(dbSize);
-          localStorage.setItem("app-font-size", String(dbSize));
+      } else if (dbFont) {
+        setFontState(dbFont);
+        localStorage.setItem("app-font", dbFont);
+      }
+
+      if (localSize) {
+        const localSizeNum = Number(localSize);
+        if (dbSize !== null && dbSize !== undefined && dbSize !== localSizeNum) {
+          try {
+            await supabase
+              .from("profiles")
+              .update({ app_font_size: localSizeNum } as any)
+              .eq("id", user.id);
+          } catch (err) {
+            console.warn("Font size DB sync failed:", err);
+          }
         }
+      } else if (dbSize) {
+        setFontSizeState(dbSize);
+        localStorage.setItem("app-font-size", String(dbSize));
       }
     })();
   }, [user]);
@@ -117,10 +147,13 @@ export const FontProvider = ({ children }: { children: ReactNode }) => {
       if (!user) return;
       setSaving(true);
       try {
-        await supabase
+        const { error } = await supabase
           .from("profiles")
           .update({ app_font: nextFont, app_font_size: nextSize } as any)
           .eq("id", user.id);
+        if (error) console.warn("Font persist failed:", error.message);
+      } catch (err) {
+        console.warn("Font persist failed:", err);
       } finally {
         setSaving(false);
       }
