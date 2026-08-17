@@ -15,6 +15,7 @@ import BottomNav from "@/components/BottomNav";
 import RelatedEntriesCard from "@/components/RelatedEntriesCard";
 import type { Mood } from "@/components/MoodSelector";
 import { dirFor } from "@/lib/textDirection";
+import { removeCachedEntryAudio } from "@/lib/audioCache";
 import {
   AlertDialog,
 
@@ -77,6 +78,10 @@ const EntryDetailPage = () => {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editedTitle, setEditedTitle] = useState("");
   const [isSavingTitle, setIsSavingTitle] = useState(false);
+  const [isEditingBody, setIsEditingBody] = useState(false);
+  const [editedBody, setEditedBody] = useState("");
+  const [isSavingBody, setIsSavingBody] = useState(false);
+  const [isEnhancing, setIsEnhancing] = useState(false);
   
   const audioRef = useRef<HTMLAudioElement>(null);
 
@@ -171,6 +176,103 @@ const EntryDetailPage = () => {
   const handleCancelEditTitle = () => {
     setIsEditingTitle(false);
     setEditedTitle("");
+  };
+
+  const handleStartEditBody = () => {
+    setEditedBody(entry?.enhanced_text || entry?.original_transcription || "");
+    setIsEditingBody(true);
+  };
+
+  const handleCancelEditBody = () => {
+    setIsEditingBody(false);
+    setEditedBody("");
+  };
+
+  // Edited/enhanced text invalidates the cached voice for this entry, so
+  // playback regenerates instead of replaying the old text. Raw recordings
+  // (non voice-cache/ paths) are never touched.
+  const invalidateVoiceCache = async () => {
+    if (!id) return;
+    setGeneratedAudioUrl(null);
+    setIsPlaying(false);
+    await removeCachedEntryAudio(id);
+    if (entry?.audio_url?.startsWith("voice-cache/")) {
+      try {
+        await supabase
+          .from('journal_entries')
+          .update({ audio_url: null } as any)
+          .eq('id', id);
+      } catch (err) {
+        console.warn('Failed to clear stale voice cache path:', err);
+      }
+    }
+  };
+
+  const handleSaveBody = async () => {
+    if (!id || !editedBody.trim()) return;
+    const cleanBody = editedBody.trim();
+    setIsSavingBody(true);
+    try {
+      const patch: Record<string, unknown> = { enhanced_text: cleanBody };
+      // If the entry was never enhanced, mirror the edit into the original
+      // transcription too so the "Original Transcription" section isn't empty.
+      if (!entry?.enhanced_text && !entry?.original_transcription) {
+        patch.original_transcription = cleanBody;
+      }
+      const { error } = await supabase
+        .from('journal_entries')
+        .update(patch as any)
+        .eq('id', id);
+      if (error) throw error;
+
+      await invalidateVoiceCache();
+      setEntry(prev => prev ? { ...prev, enhanced_text: cleanBody, audio_url: null } : null);
+      setIsEditingBody(false);
+      toast({
+        title: t("entry.bodyUpdated"),
+        description: t("entry.bodyUpdatedDesc"),
+      });
+    } catch (error) {
+      console.error('Error updating entry:', error);
+      toast({
+        title: t("common.error"),
+        description: t("entry.bodyFailed"),
+        variant: "destructive",
+      });
+    } finally {
+      setIsSavingBody(false);
+    }
+  };
+
+  const handleEnhanceBody = async () => {
+    if (!id) return;
+    const source = entry?.enhanced_text || entry?.original_transcription || "";
+    if (!source.trim()) return;
+    setIsEnhancing(true);
+    try {
+      const enhanced = await api.enhanceText(source, 'natural', (entry as any)?.detected_language || undefined);
+      const { error } = await supabase
+        .from('journal_entries')
+        .update({ enhanced_text: enhanced } as any)
+        .eq('id', id);
+      if (error) throw error;
+
+      await invalidateVoiceCache();
+      setEntry(prev => prev ? { ...prev, enhanced_text: enhanced, audio_url: null } : null);
+      toast({
+        title: t("entry.enhanced"),
+        description: t("entry.enhancedDesc"),
+      });
+    } catch (error) {
+      console.error('Error enhancing entry:', error);
+      toast({
+        title: t("entry.enhanceFailed"),
+        description: error instanceof Error ? error.message : t("entry.enhanceFailed"),
+        variant: "destructive",
+      });
+    } finally {
+      setIsEnhancing(false);
+    }
   };
 
   // Live elapsed counter while voice is generating — makes long entries feel
@@ -438,22 +540,85 @@ const EntryDetailPage = () => {
           </div>
         </motion.div>
 
-        {/* Enhanced Text */}
+        {/* Enhanced Text — editable, with AI enhance after save */}
         <motion.div
           className="glass-card rounded-2xl p-6"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
         >
-          <h3 className="text-sm font-medium text-muted-foreground mb-3">
-            Your Story
-          </h3>
-          <p
-            dir={dirFor(entry.detected_language)}
-            className="font-journal text-foreground leading-relaxed whitespace-pre-wrap"
-          >
-            {entry.enhanced_text}
-          </p>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-medium text-muted-foreground">
+              Your Story
+            </h3>
+            {!isEditingBody && (
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 px-2 gap-1 text-xs"
+                  onClick={handleStartEditBody}
+                >
+                  <Pencil className="w-3 h-3" />
+                  {t("entry.editEntry")}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 px-2 gap-1 text-xs text-primary"
+                  onClick={handleEnhanceBody}
+                  disabled={isEnhancing}
+                >
+                  {isEnhancing ? (
+                    <motion.div
+                      className="w-3.5 h-3.5 border-2 border-primary border-t-transparent rounded-full"
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    />
+                  ) : (
+                    <Sparkles className="w-3.5 h-3.5" />
+                  )}
+                  {isEnhancing ? t("record.enhancing") : t("record.enhanceWithAI")}
+                </Button>
+              </div>
+            )}
+          </div>
+
+          {isEditingBody ? (
+            <div className="space-y-3">
+              <textarea
+                value={editedBody}
+                onChange={(e) => setEditedBody(e.target.value)}
+                dir={dirFor(entry.detected_language)}
+                autoFocus
+                placeholder={t("entry.editEntry")}
+                className="w-full min-h-[160px] px-3 py-2.5 bg-muted/50 border border-border rounded-xl text-foreground font-journal text-[15px] leading-relaxed focus:outline-none focus:ring-2 focus:ring-primary resize-y"
+              />
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  className="flex-1 h-11 rounded-xl"
+                  onClick={handleCancelEditBody}
+                >
+                  {t("common.cancel")}
+                </Button>
+                <Button
+                  className="flex-1 h-11 rounded-xl gradient-primary"
+                  onClick={handleSaveBody}
+                  disabled={isSavingBody || !editedBody.trim()}
+                >
+                  {isSavingBody ? t("record.saving") : t("entry.save")}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <p
+              dir={dirFor(entry.detected_language)}
+              className="font-journal text-foreground leading-relaxed whitespace-pre-wrap"
+            >
+              {entry.enhanced_text}
+            </p>
+          )}
         </motion.div>
 
         {/* Voice Playback */}

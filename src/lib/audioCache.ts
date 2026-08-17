@@ -58,3 +58,32 @@ export const dataUrlToBlob = (dataUrl: string): Blob => {
   for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
   return new Blob([bytes], { type: mime });
 };
+
+/**
+ * Delete every cached audio entry for a given entry id (keys are
+ * `entryId:textType:voiceId`). Called after the entry text is edited or
+ * enhanced so playback regenerates instead of replaying the old text.
+ */
+export const removeCachedEntryAudio = async (entryId: string): Promise<void> => {
+  try {
+    const db = await openDb();
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction(STORE, "readwrite");
+      const store = tx.objectStore(STORE);
+      const req = store.openCursor();
+      req.onsuccess = () => {
+        const cursor = req.result;
+        if (cursor) {
+          if (typeof cursor.key === "string" && cursor.key.startsWith(entryId + ":")) {
+            cursor.delete();
+          }
+          cursor.continue();
+        }
+      };
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  } catch {
+    /* cache cleanup is best-effort — never block an edit save on it */
+  }
+};
