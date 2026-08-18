@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Open Soul Journal in Expo Go</title>
+<style>
+  body { margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
+        background:#f0f5f1; font-family:-apple-system, 'Segoe UI', Roboto, sans-serif; }
+  .card { background:#fff; border-radius:24px; padding:36px 40px; text-align:center; max-width:420px;
+          box-shadow:0 20px 50px -20px rgba(29,129,237,.35); border:1px solid rgba(29,129,237,.15); }
+  h1 { color:#0b4f8f; font-size:24px; margin:0 0 8px; }
+  p { color:#1d81ed; font-size:15px; margin:0 0 22px; }
+  .btn { display:block; background:#1d81ed; color:#fff; text-decoration:none;
+         font-size:17px; font-weight:700; padding:16px 18px; border-radius:14px; margin-top:8px; }
+  .btn:active { opacity:.8; }
+  .url { margin-top:16px; font-size:13px; color:#0b4f8f; word-break:break-all;
+          background:#eaf3fd; padding:10px 14px; border-radius:10px; }
+  .step { font-size:13px; color:#3a6ea5; margin-top:16px; line-height:1.8; text-align:left; }
+  .step b { color:#0b4f8f; }
+  .fallback { margin-top:14px; font-size:12px; color:#64748b; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>📓 Soul Journal</h1>
+    <p>Tap to open the app in Expo Go</p>
+    <a class="btn" href="exp://144.91.106.188.sslip.io:9444" id="openBtn">▶ Open in Expo Go</a>
+    <div class="url">exp://144.91.106.188.sslip.io:9444</div>
+    <div class="step">
+      <b>Option 1:</b> tap the blue button above — Expo Go opens the app.<br>
+      <b>Option 2:</b> open Expo Go → "Enter URL manually" → paste
+      <b>exp://144.91.106.188.sslip.io:9444</b> → Open.
+    </div>
+    <div class="fallback" id="fb"></div>
+  </div>
+  <script>
+    // Auto-attempt on load (iOS may block non-user-initiated opens — that's
+    // why the big button is the primary path).
+    try {
+      window.location.href = "exp://144.91.106.188.sslip.io:9444";
+    } catch (e) {}
+    setTimeout(function () {
+      document.getElementById("fb").textContent =
+        "If nothing opened, tap the blue button above (iOS requires a tap).";
+    }, 1500);
+  </script>
+</body>
+</html>
