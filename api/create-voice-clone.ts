@@ -66,7 +66,13 @@ export default async function handler(req: any, res: any) {
     if (!response.ok) {
       const errorText = await response.text();
       console.error("Fish Audio API error:", response.status, errorText);
-      return res.status(502).json({ error: "Voice cloning service unavailable" });
+      // Surface Fish's reason to the client so the app can show a useful message
+      let fishReason = "Voice cloning service unavailable";
+      try {
+        const j = JSON.parse(errorText);
+        fishReason = j?.message || j?.detail || j?.error || fishReason;
+      } catch {}
+      return res.status(502).json({ error: fishReason });
     }
 
     const result = await response.json();

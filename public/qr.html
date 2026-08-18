@@ -3,27 +3,37 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Soul Journal — Scan to open the app</title>
+<title>Soul Journal — Open the app</title>
 <style>
   body { margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
-        background:#EAF6EF; font-family:-apple-system, 'Segoe UI', Roboto, sans-serif; }
-  .card { background:#fff; border-radius:24px; padding:40px 48px; text-align:center;
-          box-shadow:0 20px 50px -20px rgba(5,150,105,.35); border:1px solid rgba(5,150,105,.15); }
-  h1 { color:#065f46; font-size:26px; margin:0 0 6px; }
-  p { color:#047857; font-size:16px; margin:0 0 24px; }
-  img { width:min(320px, 78vw); height:auto; display:block; margin:0 auto; border-radius:12px; }
-  .url { margin-top:22px; font-size:14px; color:#065f46; word-break:break-all;
-          background:#F0FDF4; padding:10px 14px; border-radius:10px; }
-  .step { font-size:13px; color:#166534; margin-top:18px; line-height:1.6; }
+        background:#d2ecf9; font-family:-apple-system, 'Segoe UI', Roboto, sans-serif; }
+  .card { background:#fff; border-radius:24px; padding:36px 40px; text-align:center; max-width:420px;
+          box-shadow:0 20px 50px -20px rgba(29,129,237,.35); border:1px solid rgba(29,129,237,.15); }
+  h1 { color:#0b4f8f; font-size:24px; margin:0 0 6px; }
+  p { color:#1d81ed; font-size:15px; margin:0 0 22px; }
+  img { width:min(280px, 70vw); height:auto; display:block; margin:0 auto; border-radius:12px; }
+  .btn { display:block; margin-top:20px; background:#1d81ed; color:#fff; text-decoration:none;
+         font-size:16px; font-weight:700; padding:14px 18px; border-radius:14px; }
+  .btn:active { opacity:.8; }
+  .url { margin-top:14px; font-size:13px; color:#0b4f8f; word-break:break-all;
+          background:#eaf3fd; padding:10px 14px; border-radius:10px; }
+  .step { font-size:13px; color:#3a6ea5; margin-top:16px; line-height:1.7; text-align:left; }
+  .step b { color:#0b4f8f; }
 </style>
 </head>
 <body>
   <div class="card">
     <h1>📓 Soul Journal</h1>
-    <p>Scan with <b>Expo Go</b> to open the app</p>
+    <p>Ouvrir dans Expo Go — aucune scanne requise</p>
     <img src="/qr-mobile.png" alt="QR code">
-    <div class="url">exp://c6yzfqi-anonymous-8090.exp.direct</div>
-    <div class="step">1. Open <b>Expo Go</b> on your phone<br>2. Scan this code with the in-app scanner</div>
+    <a class="btn" href="exp://144.91.106.188.sslip.io:9444">▶ Ouvrir dans Expo Go</a>
+    <div class="url">exp://144.91.106.188.sslip.io:9444</div>
+    <div class="step">
+      <b>Option 1 (recommandé) :</b> touchez le bouton bleu ci-dessus — Expo Go s'ouvre tout seul.<br><br>
+      <b>Option 2 :</b> ouvrez Expo Go → champ « Enter URL manually » en haut → collez
+      <b>exp://144.91.106.188.sslip.io:9444</b> → Open.<br><br>
+      <b>Option 3 (deux appareils) :</b> scannez ce QR avec l'appareil photo d'un autre téléphone.
+    </div>
   </div>
 </body>
 </html>
