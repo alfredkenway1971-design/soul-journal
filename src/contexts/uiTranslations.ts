@@ -58,6 +58,7 @@ export const UI_TRANSLATIONS: Record<AppLanguage, Record<string, string>> = {
     "entry.enhanced": "Entry Enhanced",
     "entry.enhancedDesc": "Your entry has been enhanced with Ai.",
     "entry.enhanceFailed": "Enhancement Failed",
+    "entry.enhanceStructured": "5 Sections",
   },
   fr: {
     "library.title": "Bibliothèque Soul Journal",
@@ -115,6 +116,7 @@ export const UI_TRANSLATIONS: Record<AppLanguage, Record<string, string>> = {
     "entry.enhanced": "Entrée améliorée",
     "entry.enhancedDesc": "Votre entrée a été améliorée avec l'Ai.",
     "entry.enhanceFailed": "Échec de l'amélioration",
+    "entry.enhanceStructured": "5 Sections",
   },
   es: {
     "library.title": "Biblioteca de Soul Journal",
@@ -172,6 +174,7 @@ export const UI_TRANSLATIONS: Record<AppLanguage, Record<string, string>> = {
     "entry.enhanced": "Entrada mejorada",
     "entry.enhancedDesc": "Tu entrada se ha mejorado con Ia.",
     "entry.enhanceFailed": "La mejora falló",
+    "entry.enhanceStructured": "5 Secciones",
   },
   ar: {
     "library.title": "مكتبة سول جورنال",
@@ -229,6 +232,7 @@ export const UI_TRANSLATIONS: Record<AppLanguage, Record<string, string>> = {
     "entry.enhanced": "تم تحسين المدخل",
     "entry.enhancedDesc": "تم تحسين مدخلتك بالذكاء الاصطناعي.",
     "entry.enhanceFailed": "فشل التحسين",
+    "entry.enhanceStructured": "5 أقسام",
   },
   zh: {
     "library.title": "心灵日记库",
@@ -286,6 +290,7 @@ export const UI_TRANSLATIONS: Record<AppLanguage, Record<string, string>> = {
     "entry.enhanced": "条目已增强",
     "entry.enhancedDesc": "您的条目已用 Ai 增强。",
     "entry.enhanceFailed": "增强失败",
+    "entry.enhanceStructured": "5 个部分",
   },
   ja: {
     "library.title": "ソウルジャーナル ライブラリ",
@@ -343,6 +348,7 @@ export const UI_TRANSLATIONS: Record<AppLanguage, Record<string, string>> = {
     "entry.enhanced": "エントリを強化しました",
     "entry.enhancedDesc": "エントリを Ai で強化しました。",
     "entry.enhanceFailed": "強化に失敗しました",
+    "entry.enhanceStructured": "5セクション",
   },
   sw: {
     "library.title": "Maktaba ya Soul Journal",
@@ -400,6 +406,7 @@ export const UI_TRANSLATIONS: Record<AppLanguage, Record<string, string>> = {
     "entry.enhanced": "Ingizo Limeboreshwa",
     "entry.enhancedDesc": "Ingizo lako limeboreshwa kwa Ai.",
     "entry.enhanceFailed": "Uboreshaji umeshindwa",
+    "entry.enhanceStructured": "Sehemu 5",
   },
   de: {
     "library.title": "Soul Journal Bibliothek",
@@ -457,5 +464,6 @@ export const UI_TRANSLATIONS: Record<AppLanguage, Record<string, string>> = {
     "entry.enhanced": "Eintrag verbessert",
     "entry.enhancedDesc": "Ihr Eintrag wurde mit Ki verbessert.",
     "entry.enhanceFailed": "Verbesserung fehlgeschlagen",
+    "entry.enhanceStructured": "5 Abschnitte",
   },
 };

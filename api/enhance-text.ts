@@ -51,6 +51,26 @@ export default async function handler(req: any, res: any) {
     if (customPrompt) {
       systemPrompt = "You are a helpful assistant that follows instructions precisely.";
       userMessage = `${customPrompt}\n\n${text}`;
+    } else if (tone === "structured") {
+      // 5-section journal restructure (Amer's spec) — keeps the writer's voice,
+      // never fabricates, never invents emotions, leaves blank what isn't there.
+      systemPrompt = `You are helping someone turn a raw, unstructured journal entry into a clear, well-organized personal journal entry. Do not change their meaning, invent details, or add emotions they didn't express.
+
+Given the user's raw entry below, restructure it into these 5 sections:
+
+1. What Happened - Extract the key events, stated as facts, no judgment added.
+2. How I Felt - Pull out the emotions the user mentioned or implied, and when they happened.
+3. Why - Identify the cause or trigger behind those feelings, only if it's present in their entry.
+4. What I Noticed - Surface any pattern, realization, or self-observation they made.
+5. Tomorrow - Extract any intention, plan, or hope they mentioned for the next day. If none was mentioned, leave this section blank rather than inventing one.
+
+Rules:
+- Keep their original voice and tone - don't make it sound clinical or robotic.
+- If a section has no content in the raw entry, leave it empty or write "Not mentioned" - never fabricate.
+- Keep the output concise; don't pad or over-explain.
+- Return the result in clean formatted sections with headers.
+Output language: ${language}.${styleBlock}`;
+      userMessage = `Raw entry:\n"${text}"`;
     } else if (tone === "expand") {
       systemPrompt = `You are a journaling companion who expands short notes or bullet points into a flowing, first-person journal paragraph in ${language}.
 Rules:

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Play, Pause, Trash2, Volume2, ChevronDown, ChevronUp, Pencil, Check, X, Sparkles, Heart, Flame, Blend } from "lucide-react";
+import { ArrowLeft, Play, Pause, Trash2, Volume2, ChevronDown, ChevronUp, Pencil, Check, X, Sparkles, Heart, Flame, Blend, ListTree } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -244,13 +244,13 @@ const EntryDetailPage = () => {
     }
   };
 
-  const handleEnhanceBody = async () => {
+  const handleEnhanceBody = async (tone: string = 'natural') => {
     if (!id) return;
     const source = entry?.enhanced_text || entry?.original_transcription || "";
     if (!source.trim()) return;
     setIsEnhancing(true);
     try {
-      const enhanced = await api.enhanceText(source, 'natural', (entry as any)?.detected_language || undefined);
+      const enhanced = await api.enhanceText(source, tone, (entry as any)?.detected_language || undefined);
       const { error } = await supabase
         .from('journal_entries')
         .update({ enhanced_text: enhanced } as any)
@@ -566,7 +566,7 @@ const EntryDetailPage = () => {
                   variant="ghost"
                   size="sm"
                   className="h-7 px-2 gap-1 text-xs text-primary"
-                  onClick={handleEnhanceBody}
+                  onClick={() => handleEnhanceBody('natural')}
                   disabled={isEnhancing}
                 >
                   {isEnhancing ? (
@@ -579,6 +579,16 @@ const EntryDetailPage = () => {
                     <Sparkles className="w-3.5 h-3.5" />
                   )}
                   {isEnhancing ? t("record.enhancing") : t("record.enhanceWithAI")}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 px-2 gap-1 text-xs text-primary"
+                  onClick={() => handleEnhanceBody('structured')}
+                  disabled={isEnhancing}
+                >
+                  <ListTree className="w-3.5 h-3.5" />
+                  {t("entry.enhanceStructured")}
                 </Button>
               </div>
             )}
