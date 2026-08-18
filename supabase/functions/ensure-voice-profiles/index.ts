@@ -25,6 +25,12 @@ Deno.serve(async () => {
       )
     `;
     await sql`ALTER TABLE voice_profiles ENABLE ROW LEVEL SECURITY`;
+    // CRITICAL: RLS policies alone are not enough — the authenticated/anon roles
+    // need base table privileges, otherwise every query fails with
+    // "permission denied for table voice_profiles" (42501) even with policies.
+    await sql`GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE voice_profiles TO authenticated`;
+    await sql`GRANT SELECT ON TABLE voice_profiles TO anon`;
+    await sql`GRANT ALL ON TABLE voice_profiles TO service_role`;
     await sql`
       DO $$
       BEGIN
