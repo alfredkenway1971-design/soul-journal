@@ -68,16 +68,31 @@ Deno.serve(async (req) => {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      const { data, error } = await admin
-        .from("voice_profiles")
-        .upsert(
-          { user_id: user.id, lang, voice_id, updated_at: new Date().toISOString() },
-          { onConflict: "user_id,lang" }
-        )
-        .select("lang, voice_id")
-        .single();
-      if (error) throw error;
-      return new Response(JSON.stringify({ profile: data }), {
+      const row = { user_id: user.id, lang, voice_id };
+      // Schema-tolerant upsert: the table may lack an `updated_at` column and/or
+      // the user_id+lang unique constraint. Try the clean path, then fall back
+      // to explicit select -> update/insert (no constraint required).
+      let payload: Record<string, string> = { ...row, updated_at: new Date().toISOString() };
+      let result = await admin.from("voice_profiles").upsert(payload, { onConflict: "user_id,lang" }).select("lang, voice_id").single();
+      const msg = String(result.error?.message ?? "");
+      if (result.error && (msg.toLowerCase().includes("updated_at") || msg.includes("PGRST102") || msg.includes("constraint"))) {
+        // Fallback 1: without updated_at
+        payload = { ...row };
+        result = await admin.from("voice_profiles").upsert(payload, { onConflict: "user_id,lang" }).select("lang, voice_id").single();
+        const msg2 = String(result.error?.message ?? "");
+        if (result.error && (msg2.includes("PGRST102") || msg2.toLowerCase().includes("constraint"))) {
+          // Fallback 2: no unique constraint — explicit select, then update or insert
+          const existing = await admin.from("voice_profiles").select("lang").eq("user_id", user.id).eq("lang", lang).maybeSingle();
+          if (existing.error) throw existing.error;
+          if (existing.data) {
+            result = await admin.from("voice_profiles").update({ voice_id }).eq("user_id", user.id).eq("lang", lang).select("lang, voice_id").single();
+          } else {
+            result = await admin.from("voice_profiles").insert(row).select("lang, voice_id").single();
+          }
+        }
+      }
+      if (result.error) throw result.error;
+      return new Response(JSON.stringify({ profile: result.data }), {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
