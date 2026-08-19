@@ -253,13 +253,18 @@ const buildImageGalleryHTML = (photoUrls: string[], photoSize: PhotoSize, isRTL:
 // ── Soul Reflection HTML ──
 const buildSoulReflectionHTML = (reflection: string, fontSize: number): string => {
   if (!reflection) return "";
+  // AI reflection tags like [CHALLENGE] render as shouting caps — show them in title case instead.
+  const shown = reflection.replace(/\[([A-Z][A-Z\s]*)\]/g, (_m, inner: string) => {
+    const t = inner.trim().toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+    return `[${t}]`;
+  });
   return `
     <div style="margin-top:28px;padding:16px 20px;border-radius:14px;background:linear-gradient(135deg, rgba(139,92,246,0.08), rgba(236,72,153,0.06));border:1px solid rgba(139,92,246,0.15);">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
         <span style="font-size:14px;">✨</span>
-        <span style="font-size:${fontSize - 4}px;font-weight:600;color:#7c3aed;letter-spacing:0.04em;">Message from Your Soul</span>
+        <span style="font-size:${fontSize - 4}px;font-weight:400;color:#7c3aed;">Message from Your Soul</span>
       </div>
-      <p style="font-size:${fontSize - 1}px;line-height:1.7;color:#4b5563;font-style:italic;">"${escapeHtml(reflection)}"</p>
+      <p style="font-size:${fontSize - 1}px;line-height:1.7;color:#4b5563;font-style:italic;">"${escapeHtml(shown)}"</p>
     </div>`;
 };
 
