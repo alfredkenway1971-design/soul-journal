@@ -14,11 +14,10 @@ const logStep = (step: string, details?: any) => {
 
 // ═══════════════════════════════════════════════════════════════════════════
 // SOUL JOURNAL STRIPE PRICE IDS — keep in sync with src/contexts/SubscriptionContext.tsx
-// ⚠️ PENDING: v5 $12.99 monthly price not yet created on the Soul Journal
-// Stripe account (awaiting Amer's keys). LEGACY_PRICE_MONTHLY keeps existing
-// $9.99 subscribers mapped to the monthly tier until then.
+// v5 $12.99 monthly price is LIVE (created 2026-08-21 on acct_1QvXQoCkL5ed5EgT).
+// LEGACY_PRICE_MONTHLY keeps existing $9.99 subscribers mapped to monthly.
 // ═══════════════════════════════════════════════════════════════════════════
-const PRICE_MONTHLY_V5 = "price_PENDING_V5_MONTHLY_1299";
+const PRICE_MONTHLY_V5 = "price_1U6yNgCkL5ed5EgTME3JAdp1";
 const PRICE_MONTHLY_LEGACY = "price_1U6YJjCkL5ed5EgTWBH04tDj";
 const PRICE_YEARLY = "price_1U6YKECkL5ed5EgTp2TqeKlb";
 

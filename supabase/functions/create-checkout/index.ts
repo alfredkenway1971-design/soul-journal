@@ -14,16 +14,13 @@ const logStep = (step: string, details?: any) => {
 
 // ═══════════════════════════════════════════════════════════════════════════
 // SOUL JOURNAL STRIPE PRICE IDS — keep in sync with src/contexts/SubscriptionContext.tsx
-// ⚠️ PENDING: the v5 $12.99 monthly price + voice replay add-on prices must be
-// created on the Soul Journal Stripe account once Amer provides the keys.
-// While any ID contains "PENDING" this function refuses to create sessions
-// (returns a friendly error) so the live app can never charge wrong prices.
+// All v5 IDs are LIVE on the SJ account (acct_1QvXQoCkL5ed5EgT), created 2026-08-21.
 // ═══════════════════════════════════════════════════════════════════════════
-const PRICE_MONTHLY = "price_PENDING_V5_MONTHLY_1299"; // v5 $12.99/mo — PENDING
+const PRICE_MONTHLY = "price_1U6yNgCkL5ed5EgTME3JAdp1"; // v5 $12.99/mo
 const PRICE_YEARLY = "price_1U6YKECkL5ed5EgTp2TqeKlb"; // $99.99/yr
 const PRICE_EXTRA_EXPORT = "price_1U6YJkCkL5ed5EgTMDxQXbLr"; // $2.99 one-off PDF
-const PRICE_VOICE_CREDIT = "price_PENDING_V5_VOICE_050"; // $0.50/replay — PENDING
-const PRICE_VOICE_BUNDLE = "price_PENDING_V5_VOICE10_499"; // $4.99/10 replays — PENDING
+const PRICE_VOICE_CREDIT = "price_1U6yNgCkL5ed5EgTdiJHb06Z"; // $0.50/replay
+const PRICE_VOICE_BUNDLE = "price_1U6yNhCkL5ed5EgTHmIyavf5"; // $4.99/10 replays
 
 const VALID_SUBSCRIPTION_PRICES = new Set([PRICE_MONTHLY, PRICE_YEARLY]);
 const VALID_ADDON_PRICES = new Set([PRICE_EXTRA_EXPORT, PRICE_VOICE_CREDIT, PRICE_VOICE_BUNDLE]);

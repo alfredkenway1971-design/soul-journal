@@ -140,8 +140,8 @@ const AdminDashboard = () => {
   };
 
   // Mock revenue figures derived from subscription counts (placeholder until Stripe webhooks populate real data)
-  const monthlyRevenue = monthlySubscribers.length * 599;
-  const annualRevenueShare = Math.round((annualSubscribers.length * 4999) / 12);
+  const monthlyRevenue = monthlySubscribers.length * 1299;
+  const annualRevenueShare = Math.round((annualSubscribers.length * 9999) / 12);
   const totalRevenueThisMonth = monthlyRevenue + annualRevenueShare;
   const fmtUSD = (cents: number) =>
     `$${(cents / 100).toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
@@ -274,7 +274,7 @@ const AdminDashboard = () => {
                 { label: "Total Users", value: users.length.toLocaleString() },
                 { label: "Active Subscribers", value: activeSubscribers.length.toLocaleString() },
                 { label: "Monthly Revenue", value: fmtUSD(monthlyRevenue) },
-                { label: "Annual Revenue", value: fmtUSD(annualSubscribers.length * 4999) },
+                { label: "Annual Revenue", value: fmtUSD(annualSubscribers.length * 9999) },
               ].map((stat, i) => (
                 <motion.div
                   key={stat.label}

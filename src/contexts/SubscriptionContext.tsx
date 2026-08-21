@@ -7,22 +7,17 @@ import { useAuth } from '@/contexts/AuthContext';
 // $12.99/mo · $99.99/yr (≈36% savings) · $2.99 one-off PDF add-on
 // · $0.50 per extra voice replay (or 10 for $4.99)
 //
-// ⚠️ PENDING: Amer is providing Soul Journal's own Stripe API keys.
-// The monthly price on the Soul Journal account is still the OLD $9.99 one
-// (LEGACY_PRICE_MONTHLY). The new $12.99 price + voice-credit add-on prices
-// must be created once the key is available; until then those IDs contain
-// "PENDING" and checkout refuses to run for them (create-checkout guard).
-// Existing $9.99 subscribers keep working via the legacy ID mapping in
-// check-subscription / stripe-webhook.
+// All v5 price IDs are LIVE on the Soul Journal Stripe account
+// (acct_1QvXQoCkL5ed5EgT), created 2026-08-21 with the account's own
+// restricted key. LEGACY_PRICE_MONTHLY keeps existing $9.99 subscribers
+// mapped to the monthly tier (see check-subscription / stripe-webhook).
 // ═══════════════════════════════════════════════════════════════════════════
 export const STRIPE_IDS = {
-  // PENDING: create $12.99/month price on the Soul Journal Stripe account
-  monthly: "price_PENDING_V5_MONTHLY_1299",
-  yearly: "price_1U6YKECkL5ed5EgTp2TqeKlb",
-  extraExport: "price_1U6YJkCkL5ed5EgTMDxQXbLr",
-  // PENDING: voice replay add-on prices ($0.50 each / 10 for $4.99)
-  voiceCredit: "price_PENDING_V5_VOICE_050",
-  voiceBundle: "price_PENDING_V5_VOICE10_499",
+  monthly: "price_1U6yNgCkL5ed5EgTME3JAdp1", // $12.99/mo
+  yearly: "price_1U6YKECkL5ed5EgTp2TqeKlb", // $99.99/yr
+  extraExport: "price_1U6YJkCkL5ed5EgTMDxQXbLr", // $2.99 one-off PDF
+  voiceCredit: "price_1U6yNgCkL5ed5EgTdiJHb06Z", // $0.50/replay
+  voiceBundle: "price_1U6yNhCkL5ed5EgTHmIyavf5", // $4.99 / 10 replays
 } as const;
 
 /** Old $9.99/mo price — existing subscribers must stay mapped to monthly. */
