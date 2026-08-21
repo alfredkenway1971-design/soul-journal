@@ -12,6 +12,46 @@ const logStep = (step: string, details?: any) => {
   console.log(`[CREATE-CHECKOUT] ${step}${detailsStr}`);
 };
 
+// ═══════════════════════════════════════════════════════════════════════════
+// SOUL JOURNAL STRIPE PRICE IDS — keep in sync with src/contexts/SubscriptionContext.tsx
+// ⚠️ PENDING: the v5 $12.99 monthly price + voice replay add-on prices must be
+// created on the Soul Journal Stripe account once Amer provides the keys.
+// While any ID contains "PENDING" this function refuses to create sessions
+// (returns a friendly error) so the live app can never charge wrong prices.
+// ═══════════════════════════════════════════════════════════════════════════
+const PRICE_MONTHLY = "price_PENDING_V5_MONTHLY_1299"; // v5 $12.99/mo — PENDING
+const PRICE_YEARLY = "price_1U6YKECkL5ed5EgTp2TqeKlb"; // $99.99/yr
+const PRICE_EXTRA_EXPORT = "price_1U6YJkCkL5ed5EgTMDxQXbLr"; // $2.99 one-off PDF
+const PRICE_VOICE_CREDIT = "price_PENDING_V5_VOICE_050"; // $0.50/replay — PENDING
+const PRICE_VOICE_BUNDLE = "price_PENDING_V5_VOICE10_499"; // $4.99/10 replays — PENDING
+
+const VALID_SUBSCRIPTION_PRICES = new Set([PRICE_MONTHLY, PRICE_YEARLY]);
+const VALID_ADDON_PRICES = new Set([PRICE_EXTRA_EXPORT, PRICE_VOICE_CREDIT, PRICE_VOICE_BUNDLE]);
+
+// ── Checkout language support ──────────────────────────────────────────────
+// Stripe localizes the hosted Checkout page itself (buttons, labels, errors).
+// We map the app's 8 languages to Stripe's supported Checkout locales.
+// Arabic & Swahili aren't in Stripe's list, so they fall back to "auto",
+// which makes Stripe use the customer's browser language automatically.
+const STRIPE_LOCALES: Record<string, string> = {
+  en: "en",
+  fr: "fr-CA", // Quebec French
+  es: "es",
+  de: "de",
+  ja: "ja",
+  zh: "zh",
+};
+const CHECKOUT_TEXT: Record<string, { subscribe: string; pay: string; afterSubmit: string }> = {
+  en: { subscribe: "Subscribe to Premium", pay: "Pay now", afterSubmit: "You will be redirected back to Soul Journal after payment." },
+  fr: { subscribe: "S'abonner à Premium", pay: "Payer maintenant", afterSubmit: "Vous serez redirigé vers Soul Journal après le paiement." },
+  es: { subscribe: "Suscribirse a Premium", pay: "Pagar ahora", afterSubmit: "Serás redirigido a Soul Journal después del pago." },
+  de: { subscribe: "Premium abonnieren", pay: "Jetzt bezahlen", afterSubmit: "Nach der Zahlung werden Sie zu Soul Journal zurückgeleitet." },
+  ja: { subscribe: "プレミアムに登録", pay: "今すぐ支払う", afterSubmit: "お支払い後、Soul Journal に戻ります。" },
+  zh: { subscribe: "订阅高级版", pay: "立即支付", afterSubmit: "付款后将返回 Soul Journal。" },
+  ar: { subscribe: "الاشتراك في بريميوم", pay: "ادفع الآن", afterSubmit: "سيتم توجيهك إلى Soul Journal بعد الدفع." },
+  sw: { subscribe: "Jiandikishe kwa Premium", pay: "Lipa sasa", afterSubmit: "Utaelekezwa kwenye Soul Journal baada ya malipo." },
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -35,19 +75,33 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
-    const { priceId } = await req.json();
+    const body = await req.json();
+    const { priceId, mode = "subscription", lang = "en" } = body;
     if (!priceId) throw new Error("priceId is required");
-    const VALID_PRICE_IDS = new Set([
-      "price_1T8kWjCkL5ed5EgT3vQutx72", // monthly
-      "price_1T8kXACkL5ed5EgTzKtnTnEz", // yearly
-    ]);
-    if (!VALID_PRICE_IDS.has(priceId)) {
+
+    const locale = STRIPE_LOCALES[lang] ?? "auto";
+    const text = CHECKOUT_TEXT[lang] ?? CHECKOUT_TEXT.en;
+
+    // PENDING guard — never charge while price IDs are placeholders
+    if (priceId.includes("PENDING")) {
+      logStep("Refusing checkout: price ID not configured", { priceId });
+      return new Response(JSON.stringify({ error: "Paiement bientôt disponible — réessayez plus tard." }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400,
+      });
+    }
+
+    const isPaymentMode = mode === "payment";
+    const isValid = isPaymentMode
+      ? VALID_ADDON_PRICES.has(priceId)
+      : VALID_SUBSCRIPTION_PRICES.has(priceId);
+    if (!isValid) {
       return new Response(JSON.stringify({ error: "Invalid price ID" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    logStep("Price ID received", { priceId });
+    logStep("Price ID accepted", { priceId, mode });
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
@@ -57,17 +111,35 @@ serve(async (req) => {
     }
     logStep("Customer lookup", { customerId: customerId || "new" });
 
+    const origin = req.headers.get("origin") ?? "https://soul-journal-seven.vercel.app";
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
       line_items: [{ price: priceId, quantity: 1 }],
-      mode: "subscription",
-      success_url: `${req.headers.get("origin")}/settings?checkout=success`,
-      cancel_url: `${req.headers.get("origin")}/pricing?checkout=cancelled`,
+      mode: isPaymentMode ? "payment" : "subscription",
+      locale,
+      custom_text: {
+        submit: isPaymentMode ? text.pay : text.subscribe,
+        after_submit: text.afterSubmit,
+      },
+      metadata: {
+        user_id: user.id,
+        ...(isPaymentMode
+          ? {
+              type: priceId === PRICE_VOICE_CREDIT || priceId === PRICE_VOICE_BUNDLE
+                ? "voice_credit"
+                : "export_credit",
+              price_id: priceId,
+              // The $4.99 bundle grants 10 replays; the $0.50 single grants 1
+              ...(priceId === PRICE_VOICE_BUNDLE ? { credits: "10" } : {}),
+            }
+          : {}),
+      },
+      success_url: `${origin}/settings?checkout=success`,
+      cancel_url: `${origin}/pricing?checkout=cancelled`,
     });
 
-    logStep("Checkout session created", { sessionId: session.id });
-
+    logStep("Checkout session created", { sessionId: session.id, mode });
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,

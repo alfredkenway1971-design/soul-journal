@@ -16,6 +16,7 @@ import { captureEntryContext } from "@/lib/contextCapture";
 
 import BottomNav from "@/components/BottomNav";
 import { useToast } from "@/hooks/use-toast";
+import { useSubscription, FREE_LIMITS, PREMIUM_ENTITLEMENTS } from "@/contexts/SubscriptionContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useJournalAPI } from "@/hooks/useJournalAPI";
 import { useUsageLimits } from "@/hooks/useUsageLimits";
@@ -28,6 +29,7 @@ type RecordingStep = "main" | "write" | "mood" | "enhance" | "language" | "compl
 const RecordPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { isPremium } = useSubscription();
   const { user } = useAuth();
   const { language, t } = useLanguage();
   const api = useJournalAPI(language);
@@ -83,8 +85,18 @@ const RecordPage = () => {
     if (!files) return;
     const newFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
     if (newFiles.length === 0) return;
-    setPhotos(prev => [...prev, ...newFiles]);
-    setPhotoPreviewUrls(prev => [...prev, ...newFiles.map(f => URL.createObjectURL(f))]);
+    const photoLimit = isPremium ? PREMIUM_ENTITLEMENTS.photosPerEntry : FREE_LIMITS.photosPerEntry;
+    const room = Math.max(0, photoLimit - photos.length);
+    if (room <= 0) {
+      toast({ title: "Photo limit reached", description: `Up to ${photoLimit} photos per entry.`, variant: "destructive" });
+      return;
+    }
+    const accepted = newFiles.slice(0, room);
+    setPhotos(prev => [...prev, ...accepted]);
+    setPhotoPreviewUrls(prev => [...prev, ...accepted.map(f => URL.createObjectURL(f))]);
+    if (newFiles.length > room) {
+      toast({ title: "Photo limit reached", description: `Up to ${photoLimit} photos per entry.`, variant: "destructive" });
+    }
   };
 
   const removePhoto = (index: number) => {

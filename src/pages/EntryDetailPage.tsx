@@ -6,7 +6,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useTitleCase } from "@/hooks/useTitleCase";
 import { hasVoiceForLanguage, normalizeLang } from "@/lib/voiceProfiles";
+import {
+  useSubscription,
+  STRIPE_IDS,
+  VOICE_REPLAY_PRICE,
+  VOICE_REPLAY_BUNDLE_PRICE,
+  VOICE_REPLAY_BUNDLE_SIZE,
+} from "@/contexts/SubscriptionContext";
+import { getReplaysUsed, incrementReplaysUsed } from "@/lib/voiceReplayQuota";
 import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage, LANGUAGES } from "@/contexts/LanguageContext";
 import { useJournalAPI } from "@/hooks/useJournalAPI";
@@ -64,6 +73,7 @@ const EntryDetailPage = () => {
   const { language, t } = useLanguage();
   const titleCase = useTitleCase();
   const api = useJournalAPI(language);
+  const { isPremium, limits, voiceCredits } = useSubscription();
   
   const [entry, setEntry] = useState<EntryData | null>(null);
   const [media, setMedia] = useState<MediaData[]>([]);
@@ -82,8 +92,51 @@ const EntryDetailPage = () => {
   const [editedBody, setEditedBody] = useState("");
   const [isSavingBody, setIsSavingBody] = useState(false);
   const [isEnhancing, setIsEnhancing] = useState(false);
+  const [showReplayUpsell, setShowReplayUpsell] = useState(false);
+  const [buyingReplays, setBuyingReplays] = useState(false);
   
   const audioRef = useRef<HTMLAudioElement>(null);
+
+  // v5 voice strategy: replay (cloned voice) is Premium-only, capped at 20/month
+  // + paid voice credits. Free tier gets NO voice replay (native STT entry only).
+  const canUseReplay = (): boolean => {
+    if (!isPremium) return false;
+    const allowance = limits.voiceReplaysPerMonth;
+    return getReplaysUsed() < allowance + voiceCredits;
+  };
+
+  const buyReplays = async (bundle: boolean) => {
+    setBuyingReplays(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-checkout", {
+        body: {
+          priceId: bundle ? STRIPE_IDS.voiceBundle : STRIPE_IDS.voiceCredit,
+          mode: "payment",
+          lang: localStorage.getItem("app-language") || "en",
+        },
+      });
+      if (error) throw error;
+      if (data?.url) {
+        window.open(data.url, "_blank");
+        setShowReplayUpsell(false);
+      } else {
+        toast({
+          title: t("common.error"),
+          description: data?.error ?? "Checkout error",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error buying replays:", error);
+      toast({
+        title: t("common.error"),
+        description: error instanceof Error ? error.message : "Checkout error",
+        variant: "destructive",
+      });
+    } finally {
+      setBuyingReplays(false);
+    }
+  };
 
   useEffect(() => {
     const fetchEntry = async () => {
@@ -288,6 +341,20 @@ const EntryDetailPage = () => {
 
   const handleGenerateVoice = async () => {
     if (!entry || !entry.enhanced_text) return;
+    // v5: voice replay is Premium-only and capped (20/mo + purchased credits)
+    if (!isPremium) {
+      toast({
+        title: t("entry.voicePremiumRequired"),
+        description: t("entry.voicePremiumRequiredDesc"),
+        variant: "destructive",
+      });
+      navigate("/pricing");
+      return;
+    }
+    if (!canUseReplay()) {
+      setShowReplayUpsell(true);
+      return;
+    }
     
     setIsGeneratingVoice(true);
     
@@ -311,6 +378,7 @@ const EntryDetailPage = () => {
       
       const audioUrl = await api.generateVoice(textForVoice, undefined, id, 'entry');
       setGeneratedAudioUrl(audioUrl);
+      incrementReplaysUsed();
       // Auto-play once ready (matches the reflection flow)
       setTimeout(() => {
         if (audioRef.current) {
@@ -348,10 +416,25 @@ const EntryDetailPage = () => {
   };
 
   const handleGenerateVoiceForText = async (text: string) => {
+    // v5: voice replay is Premium-only and capped (20/mo + purchased credits)
+    if (!isPremium) {
+      toast({
+        title: t("entry.voicePremiumRequired"),
+        description: t("entry.voicePremiumRequiredDesc"),
+        variant: "destructive",
+      });
+      navigate("/pricing");
+      return;
+    }
+    if (!canUseReplay()) {
+      setShowReplayUpsell(true);
+      return;
+    }
     setIsGeneratingVoice(true);
     try {
       const audioUrl = await api.generateVoice(text, undefined, id, 'reflection');
       setGeneratedAudioUrl(audioUrl);
+      incrementReplaysUsed();
       setTimeout(() => {
         if (audioRef.current) {
           audioRef.current.play();
@@ -880,6 +963,42 @@ const EntryDetailPage = () => {
           </motion.div>
         )}
       </main>
+
+      {/* v5: voice replay counter (Premium: 20/month + purchased credits) */}
+      {isPremium && generatedAudioUrl && (
+        <div className="px-4 pb-2 -mt-2 text-xs text-muted-foreground text-center">
+          {t("entry.replaysUsed")}: {getReplaysUsed()}/{limits.voiceReplaysPerMonth + voiceCredits}
+        </div>
+      )}
+
+      {/* v5: over-limit voice replay upsell (0,50 $ / replay, 10 for 4,99 $) */}
+      <Dialog open={showReplayUpsell} onOpenChange={setShowReplayUpsell}>
+        <DialogContent className="max-w-sm p-5 text-center">
+          <DialogHeader>
+            <DialogTitle className="text-lg">{t("entry.replaysLimitTitle")}</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground mb-4">{t("entry.replaysLimitDesc")}</p>
+          <div className="space-y-2">
+            <Button
+              className="w-full h-12 rounded-xl gap-2"
+              onClick={() => buyReplays(false)}
+              disabled={buyingReplays}
+            >
+              <Sparkles className="w-4 h-4" />
+              1 {t("entry.replayUnit")} — {VOICE_REPLAY_PRICE.toFixed(2).replace(".", ",")} $
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full h-12 rounded-xl gap-2"
+              onClick={() => buyReplays(true)}
+              disabled={buyingReplays}
+            >
+              <Sparkles className="w-4 h-4" />
+              {VOICE_REPLAY_BUNDLE_SIZE} {t("entry.replayUnitPlural")} — {VOICE_REPLAY_BUNDLE_PRICE.toFixed(2).replace(".", ",")} $
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <BottomNav />
     </div>

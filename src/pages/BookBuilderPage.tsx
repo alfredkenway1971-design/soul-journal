@@ -7,9 +7,9 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
-import { useSubscription } from "@/contexts/SubscriptionContext";
+import { useSubscription, EXTRA_EXPORT_PRICE, STRIPE_IDS } from "@/contexts/SubscriptionContext";
+import { getExportsUsed, incrementExportsUsed } from "@/lib/exportQuota";
 import ErrorBoundary from "@/components/ErrorBoundary";
-import UpgradePrompt from "@/components/premium/UpgradePrompt";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import BottomNav from "@/components/BottomNav";
@@ -41,9 +41,12 @@ const fontSizeLabels: Record<FontSize, string> = {
 const BookBuilderPage = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const { toast } = useToast();
-  const { isPremium } = useSubscription();
+  const { isPremium, isAdmin, limits } = useSubscription();
+  const [exportsUsed, setExportsUsed] = useState(() => getExportsUsed());
+  const [exportCredits, setExportCredits] = useState(0);
+  const [buyingExtra, setBuyingExtra] = useState(false);
 
   const [step, setStep] = useState<Step>(1);
   const [generating, setGenerating] = useState(false);
@@ -99,6 +102,15 @@ const BookBuilderPage = () => {
       const { data } = await supabase.from("profiles").select("display_name, avatar_url").eq("id", user.id).single();
       if (data?.display_name) setUserName(data.display_name);
       if (data?.avatar_url) setAvatarUrl(data.avatar_url);
+    })();
+  }, [user]);
+
+  // Fetch paid export credits ($2.99 add-ons) — add to monthly allowance
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const { data } = await supabase.from("export_credits").select("credits").eq("user_id", user.id).maybeSingle();
+      setExportCredits(data?.credits ?? 0);
     })();
   }, [user]);
 
@@ -237,6 +249,10 @@ const BookBuilderPage = () => {
         setProgressMsg
       );
 
+      if (!isAdmin) {
+        incrementExportsUsed();
+        setExportsUsed(getExportsUsed());
+      }
       toast({ title: "Book Downloaded! 📖", description: `${entries.length} entries compiled into your Soul Book PDF.` });
     } catch (err) {
       console.error(err);
@@ -276,7 +292,33 @@ const BookBuilderPage = () => {
     setFontSize(map[val[0]]);
   };
 
-  if (!isPremium) {
+  // Fair-usage quota: free 1/mo, premium 3/mo, + $2.99 add-ons; admin unlimited
+  const monthlyAllowance = limits.bookExportsPerMonth + exportCredits;
+  const quotaReached = !isAdmin && exportsUsed >= monthlyAllowance;
+
+  const handleBuyExtraExport = async () => {
+    if (!user || !session?.access_token) return;
+    setBuyingExtra(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-checkout", {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+        body: { priceId: STRIPE_IDS.extraExport, mode: "payment", lang: localStorage.getItem("app-language") || "en" },
+      });
+      if (error) throw error;
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        toast({ title: "Erreur", description: data?.error || "Impossible de créer la commande.", variant: "destructive" });
+      }
+    } catch (e) {
+      console.error(e);
+      toast({ title: "Erreur", description: "Paiement bientôt disponible — réessayez plus tard.", variant: "destructive" });
+    } finally {
+      setBuyingExtra(false);
+    }
+  };
+
+  if (quotaReached) {
     return (
       <div className="min-h-screen gradient-warm pb-24">
         <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border/50">
@@ -290,10 +332,31 @@ const BookBuilderPage = () => {
           </div>
         </header>
         <main className="max-w-lg mx-auto px-4 py-12">
-          <UpgradePrompt 
-            feature="Soul Book Builder" 
-            description="Export your journal entries as a beautifully designed PDF book. Upgrade to Premium to unlock this feature."
-          />
+          <div className="glass-premium p-8 text-center space-y-4">
+            <span className="text-4xl block">📖</span>
+            <h2 className="text-xl font-display font-semibold text-foreground">Monthly export limit reached</h2>
+            <p className="text-sm text-muted-foreground">
+              {isPremium
+                ? `You've used your ${monthlyAllowance} included Soul Book exports this month. Generate more for ${EXTRA_EXPORT_PRICE.toFixed(2)}$ each.`
+                : "You've reached your monthly limit. Upgrade or wait until next month."}
+            </p>
+            {isPremium ? (
+              <Button className="w-full h-12 rounded-xl gap-2" onClick={handleBuyExtraExport} disabled={buyingExtra}>
+                {buyingExtra ? <Loader2 className="w-5 h-5 animate-spin" /> : <Sparkles className="w-5 h-5" />}
+                Generate more for {EXTRA_EXPORT_PRICE.toFixed(2)}$ each
+              </Button>
+            ) : (
+              <div className="space-y-2">
+                <Button className="w-full h-12 rounded-xl gap-2" onClick={() => navigate("/pricing")}>
+                  Passer à Premium
+                </Button>
+                <Button variant="ghost" className="w-full" onClick={handleBuyExtraExport} disabled={buyingExtra}>
+                  {buyingExtra ? <Loader2 className="w-5 h-5 animate-spin" /> : null}
+                  Generate more for {EXTRA_EXPORT_PRICE.toFixed(2)}$ each
+                </Button>
+              </div>
+            )}
+          </div>
         </main>
         <BottomNav />
       </div>
@@ -556,6 +619,16 @@ const BookBuilderPage = () => {
                     </>
                   )}
                 </Button>
+
+                {/* Export quota banner — v5: show used/total counter */}
+                {!isAdmin && (
+                  <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
+                    <span>PDF exports used this month</span>
+                    <span className="font-medium text-primary">
+                      {exportsUsed}/{monthlyAllowance}
+                    </span>
+                  </div>
+                )}
 
                 <Button
                   className="w-full h-14 rounded-2xl gradient-primary text-lg gap-2"

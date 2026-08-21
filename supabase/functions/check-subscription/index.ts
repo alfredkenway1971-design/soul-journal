@@ -12,6 +12,22 @@ const logStep = (step: string, details?: any) => {
   console.log(`[CHECK-SUBSCRIPTION] ${step}${detailsStr}`);
 };
 
+// ═══════════════════════════════════════════════════════════════════════════
+// SOUL JOURNAL STRIPE PRICE IDS — keep in sync with src/contexts/SubscriptionContext.tsx
+// ⚠️ PENDING: v5 $12.99 monthly price not yet created on the Soul Journal
+// Stripe account (awaiting Amer's keys). LEGACY_PRICE_MONTHLY keeps existing
+// $9.99 subscribers mapped to the monthly tier until then.
+// ═══════════════════════════════════════════════════════════════════════════
+const PRICE_MONTHLY_V5 = "price_PENDING_V5_MONTHLY_1299";
+const PRICE_MONTHLY_LEGACY = "price_1U6YJjCkL5ed5EgTWBH04tDj";
+const PRICE_YEARLY = "price_1U6YKECkL5ed5EgTp2TqeKlb";
+
+const tierFromPrice = (priceId: string): string | null => {
+  if (priceId === PRICE_MONTHLY_V5 || priceId === PRICE_MONTHLY_LEGACY) return "monthly";
+  if (priceId === PRICE_YEARLY) return "yearly";
+  return null;
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -25,9 +41,6 @@ serve(async (req) => {
 
   try {
     logStep("Function started");
-
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
 
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) throw new Error("No authorization header provided");
@@ -53,8 +66,11 @@ serve(async (req) => {
       return new Response(JSON.stringify({
         subscribed: true,
         plan_type: "manual",
+        tier: "yearly",
         is_manual_grant: true,
         subscription_end: null,
+        export_credits: 0,
+        voice_credits: 0,
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
@@ -73,15 +89,18 @@ serve(async (req) => {
       return new Response(JSON.stringify({
         subscribed: true,
         plan_type: "manual",
+        tier: "yearly",
         is_manual_grant: true,
         subscription_end: null,
+        export_credits: 0,
+        voice_credits: 0,
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
       });
     }
 
-    // First check for manual grant in subscriptions table
+    // Manual grant in subscriptions table
     const { data: manualGrant } = await supabaseClient
       .from("subscriptions")
       .select("*")
@@ -95,86 +114,173 @@ serve(async (req) => {
       return new Response(JSON.stringify({
         subscribed: true,
         plan_type: "manual",
+        tier: "yearly",
         is_manual_grant: true,
         subscription_end: null,
+        export_credits: 0,
+        voice_credits: 0,
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
       });
     }
 
-    // Check Stripe
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+    // Export credits (paid $2.99 add-ons) — read BEFORE returning
+    const { data: creditsRow } = await supabaseClient
+      .from("export_credits")
+      .select("credits")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    const exportCredits = creditsRow?.credits ?? 0;
 
-    if (customers.data.length === 0) {
-      logStep("No Stripe customer found");
-      return new Response(JSON.stringify({ subscribed: false }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      });
+    // Voice replay credits (v5 paid add-ons: $0.50 each / 10 for $4.99)
+    const { data: voiceRow } = await supabaseClient
+      .from("voice_credits")
+      .select("credits")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    const voiceCredits = voiceRow?.credits ?? 0;
+
+    // 1) Check DB row first — it is the source of truth written by webhooks
+    const { data: dbSub } = await supabaseClient
+      .from("subscriptions")
+      .select("*")
+      .eq("user_id", user.id)
+      .in("status", ["active", "canceled", "past_due", "incomplete"])
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (dbSub) {
+      const periodEnd = dbSub.current_period_end ? new Date(dbSub.current_period_end) : null;
+      const isActive = dbSub.status === "active" && (!periodEnd || periodEnd > new Date());
+      // canceled but period not ended → premium until period ends (spec)
+      const isGrace = dbSub.status === "canceled" && periodEnd && periodEnd > new Date();
+      if (isActive || isGrace) {
+        logStep("DB subscription active", { tier: dbSub.tier, status: dbSub.status, periodEnd });
+        return new Response(JSON.stringify({
+          subscribed: true,
+          plan_type: dbSub.tier || dbSub.plan_type || "monthly",
+          tier: dbSub.tier || "monthly",
+          is_manual_grant: false,
+          subscription_end: dbSub.current_period_end,
+          cancel_at_period_end: dbSub.cancel_at_period_end ?? false,
+          export_credits: exportCredits,
+          voice_credits: voiceCredits,
+        }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        });
+      }
     }
 
-    const customerId = customers.data[0].id;
-    logStep("Found Stripe customer", { customerId });
+    // 2) RevenueCat (mobile) rows
+    const { data: rcSub } = await supabaseClient
+      .from("subscriptions")
+      .select("*")
+      .eq("user_id", user.id)
+      .in("platform", ["ios", "android"])
+      .eq("status", "active")
+      .maybeSingle();
 
-    const subscriptions = await stripe.subscriptions.list({
-      customer: customerId,
-      status: "active",
-      limit: 1,
-    });
-
-    const hasActiveSub = subscriptions.data.length > 0;
-    let planType = null;
-    let subscriptionEnd = null;
-
-    if (hasActiveSub) {
-      const subscription = subscriptions.data[0];
-      subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
-      const priceId = subscription.items.data[0].price.id;
-      
-      // Determine plan type from price ID
-      if (priceId === "price_1T8kWjCkL5ed5EgT3vQutx72") {
-        planType = "monthly";
-      } else if (priceId === "price_1T8kXACkL5ed5EgTzKtnTnEz") {
-        planType = "yearly";
-      } else {
-        planType = "unknown";
+    if (rcSub) {
+      const periodEnd = rcSub.current_period_end ? new Date(rcSub.current_period_end) : null;
+      if (!periodEnd || periodEnd > new Date()) {
+        logStep("RevenueCat subscription active", { tier: rcSub.tier, platform: rcSub.platform });
+        return new Response(JSON.stringify({
+          subscribed: true,
+          plan_type: rcSub.tier || "monthly",
+          tier: rcSub.tier || "monthly",
+          is_manual_grant: false,
+          subscription_end: rcSub.current_period_end,
+          export_credits: exportCredits,
+          voice_credits: voiceCredits,
+        }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        });
       }
-      logStep("Active subscription found", { planType, subscriptionEnd });
-
-      // Sync to subscriptions table
-      const { data: existing } = await supabaseClient
-        .from("subscriptions")
-        .select("id")
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      const subData = {
-        user_id: user.id,
-        stripe_customer_id: customerId,
-        stripe_subscription_id: subscription.id,
-        plan_type: planType,
-        status: "active",
-        current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-        current_period_end: subscriptionEnd,
-        is_manual_grant: false,
-      };
-
-      if (existing) {
-        await supabaseClient.from("subscriptions").update(subData).eq("id", existing.id);
-      } else {
-        await supabaseClient.from("subscriptions").insert(subData);
-      }
-    } else {
-      logStep("No active subscription found");
     }
 
+    // 3) Live Stripe check (web) — catches subs created before webhooks were wired
+    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+    if (stripeKey) {
+      const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+      const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+
+      if (customers.data.length > 0) {
+        const customerId = customers.data[0].id;
+        const subscriptions = await stripe.subscriptions.list({
+          customer: customerId,
+          status: "all",
+          limit: 5,
+        });
+
+        const now = Math.floor(Date.now() / 1000);
+        const activeSub = subscriptions.data.find((s) => {
+          const inActiveWindow = s.status === "active" && s.current_period_end > now;
+          const inGraceWindow = s.status === "canceled" && s.current_period_end > now;
+          return inActiveWindow || inGraceWindow;
+        });
+
+        if (activeSub) {
+          const subscriptionEnd = new Date(activeSub.current_period_end * 1000).toISOString();
+          const priceId = activeSub.items.data[0]?.price.id ?? "";
+          const tier = tierFromPrice(priceId) || (activeSub.items.data[0]?.price?.recurring?.interval === "year" ? "yearly" : "monthly");
+          logStep("Stripe subscription active", { tier, status: activeSub.status });
+
+          // Sync to DB
+          const { data: existing } = await supabaseClient
+            .from("subscriptions")
+            .select("id")
+            .eq("user_id", user.id)
+            .maybeSingle();
+
+          const subData = {
+            user_id: user.id,
+            stripe_customer_id: customerId,
+            stripe_subscription_id: activeSub.id,
+            plan_type: tier,
+            tier,
+            status: activeSub.status,
+            platform: "web",
+            current_period_start: new Date(activeSub.current_period_start * 1000).toISOString(),
+            current_period_end: subscriptionEnd,
+            cancel_at_period_end: activeSub.cancel_at_period_end ?? false,
+            is_manual_grant: false,
+          };
+
+          if (existing) {
+            await supabaseClient.from("subscriptions").update(subData).eq("id", existing.id);
+          } else {
+            await supabaseClient.from("subscriptions").insert(subData);
+          }
+
+          return new Response(JSON.stringify({
+            subscribed: true,
+            plan_type: tier,
+            tier,
+            is_manual_grant: false,
+            subscription_end: subscriptionEnd,
+            cancel_at_period_end: activeSub.cancel_at_period_end ?? false,
+            export_credits: exportCredits,
+          voice_credits: voiceCredits,
+          }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 200,
+          });
+        }
+      }
+    }
+
+    logStep("No active subscription found");
     return new Response(JSON.stringify({
-      subscribed: hasActiveSub,
-      plan_type: planType,
-      subscription_end: subscriptionEnd,
+      subscribed: false,
+      plan_type: null,
+      tier: "free",
       is_manual_grant: false,
+      subscription_end: null,
+      export_credits: exportCredits,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,

@@ -138,6 +138,32 @@ export type Database = {
           },
         ]
       }
+      export_credits: {
+        Row: {
+          credits: number
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          credits?: number
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          credits?: number
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "export_credits_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       journal_entries: {
         Row: {
           audio_url: string | null

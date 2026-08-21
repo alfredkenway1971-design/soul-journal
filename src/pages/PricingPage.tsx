@@ -4,11 +4,45 @@ import { ArrowLeft, Check, Crown, Sparkles, Zap, Shield } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useSubscription, SUBSCRIPTION_TIERS, FREE_LIMITS } from "@/contexts/SubscriptionContext";
+import { useSubscription, SUBSCRIPTION_TIERS } from "@/contexts/SubscriptionContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import BottomNav from "@/components/BottomNav";
+
+// Pricing UI is French (Québec) by default per product spec. Feature lists use
+// "included" language — never "unlimited" (fair-usage soft caps).
+const freeFeatures = [
+  "Entrées texte illimitées",
+  "Jusqu'à 3 photos par entrée",
+  "AI Coach de base (5 réponses / mois)",
+  "1 export Soul Book PDF / mois",
+  "Thèmes de base (Lavender Dreams, Ocean Sky)",
+  "Verrouillage PIN",
+  "Saisie vocale native (reconnaissance vocale de l'appareil — gratuite)",
+  "Aucune relecture vocale / aucune voix clonée",
+];
+
+const premiumFeatures = [
+  "Entrées texte illimitées",
+  "Jusqu'à 50 photos par entrée",
+  "AI Coach complet (réponses illimitées)",
+  "Suggestions d'écriture intelligentes",
+  "Alertes d'humeur prédictives",
+  "Partenaire de responsabilité d'objectifs",
+  "Revue hebdomadaire de l'âme",
+  "Prévision émotionnelle",
+  "Soul Mirror (portrait mensuel)",
+  "Suivi émotionnel des relations",
+  "Réflexion sur les rêves",
+  "Détection automatique de gratitude",
+  "Débloqueur de blocage d'écriture",
+  "Relecture vocale avec voix clonée (20 relectures / mois incluses)",
+  "3 exports Soul Book PDF / mois (supplémentaires : 2,99 $ chacun)",
+  "Tous les thèmes + arrière-plans personnalisés",
+  "Verrouillage biométrique (mobile)",
+  "Traitement IA prioritaire",
+];
 
 const PricingPage = () => {
   const navigate = useNavigate();
@@ -21,11 +55,13 @@ const PricingPage = () => {
     setLoadingPlan(plan);
     try {
       const { data, error } = await supabase.functions.invoke("create-checkout", {
-        body: { priceId },
+        body: { priceId, lang: localStorage.getItem("app-language") || "en" },
       });
       if (error) throw error;
       if (data?.url) {
         window.open(data.url, "_blank");
+      } else {
+        toast({ title: t("common.error"), description: data?.error || "Failed to start checkout", variant: "destructive" });
       }
     } catch (e: any) {
       toast({ title: t("common.error"), description: e.message || "Failed to start checkout", variant: "destructive" });
@@ -44,25 +80,6 @@ const PricingPage = () => {
       toast({ title: t("common.error"), description: e.message || "Failed to open portal", variant: "destructive" });
     }
   };
-
-  const freeFeatures = [
-    `${FREE_LIMITS.textEntriesPerDay} ${t("record.textLimit")}/${t("record.today")}`,
-    `${FREE_LIMITS.audioEntriesPerWeek} ${t("record.audioLimit")}/${t("record.thisWeek")}`,
-    `${FREE_LIMITS.aiCoachingCallsPerMonth} ${t("coaching.usageCounter")}`,
-    t("record.selectMood"),
-    t("insights.bestStreak"),
-  ];
-
-  const premiumFeatures = [
-    "Unlimited text & audio entries",
-    "Full AI transcription & refinement",
-    "Unlimited AI coaching & analysis",
-    "Voice cloning & playback",
-    "Full insights dashboard & trends",
-    "Book/PDF export",
-    "All premium themes",
-    "Priority support",
-  ];
 
   return (
     <div className="min-h-screen gradient-warm pb-24">
@@ -119,7 +136,7 @@ const PricingPage = () => {
             <h3 className="font-semibold text-foreground text-lg">{t("pricing.free")}</h3>
             {!isPremium && <Badge variant="outline" className="ml-auto">{t("pricing.currentPlan")}</Badge>}
           </div>
-          <p className="text-3xl font-bold text-foreground mb-4">$0<span className="text-sm font-normal text-muted-foreground">{t("pricing.forever")}</span></p>
+          <p className="text-3xl font-bold text-foreground mb-4">0 $<span className="text-sm font-normal text-muted-foreground">{t("pricing.forever")}</span></p>
           <ul className="space-y-2">
             {freeFeatures.map((f) => (
               <li key={f} className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -142,7 +159,7 @@ const PricingPage = () => {
             {isPremium && planType === "monthly" && <Badge className="bg-primary/20 text-primary border-primary/30 ml-auto">{t("pricing.yourPlan")}</Badge>}
           </div>
           <p className="text-3xl font-bold text-foreground mb-4">
-            ${SUBSCRIPTION_TIERS.monthly.price}<span className="text-sm font-normal text-muted-foreground">{t("pricing.perMonth")}</span>
+            12,99 $<span className="text-sm font-normal text-muted-foreground">{t("pricing.perMonth")}</span>
           </p>
           <ul className="space-y-2 mb-5">
             {premiumFeatures.map((f) => (
@@ -157,7 +174,7 @@ const PricingPage = () => {
               onClick={() => handleCheckout(SUBSCRIPTION_TIERS.monthly.price_id, "monthly")}
               disabled={loadingPlan === "monthly"}
             >
-              {loadingPlan === "monthly" ? t("pricing.loading") : t("pricing.subscribeMonthly")}
+              {loadingPlan === "monthly" ? t("pricing.loading") : "Passer à Premium"}
             </Button>
           )}
         </motion.div>
@@ -170,7 +187,7 @@ const PricingPage = () => {
           className={`glass-card rounded-2xl p-6 relative overflow-hidden ${isPremium && planType === "yearly" ? "border-2 border-primary/50" : "border-2 border-primary/30"}`}
         >
           <div className="absolute top-0 right-0 bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-bl-xl">
-            {t("pricing.save30")}
+            Économisez 36% avec l'annuel
           </div>
           <div className="flex items-center gap-2 mb-1">
             <Sparkles className="w-5 h-5 text-primary" />
@@ -178,10 +195,10 @@ const PricingPage = () => {
             {isPremium && planType === "yearly" && <Badge className="bg-primary/20 text-primary border-primary/30 ml-auto">{t("pricing.yourPlan")}</Badge>}
           </div>
           <p className="text-3xl font-bold text-foreground">
-            ${SUBSCRIPTION_TIERS.yearly.price}<span className="text-sm font-normal text-muted-foreground">{t("pricing.perYear")}</span>
+            99,99 $<span className="text-sm font-normal text-muted-foreground">{t("pricing.perYear")}</span>
           </p>
           <p className="text-sm text-primary font-medium mb-4">
-            {t("pricing.justPerMonth")} ${SUBSCRIPTION_TIERS.yearly.effectiveMonthly}/{t("pricing.perMonth")} — {t("pricing.savePerYear")} ${((SUBSCRIPTION_TIERS.monthly.price * 12) - SUBSCRIPTION_TIERS.yearly.price).toFixed(2)}/{t("pricing.perYear")}
+            {t("pricing.justPerMonth")} 8,33 $/{t("pricing.perMonth")} — {t("pricing.savePerYear")} 55,89 $/{t("pricing.perYear")}
           </p>
           <ul className="space-y-2 mb-5">
             {premiumFeatures.map((f) => (
@@ -196,7 +213,7 @@ const PricingPage = () => {
               onClick={() => handleCheckout(SUBSCRIPTION_TIERS.yearly.price_id, "yearly")}
               disabled={loadingPlan === "yearly"}
             >
-              {loadingPlan === "yearly" ? t("pricing.loading") : t("pricing.subscribeYearly")}
+              {loadingPlan === "yearly" ? t("pricing.loading") : "Passer à Premium — Meilleur prix"}
             </Button>
           )}
         </motion.div>

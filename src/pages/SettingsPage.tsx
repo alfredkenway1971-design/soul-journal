@@ -41,6 +41,9 @@ import AppLanguageSwitcher from "@/components/AppLanguageSwitcher";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useSubscription } from "@/contexts/SubscriptionContext";
+import { getExportsUsed } from "@/lib/exportQuota";
+import { getReplaysUsed } from "@/lib/voiceReplayQuota";
 import { supabase } from "@/integrations/supabase/client";
 
 const SectionCard = ({
@@ -123,6 +126,7 @@ const SettingsPage = () => {
   const { signOut, isAdmin, user } = useAuth();
   const { toast } = useToast();
   const { t } = useLanguage();
+  const { isPremium, limits, voiceCredits } = useSubscription();
   const [darkMode, setDarkMode] = useState(false);
   const [dailyReminder, setDailyReminder] = useState(false);
   const [aiPrefs, setAiPrefs] = useState<AIPrefs>(() => loadAIPrefs());
@@ -263,6 +267,29 @@ const SettingsPage = () => {
               </AlertDialogContent>
             </AlertDialog>
           </SectionCard>
+
+          {/* v5: usage counters — voice replays & PDF exports */}
+          {!isAdmin && (
+            <SectionCard title={t("settings.usage")}>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">{t("settings.voiceReplaysUsed")}</span>
+                  <span className="text-sm font-semibold text-primary">
+                    {isPremium ? `${getReplaysUsed()} / ${limits.voiceReplaysPerMonth + voiceCredits}` : "0 / 0"}
+                  </span>
+                </div>
+                {!isPremium && (
+                  <p className="text-xs text-muted-foreground">{t("settings.voiceReplaysPremiumOnly")}</p>
+                )}
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">{t("settings.pdfExportsUsed")}</span>
+                  <span className="text-sm font-semibold text-primary">
+                    {getExportsUsed()} / {isPremium ? limits.bookExportsPerMonth : 1}
+                  </span>
+                </div>
+              </div>
+            </SectionCard>
+          )}
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>

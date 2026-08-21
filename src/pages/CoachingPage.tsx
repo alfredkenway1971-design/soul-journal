@@ -382,9 +382,9 @@ const CoachingPage = () => {
 
         {coachingLimitReached && (
           <div className="rounded-2xl bg-destructive/10 border border-destructive/20 px-4 py-3 text-xs text-destructive flex items-center justify-between">
-            <span>{coachingCallsThisMonth}/{FREE_LIMITS.aiCoachingCallsPerMonth} coaching calls used this month</span>
+            <span>Vous avez atteint votre limite mensuelle. Passez à Premium ou attendez le mois prochain.</span>
             <button onClick={() => navigate("/pricing")} className="underline ml-2 shrink-0">
-              Upgrade
+              Passer à Premium
             </button>
           </div>
         )}
