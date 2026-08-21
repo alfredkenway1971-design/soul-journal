@@ -259,6 +259,19 @@ const EntryDetailPage = () => {
         console.warn('Failed to clear stale voice cache path:', err);
       }
     }
+    // Delete the DURABLE storage file too (voice-cache/<userId>/<entryId>-entry.mp3),
+    // otherwise the next replay finds the old file via storage .list() and plays
+    // the pre-edit text. Mirrors mobile's removeRemoteVoice().
+    try {
+      const { data: { user: u } } = await supabase.auth.getUser();
+      if (u?.id) {
+        await supabase.storage
+          .from('journal-audio')
+          .remove([`voice-cache/${u.id}/${id}-entry.mp3`]);
+      }
+    } catch (err) {
+      console.warn('Failed to delete stale voice-cache file:', err);
+    }
   };
 
   const handleSaveBody = async () => {
