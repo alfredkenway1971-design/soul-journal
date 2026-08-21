@@ -79,7 +79,23 @@ serve(async (req) => {
     const locale = STRIPE_LOCALES[lang] ?? "auto";
     const text = CHECKOUT_TEXT[lang] ?? CHECKOUT_TEXT.en;
 
-    // PENDING guard — never charge while price IDs are placeholders
+    // ⚠️ KEY-TYPE GUARD — checkout is DISABLED until the full sk_live key is
+    // installed in Supabase secrets. The account's restricted key (rk_live)
+    // is only for provisioning prices/webhooks — it cannot create Checkout
+    // Sessions, so we refuse with a friendly message instead of a raw error.
+    // Amer enables live checkout by swapping STRIPE_SECRET_KEY to sk_live.
+    if (stripeKey.startsWith("rk_")) {
+      logStep("Refusing checkout: restricted key installed (not live yet)", { priceId });
+      return new Response(
+        JSON.stringify({ error: "Paiement bientôt disponible — réessayez plus tard." }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 400,
+        }
+      );
+    }
+
+    // Legacy placeholder guard — never charge while price IDs are placeholders
     if (priceId.includes("PENDING")) {
       logStep("Refusing checkout: price ID not configured", { priceId });
       return new Response(JSON.stringify({ error: "Paiement bientôt disponible — réessayez plus tard." }), {
