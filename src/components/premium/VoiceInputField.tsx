@@ -6,8 +6,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { invokeEnhance } from "@/lib/aiText";
 import { blobToWav } from "@/lib/audioConvert";
+import { createNativeSpeech, type NativeSpeechHandle } from "@/lib/nativeSpeech";
 
-// Local Whisper API endpoint (self-hosted, offline)
+// Local Whisper API endpoint (self-hosted, offline) — FALLBACK only; native device
+// speech-to-text (free) is tried first.
 const WHISPER_API_URL = "http://144.91.106.188:8082/inference";
 const WHISPER_API_KEY = "whisper_key2026";
 
@@ -29,12 +31,58 @@ const VoiceInputField = ({
   label
 }: VoiceInputFieldProps) => {
   const [isRecording, setIsRecording] = useState(false);
+  const [isDictating, setIsDictating] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
+  const speechRef = useRef<NativeSpeechHandle | null>(null);
+  const dictationBaseRef = useRef("");
   const { toast } = useToast();
 
-  const startRecording = async () => {
+  // ── Native device speech-to-text (free, $0 API calls) ──────────────
+  const startDictation = () => {
+    dictationBaseRef.current = value;
+    const handle = createNativeSpeech({
+      lang: localStorage.getItem("app-language") || "en",
+      onResult: (transcript, isFinal) => {
+        const base = dictationBaseRef.current;
+        onChange(base ? `${base}\n${transcript}` : transcript);
+        if (isFinal) {
+          toast({
+            title: summarize ? "Recorded & Summarized" : "Recorded",
+            description: "Your voice has been transcribed.",
+          });
+        }
+      },
+      onError: () => {
+        // Native STT failed (mic busy, unsupported engine, network) — fall back
+        // to the server transcription path.
+        setIsDictating(false);
+        toast({
+          title: "Using server transcription",
+          description: "Device speech-to-text was unavailable; switching to the backup.",
+        });
+        startServerRecording();
+      },
+      onEnd: () => setIsDictating(false),
+    });
+
+    if (handle) {
+      speechRef.current = handle;
+      setIsDictating(true);
+    } else {
+      startServerRecording();
+    }
+  };
+
+  const stopDictation = () => {
+    speechRef.current?.stop();
+    speechRef.current = null;
+    setIsDictating(false);
+  };
+
+  // ── Server transcription fallback (self-hosted Whisper) ─────────────
+  const startServerRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream);
@@ -172,7 +220,7 @@ const VoiceInputField = ({
               >
                 <Loader2 className="w-4 h-4 animate-spin" />
               </motion.div>
-            ) : isRecording ? (
+            ) : isRecording || isDictating ? (
               <motion.div
                 key="recording"
                 initial={{ opacity: 0, scale: 0.8 }}
@@ -189,7 +237,7 @@ const VoiceInputField = ({
                   size="icon"
                   variant="destructive"
                   className="rounded-full h-8 w-8"
-                  onClick={stopRecording}
+                  onClick={isDictating ? stopDictation : stopRecording}
                 >
                   <Square className="w-3 h-3" />
                 </Button>
@@ -205,7 +253,7 @@ const VoiceInputField = ({
                   size="icon"
                   variant="outline"
                   className="rounded-full h-8 w-8"
-                  onClick={startRecording}
+                  onClick={startDictation}
                   title={t("voiceInput.record")}
                 >
                   <Mic className="w-4 h-4" />
@@ -224,7 +272,9 @@ const VoiceInputField = ({
       </div>
       
       <p className="text-xs text-muted-foreground">
-        {summarize 
+        {isDictating
+          ? "Speaking — tap the square to stop"
+          : summarize 
           ? "Speak naturally - AI will summarize your thoughts" 
           : "Type or tap the mic to speak"
         }

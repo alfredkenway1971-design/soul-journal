@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage, getLanguageName } from "@/contexts/LanguageContext";
-import { X, Type, Smile, Sparkles, Wand2, Play, Volume2, Camera, ImagePlus, Trash2, PartyPopper, Star, RefreshCcw, Lightbulb, Check } from "lucide-react";
+import { X, Type, Smile, Sparkles, Wand2, Play, Volume2, Camera, ImagePlus, Trash2, PartyPopper, Star, RefreshCcw, Lightbulb, Check, AudioLines } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,6 +13,7 @@ import RecentEntryCard from "@/components/premium/RecentEntryCard";
 import AIInsightCard from "@/components/premium/AIInsightCard";
 import { SPOKEN_LANGUAGE_OPTIONS, dirFor } from "@/lib/textDirection";
 import { captureEntryContext } from "@/lib/contextCapture";
+import { createNativeSpeech, isNativeSpeechSupported, type NativeSpeechHandle } from "@/lib/nativeSpeech";
 
 import BottomNav from "@/components/BottomNav";
 import { useToast } from "@/hooks/use-toast";
@@ -55,6 +56,10 @@ const RecordPage = () => {
   const [generatedAudioUrl, setGeneratedAudioUrl] = useState<string | null>(null);
   const [postInsight, setPostInsight] = useState<string | null>(null);
   const [insightLoading, setInsightLoading] = useState(false);
+  // Native device dictation (free, $0 API calls)
+  const [isDictating, setIsDictating] = useState(false);
+  const speechRef = useRef<NativeSpeechHandle | null>(null);
+  const dictationTextRef = useRef("");
   // Smart Journaling Prompts (Feature: personalized prompts on the write screen)
   const [prompts, setPrompts] = useState<string[]>([]);
   const [promptsLoading, setPromptsLoading] = useState(false);
@@ -253,6 +258,85 @@ const RecordPage = () => {
       return;
     }
     setStep("write");
+  };
+
+  // ── Native device dictation (free, $0 API calls) ─────────────────────
+  const finalizeDictation = () => {
+    const text = (dictationTextRef.current || "").trim();
+    if (!text) {
+      toast({
+        title: t("record.noSpeech"),
+        variant: "destructive",
+      });
+      return;
+    }
+    setTranscription(text);
+    setStep("enhance");
+    // Auto-detect mood (same as the audio transcription path)
+    try {
+      api
+        .detectMood(text)
+        .then((m) => {
+          const mood = m as Mood;
+          setSelectedMood(mood);
+          setMoodScore(moodToScore(mood));
+        })
+        .catch((moodErr) => console.error("Mood detection error:", moodErr));
+    } catch (moodErr) {
+      console.error("Mood detection error:", moodErr);
+    }
+  };
+
+  const handleDictateClick = () => {
+    if (isDictating) {
+      speechRef.current?.stop();
+      speechRef.current = null;
+      setIsDictating(false);
+      finalizeDictation();
+      return;
+    }
+    if (!canCreateTextEntry) {
+      toast({
+        title: "Text Entry Limit Reached",
+        description: `Free plan allows ${2} text entries per day. Upgrade for unlimited.`,
+        variant: "destructive",
+      });
+      navigate("/pricing");
+      return;
+    }
+    if (!isNativeSpeechSupported()) {
+      toast({
+        title: t("record.dictateUnsupported"),
+        variant: "destructive",
+      });
+      return;
+    }
+    dictationTextRef.current = "";
+    const handle = createNativeSpeech({
+      lang: spokenLanguage && spokenLanguage !== "auto" ? spokenLanguage : undefined,
+      onResult: (transcript) => {
+        dictationTextRef.current = transcript;
+        setTranscription(transcript);
+      },
+      onError: () => {
+        setIsDictating(false);
+        speechRef.current = null;
+        toast({
+          title: t("record.dictateUnsupported"),
+          variant: "destructive",
+        });
+      },
+      onEnd: () => setIsDictating(false),
+    });
+    if (handle) {
+      speechRef.current = handle;
+      setIsDictating(true);
+    } else {
+      toast({
+        title: t("record.dictateUnsupported"),
+        variant: "destructive",
+      });
+    }
   };
 
   const formatDuration = (seconds: number) => {
@@ -562,26 +646,38 @@ const RecordPage = () => {
                 </motion.div>
               )}
 
-              {/* Voice Record Button */}
+              {/* Voice Record Button / Native Dictation */}
               <div className="flex flex-col items-center py-8">
-                <motion.button
-                  className={`voice-record-btn w-40 h-40 rounded-full flex items-center justify-center ${
-                    isRecording ? "recording" : ""
-                  } ${audioLimitReached && !isRecording ? "opacity-50" : ""}`}
-                  onClick={handleRecordClick}
-                  whileTap={{ scale: 0.95 }}
-                  disabled={isProcessing}
-                >
-                  {isProcessing ? (
-                    <div className="w-10 h-10 border-4 border-white border-t-transparent rounded-full animate-spin" />
-                  ) : audioLimitReached ? (
-                    <Lock className="w-12 h-12 text-white" />
-                  ) : (
-                    <Mic className="w-12 h-12 text-white" />
-                  )}
-                </motion.button>
+                {isDictating ? (
+                  <motion.button
+                    className="voice-record-btn w-40 h-40 rounded-full flex items-center justify-center recording"
+                    onClick={handleDictateClick}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <AudioLines className="w-12 h-12 text-white animate-pulse" />
+                  </motion.button>
+                ) : (
+                  <motion.button
+                    className={`voice-record-btn w-40 h-40 rounded-full flex items-center justify-center ${
+                      isRecording ? "recording" : ""
+                    } ${audioLimitReached && !isRecording ? "opacity-50" : ""}`}
+                    onClick={handleRecordClick}
+                    whileTap={{ scale: 0.95 }}
+                    disabled={isProcessing}
+                  >
+                    {isProcessing ? (
+                      <div className="w-10 h-10 border-4 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : audioLimitReached ? (
+                      <Lock className="w-12 h-12 text-white" />
+                    ) : (
+                      <Mic className="w-12 h-12 text-white" />
+                    )}
+                  </motion.button>
+                )}
                 <p className="mt-4 text-muted-foreground">
-                  {isRecording 
+                  {isDictating
+                    ? t("record.dictating")
+                    : isRecording 
                     ? t("record.recordingTime").replace("{time}", formatDuration(recordingDuration))
                     : isProcessing 
                     ? t("record.processing")
@@ -617,6 +713,16 @@ const RecordPage = () => {
                    {textLimitReached ? <Lock className="w-4 h-4" /> : <Type className="w-4 h-4" />}
                    {t("record.writeLimit")}{textLimitReached ? ` (${t("record.limitReached")})` : ""}
                 </Button>
+                {(isNativeSpeechSupported() || isDictating) && (
+                  <Button
+                    variant={isDictating ? "default" : "outline"}
+                    className="rounded-full px-5 gap-2"
+                    onClick={handleDictateClick}
+                  >
+                    <AudioLines className="w-4 h-4" />
+                    {isDictating ? t("record.dictateStop") : t("record.dictate")}
+                  </Button>
+                )}
                 <Button
                   variant="outline"
                   className="rounded-full px-5 gap-2"
