@@ -46,12 +46,17 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const checkOnboarding = async () => {
       if (!user) return;
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("profiles")
         .select("onboarding_completed")
         .eq("id", user.id)
         .single();
-      setNeedsOnboarding(!(data as any)?.onboarding_completed);
+      // Only flag onboarding as incomplete on a CONFIRMED false.
+      // On fetch error (network race, transient RLS hiccup) keep the previous
+      // state — a failed check must never bounce the user back to onboarding.
+      if (!error) {
+        setNeedsOnboarding(!(data as any)?.onboarding_completed);
+      }
       setOnboardingChecked(true);
     };
     if (user) checkOnboarding();
@@ -69,8 +74,8 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     return <Navigate to="/auth" replace />;
   }
 
-  // Redirect to onboarding if not completed (but allow /onboarding and /settings/voice)
-  const allowedPaths = ["/onboarding", "/settings/voice"];
+  // Redirect to onboarding if not completed (but allow /onboarding, /settings/voice and /pricing)
+  const allowedPaths = ["/onboarding", "/settings/voice", "/pricing"];
   if (needsOnboarding && !allowedPaths.includes(location.pathname)) {
     return <Navigate to="/onboarding" replace />;
   }
