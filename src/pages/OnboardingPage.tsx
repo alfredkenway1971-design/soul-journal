@@ -313,13 +313,17 @@ const OnboardingPage = () => {
     if (!user) return;
     setSaving(true);
     try {
-      await supabase
+      const { error } = await supabase
         .from("profiles")
         .update({ onboarding_completed: true } as any)
         .eq("id", user.id);
+      if (error) throw error;
       navigate("/", { replace: true });
     } catch {
-      navigate("/", { replace: true });
+      // Never navigate on a failed write: the route guard would bounce the
+      // user straight back to /onboarding (the infamous loop). Stay put and
+      // let them retry.
+      toast({ title: "Error", description: "Could not save profile.", variant: "destructive" });
     } finally {
       setSaving(false);
     }
