@@ -45,7 +45,11 @@ const FontContext = createContext<FontContextValue | undefined>(undefined);
 
 const injectFontLink = (importUrl: string) => {
   if (!importUrl) return;
-  const id = `font-link-${btoa(importUrl).slice(0, 24)}`;
+  // Id must be UNIQUE per URL: btoa(importUrl).slice(0,24) is identical for
+  // every fonts.googleapis.com URL (same base64 prefix), which made the
+  // early-return skip injecting any NEW font's stylesheet after the first one
+  // loaded → font changes showed the default until a hard refresh.
+  const id = `font-link-${importUrl.replace(/[^a-zA-Z0-9]/g, "")}`;
   if (document.getElementById(id)) return;
   const link = document.createElement("link");
   link.id = id;
