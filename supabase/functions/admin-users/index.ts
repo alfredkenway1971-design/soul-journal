@@ -81,9 +81,12 @@ Deno.serve(async (req) => {
 
     if (req.method === "POST" && action === "grant-access") {
       const { email } = await req.json();
-      // Find user by email
+      const normalizedEmail = email.trim().toLowerCase();
+      // Find user by email (case-insensitive — Supabase stores emails lowercase)
       const { data: authUsers } = await adminClient.auth.admin.listUsers({ perPage: 1000 });
-      const targetUser = authUsers?.users?.find((u: any) => u.email === email);
+      const targetUser = authUsers?.users?.find(
+        (u: any) => u.email?.toLowerCase() === normalizedEmail
+      );
       if (!targetUser) {
         return new Response(JSON.stringify({ error: "User not found" }), {
           status: 404,
